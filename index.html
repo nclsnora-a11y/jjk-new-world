@@ -560,7 +560,7 @@ function normalizeStatValue(v){
   if(v===null||v===undefined||v==='')return null;
   const n=Number(v);
   if(!Number.isFinite(n))return null;
-  return Math.max(0,Math.min(5,n));
+  return Math.max(0,n);
 }
 function normalizeStatsObject(stats){
   const src=stats||{};
@@ -1052,7 +1052,7 @@ function toggleEditor(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
   const el=document.getElementById('editor-'+id);
   if(!el.classList.contains('hidden')){el.classList.add('hidden');return}
-  const statsHtml=statNames.map(n=>`<div class="editor-stat"><small>${esc(n)}</small><input type="number" id="edit-${id}-stat-${statNames.indexOf(n)}" value="${esc(ch.currentStats?.[n]??'')}" min="0" max="5" step="1"><div class="initial-note">Inicial: ${esc(ch.initialStats?.[n]??'—')}</div></div>`).join('');
+  const statsHtml=statNames.map(n=>`<div class="editor-stat"><small>${esc(n)}</small><input type="number" id="edit-${id}-stat-${statNames.indexOf(n)}" value="${esc(ch.currentStats?.[n]??'')}" min="0" step="1"><div class="initial-note">Inicial: ${esc(ch.initialStats?.[n]??'—')}</div></div>`).join('');
   const passivesHtml=(ch.passives||[]).map((p,i)=>`<div class="passive-edit" id="pe-${id}-${i}"><div><b>${esc(p.category)} — ${esc(p.name)}</b><div class="muted">${esc(p.description||'')}</div></div><button class="secondary danger" onclick="removePassive('${id}',${i})">Quitar</button></div>`).join('')||'<div class="muted">Sin pasivas.</div>';
   el.innerHTML=`
     <div class="editor-grid">

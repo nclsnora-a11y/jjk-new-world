@@ -757,6 +757,23 @@ function infoGradesHtml(){
   ];
   return '<div class="info-table">'+grades.map(g=>'<div><b>'+esc(g[0])+'</b><span>'+esc(g[1])+'</span><strong>'+esc(g[2])+'</strong></div>').join('')+'</div>';
 }
+function infoAwakeningsHtml(){
+  const rows=[
+    ['Fuerza','15 EM','Ventaja en la tirada de ataque físico.'],
+    ['Agilidad','15 EM','Ventaja en la tirada de esquiva/defensa con Agilidad.'],
+    ['Velocidad','20 EM','Efecto especial de Velocidad.'],
+    ['Inteligencia','15 EM','Podés utilizar Inteligencia en una tirada que normalmente correspondería a otra estadística.'],
+    ['Barrera','—','Recursos avanzados para defenderse de Expansiones de Dominio y técnicas que afectan el espacio.'],
+    ['Control de Energía Maldita','20 EM','Aumentar rango o tamaño de una técnica.'],
+    ['Control de Energía Maldita','25 EM','Ventaja en la tirada de ataque de una técnica para determinar si entra.'],
+    ['Durabilidad','20 EM','Reducir a la mitad el daño recibido, antes de la tirada de daño.'],
+    ['Resistencia','Cada 2 turnos','Un movimiento gratuito.'],
+    ['Energía Maldita','Cada 3 turnos','Recuperás 20 EM automáticamente.']
+  ];
+  return '<p class="info-lead">Los despertares se desbloquean al llegar a <b>7 puntos en la estadística correspondiente</b>.</p>'+
+    '<div class="info-table">'+rows.map(r=>'<div><b>'+esc(r[0])+'</b><span><strong>'+esc(r[1])+'</strong> · '+esc(r[2])+'</span></div>').join('')+'</div>';
+}
+
 function renderInformation(){
   const root=document.getElementById('info-root');if(!root)return;
   const physical=['Fuerza','Agilidad','Velocidad','Resistencia','Durabilidad'];
@@ -784,6 +801,13 @@ function renderInformation(){
         '<h4>Grado inicial</h4>'+infoGradesHtml()+
         '<h4>Pasivas</h4><p>La ruleta contiene actualmente <b>'+passiveData.length+' talentos</b>. Todos los resultados tienen la misma probabilidad dentro de esa ruleta.</p>'+
         '<div class="info-pending"><b>En desarrollo:</b> todavía quedan reglas de creación y balance por cerrar; esta sección se irá ampliando a medida que se definan.</div>'+
+      '</div>'+
+    '</details>'+
+
+    '<details class="info-section-card">'+
+      '<summary><span>Despertares</span><small>Se desbloquean con 7 puntos</small></summary>'+
+      '<div class="info-section-body info-rules">'+
+        infoAwakeningsHtml()+
       '</div>'+
     '</details>'+
 

@@ -299,8 +299,8 @@ function effectivePlanForDate(date){
   const today=localISO(new Date());
   if(date===today)return ensureTodayAssignment();
   if(date<today){
-    const assigned=state.rolloverAssignments&&state.rolloverAssignments[date];
-    return assigned?getDay(assigned):fixed;
+    if(fixed&&planDayCompleted(fixed))return fixed;
+    return null;
   }
   return projectedPlanMap()[date]||fixed;
 }
@@ -515,6 +515,8 @@ function renderCalendar(){
 }
 function calendarCell(dt,other){
   const iso=localISO(dt),d=effectivePlanForDate(iso),today=localISO(new Date());
+  const original=getDay(iso);
+  const missedPast=iso<today&&original&&original.tasks&&original.tasks.length&&!isExamDay(original)&&!planDayCompleted(original);
   let badges='';
   if(d&&d.tasks.length){
     const cats=[...new Set(d.tasks.map(t=>t.subject))];
@@ -525,14 +527,24 @@ function calendarCell(dt,other){
       return '<div class="day-subject '+cat+'"><span>'+short+'</span><span class="day-check">'+(all?'✓':'○')+'</span></div>';
     }).join('');
   }
-  const shifted=d&&d.date!==iso&&!isExamDay(d); const note=d?(shifted?'<div class="day-note">↪ Reprogramado desde '+prettyDate(d.date,true)+'</div>':(d.note?'<div class="day-note">'+d.note+'</div>':'')):'';
-  return '<div class="calendar-cell '+(other?'other ':'')+(d?'clickable ':'')+(iso===today?'today ':'')+(iso===selectedDate?'selected':'')+'" '+(d?'data-calendar-date="'+iso+'"':'')+'>'+
+  const shifted=d&&d.date!==iso&&!isExamDay(d);
+  const note=missedPast
+    ?'<div class="day-note">↪ No realizado · pasó al próximo día de estudio</div>'
+    :(d?(shifted?'<div class="day-note">↪ Reprogramado desde '+prettyDate(d.date,true)+'</div>':(d.note?'<div class="day-note">'+d.note+'</div>':'')):'');
+  return '<div class="calendar-cell '+(other?'other ':'')+((d||missedPast)?'clickable ':'')+(iso===today?'today ':'')+(iso===selectedDate?'selected':'')+'" '+((d||missedPast)?'data-calendar-date="'+iso+'"':'')+'>'+
     '<div class="day-number">'+dt.getDate()+'</div><div class="day-subjects">'+badges+'</div>'+note+'</div>';
 }
 function renderCalendarDetail(date){
   selectedDate=date;renderCalendar();
   const d=effectivePlanForDate(date),box=document.getElementById('calendar-detail');
-  if(!d){box.innerHTML='<div class="empty">No hay plan cargado para este día.</div>';return;}
+  const original=getDay(date),today=localISO(new Date());
+  const missedPast=date<today&&original&&original.tasks&&original.tasks.length&&!isExamDay(original)&&!planDayCompleted(original);
+  if(!d){
+    box.innerHTML=missedPast
+      ?'<div class="empty"><strong>No realizado.</strong> El contenido de este día ya fue trasladado al próximo día de estudio disponible.</div>'
+      :'<div class="empty">No hay plan cargado para este día.</div>';
+    return;
+  }
   const tasks=d.tasks.length?d.tasks.map((t,i)=>{
     const done=!!state.tasks[taskId(d.date,i)];
     return '<div class="day-detail-task"><strong>'+t.title+(done?' ✓':'')+'</strong><span>'+t.scope+'</span><span><b>'+(t.finish?'Meta: ':'Límite: ')+'</b>'+t.stop+'</span></div>';

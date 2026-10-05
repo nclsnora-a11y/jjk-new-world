@@ -222,7 +222,7 @@ let currentPracticeItem=null;
 let practiceRevealed=false;
 let practiceCount=0;
 
-function defaultState(){return {units:{privado:{},penal:{}},tasks:{},reviews:[]};}
+function defaultState(){return {units:{privado:{},penal:{}},tasks:{},reviews:[],rolloverAssignments:{}};}
 function loadState(){
   try{
     const raw=localStorage.getItem(STORE)||localStorage.getItem('nico-study-hub-v1');
@@ -245,6 +245,66 @@ function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 function labelSubject(s){return s==='privado'?'Privado':s==='penal'?'Penal':'Repaso';}
 function taskId(date,index){return date+'-'+index;}
 function getDay(date){return schedule.find(d=>d.date===date)||null;}
+function isExamDay(d){return !!d && /^EXAMEN/i.test(d.label||'');}
+function studyPlanDays(){return schedule.filter(d=>d.tasks&&d.tasks.length&&!isExamDay(d));}
+function isStudySlotDate(date){return studyPlanDays().some(d=>d.date===date);}
+function planDayCompleted(d){
+  if(!d||!d.tasks||!d.tasks.length)return false;
+  return d.tasks.every((t,i)=>!!state.tasks[taskId(d.date,i)]);
+}
+function ensureTodayAssignment(){
+  const today=localISO(new Date());
+  const fixed=getDay(today);
+  if(isExamDay(fixed))return fixed;
+  if(!isStudySlotDate(today))return null;
+  state.rolloverAssignments=state.rolloverAssignments||{};
+  const existing=state.rolloverAssignments[today];
+  if(existing){
+    const assigned=getDay(existing);
+    if(assigned)return assigned;
+  }
+  const pending=studyPlanDays().filter(d=>d.date<=today&&!planDayCompleted(d));
+  const chosen=pending.length?pending[0]:fixed;
+  if(chosen){
+    state.rolloverAssignments[today]=chosen.date;
+    localStorage.setItem(STORE,JSON.stringify(state));
+  }
+  return chosen||null;
+}
+function projectedPlanMap(){
+  const today=localISO(new Date());
+  const map={};
+  const pending=studyPlanDays().filter(d=>!planDayCompleted(d)).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const slots=studyPlanDays().filter(d=>d.date>=today).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  state.rolloverAssignments=state.rolloverAssignments||{};
+  slots.forEach(slot=>{
+    let chosen=null;
+    const persisted=state.rolloverAssignments[slot.date];
+    if(persisted) chosen=getDay(persisted);
+    if(!chosen){
+      const idx=pending.findIndex(p=>p.date<=slot.date);
+      if(idx>=0) chosen=pending[idx];
+    }
+    if(chosen){
+      map[slot.date]=chosen;
+      const idx=pending.findIndex(p=>p.date===chosen.date);
+      if(idx>=0)pending.splice(idx,1);
+    }
+  });
+  return map;
+}
+function effectivePlanForDate(date){
+  const fixed=getDay(date);
+  if(isExamDay(fixed))return fixed;
+  const today=localISO(new Date());
+  if(date===today)return ensureTodayAssignment();
+  if(date<today){
+    const assigned=state.rolloverAssignments&&state.rolloverAssignments[date];
+    return assigned?getDay(assigned):fixed;
+  }
+  return projectedPlanMap()[date]||fixed;
+}
+
 function taskUnit(t){
   const m=(t.title||'').match(/U(\d+)/i);
   if(!m)return null;
@@ -362,7 +422,7 @@ function renderToday(){
   document.getElementById('days-penal').textContent=daysUntil(PENAL_EXAM);
   document.getElementById('hero-day').textContent=String(new Date().getDate()).padStart(2,'0');
 
-  const d=getDay(today);
+  const d=effectivePlanForDate(today);
   const headline=document.getElementById('today-headline');
   const summary=document.getElementById('today-summary');
   const targets=document.getElementById('today-targets');
@@ -383,8 +443,11 @@ function renderToday(){
     targets.innerHTML='<div class="empty">No hay unidades nuevas asignadas hoy.</div>';
     blocks.innerHTML='<div class="empty">Si no hay repasos vencidos: descanso.</div>';
   }else{
-    headline.textContent=d.label;
-    summary.textContent=d.note||'Cumplí el alcance marcado. No avances a la unidad siguiente aunque termines antes.';
+    const carried=d.date!==today&&!isExamDay(d);
+    headline.textContent=d.label+(carried?' · reprogramado':'');
+    summary.textContent=carried
+      ?('Este plan era del '+prettyDate(d.date,true)+' y pasó automáticamente a hoy porque no quedó marcado como cumplido. No se perdió contenido ni se agregó carga extra.')
+      :(d.note||'Cumplí el alcance marcado. No avances a la unidad siguiente aunque termines antes.');
     targets.innerHTML=d.tasks.map((t,i)=>targetHTML(d.date,i,t)).join('') || '<div class="empty">'+(d.note||'Sin tareas')+'</div>';
     blocks.innerHTML=buildBlocks(d).map(blockHTML).join('');
   }
@@ -427,7 +490,7 @@ function blockHTML(b){
   return '<article class="study-block"><div class="block-time">'+b.time+'</div><div><h4>'+b.title+'</h4><p>'+b.text+'</p>'+link+'</div><button class="block-start" data-start-block="40">▶ 40 min</button></article>';
 }
 function toggleTask(id){
-  state.tasks[id]=!state.tasks[id];save();renderToday();renderCalendar();
+  state.tasks[id]=!state.tasks[id];save();renderToday();renderCalendar();renderPractice();
   if(selectedDate)renderCalendarDetail(selectedDate);
 }
 
@@ -451,30 +514,30 @@ function renderCalendar(){
   grid.innerHTML=cells.join('');
 }
 function calendarCell(dt,other){
-  const iso=localISO(dt),d=getDay(iso),today=localISO(new Date());
+  const iso=localISO(dt),d=effectivePlanForDate(iso),today=localISO(new Date());
   let badges='';
   if(d&&d.tasks.length){
     const cats=[...new Set(d.tasks.map(t=>t.subject))];
     badges=cats.map(cat=>{
       const indices=d.tasks.map((t,i)=>t.subject===cat?i:null).filter(i=>i!==null);
-      const all=indices.every(i=>!!state.tasks[taskId(iso,i)]);
+      const all=indices.every(i=>!!state.tasks[taskId(d.date,i)]);
       const short=cat==='privado'?'Privado':cat==='penal'?'Penal':'Repaso';
       return '<div class="day-subject '+cat+'"><span>'+short+'</span><span class="day-check">'+(all?'✓':'○')+'</span></div>';
     }).join('');
   }
-  const note=d&&d.note?'<div class="day-note">'+d.note+'</div>':'';
+  const shifted=d&&d.date!==iso&&!isExamDay(d); const note=d?(shifted?'<div class="day-note">↪ Reprogramado desde '+prettyDate(d.date,true)+'</div>':(d.note?'<div class="day-note">'+d.note+'</div>':'')):'';
   return '<div class="calendar-cell '+(other?'other ':'')+(d?'clickable ':'')+(iso===today?'today ':'')+(iso===selectedDate?'selected':'')+'" '+(d?'data-calendar-date="'+iso+'"':'')+'>'+
     '<div class="day-number">'+dt.getDate()+'</div><div class="day-subjects">'+badges+'</div>'+note+'</div>';
 }
 function renderCalendarDetail(date){
   selectedDate=date;renderCalendar();
-  const d=getDay(date),box=document.getElementById('calendar-detail');
+  const d=effectivePlanForDate(date),box=document.getElementById('calendar-detail');
   if(!d){box.innerHTML='<div class="empty">No hay plan cargado para este día.</div>';return;}
   const tasks=d.tasks.length?d.tasks.map((t,i)=>{
-    const done=!!state.tasks[taskId(date,i)];
+    const done=!!state.tasks[taskId(d.date,i)];
     return '<div class="day-detail-task"><strong>'+t.title+(done?' ✓':'')+'</strong><span>'+t.scope+'</span><span><b>'+(t.finish?'Meta: ':'Límite: ')+'</b>'+t.stop+'</span></div>';
   }).join(''):'<div class="empty">'+(d.note||'Descanso')+'</div>';
-  box.innerHTML='<article class="day-detail-card"><div class="day-detail-head"><div><h3>'+cap(prettyDate(date,false))+' · '+d.label+'</h3><p>'+(d.note||'Plan del día')+'</p></div><button class="ghost-btn" data-open-day="'+date+'">Ver en Hoy</button></div><div class="day-detail-tasks">'+tasks+'</div></article>';
+  const shifted=d.date!==date&&!isExamDay(d); box.innerHTML='<article class="day-detail-card"><div class="day-detail-head"><div><h3>'+cap(prettyDate(date,false))+' · '+d.label+(shifted?' · reprogramado':'')+'</h3><p>'+(shifted?('Plan original del '+prettyDate(d.date,true)+'. Se corrió automáticamente por una jornada pendiente.'):(d.note||'Plan del día'))+'</p></div><button class="ghost-btn" data-open-day="'+date+'">Ver en Hoy</button></div><div class="day-detail-tasks">'+tasks+'</div></article>';
 }
 function goMonth(delta){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+delta,1);selectedDate=null;renderCalendar();document.getElementById('calendar-detail').innerHTML='<div class="empty">Tocá un día del calendario para ver su plan.</div>';}
 
@@ -515,7 +578,7 @@ function renderReviews(){
 function toggleReview(id){const r=state.reviews.find(x=>x.id===id);if(r){r.done=!r.done;save();renderReviews();renderDueReviews();}}
 
 function todayPracticeUnits(){
-  const d=getDay(localISO(new Date()));
+  const d=effectivePlanForDate(localISO(new Date()));
   if(!d)return [];
   return d.tasks.map(taskUnit).filter(Boolean);
 }

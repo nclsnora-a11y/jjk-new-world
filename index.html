@@ -1724,16 +1724,48 @@ zoneHtmlFor=function(c,z){
 // Character DB actions
 saveCharacterEdit=async function(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
+  if(!currentUser){toast('Iniciá sesión para guardar cambios.');return}
   const currentStats={};statNames.forEach((n,i)=>{const el=document.getElementById('edit-'+id+'-stat-'+i);currentStats[n]=normalizeStatValue(el.value)});
+  const removals=pendingPassiveRemovals[id];
+  const passives=(ch.passives||[]).filter((_,i)=>!(removals&&removals.has(i)));
+
   let photoPath=ch.photo_path||null;
-  if(pendingCharacterCrops[id]){
-    try{
+  try{
+    if(pendingCharacterCrops[id]){
       photoPath=await uploadDataUrl(pendingCharacterCrops[id],currentUser.id+'/characters/'+id+'.jpg');
       delete pendingCharacterCrops[id];
-    }catch(e){toast('No pude subir la foto.');return}
+    }else{
+      const photoInput=document.getElementById('edit-'+id+'-photo');
+      const file=photoInput?.files?.[0];
+      if(file){
+        const resized=await resizeCharacterPhoto(file);
+        photoPath=await uploadDataUrl(resized,currentUser.id+'/characters/'+id+'.jpg');
+      }
+    }
+  }catch(e){
+    console.error('Error subiendo foto de personaje',e);
+    toast('No pude subir la foto. Probá con una imagen JPG o PNG.');
+    return;
   }
-  const payload={sorcerer_name:document.getElementById('edit-'+id+'-name').value.trim()||'Hechicero sin nombre',user_name:'—',character_side:document.getElementById('edit-'+id+'-side')?.value||'hechicero',technique_type:document.getElementById('edit-'+id+'-type').value||null,grade:document.getElementById('edit-'+id+'-grade').value||null,control_em:document.getElementById('edit-'+id+'-control').value?Number(document.getElementById('edit-'+id+'-control').value):null,current_stats:currentStats,technique_description:document.getElementById('tech-desc-'+id)?.value.trim()||'',technique_actions:collectTechniqueUses(id),photo_path:photoPath,updated_at:new Date().toISOString()};
-  const {error}=await sb.from('characters').update(payload).eq('id',id);if(error){toast(error.message);return}
+
+  const payload={
+    sorcerer_name:document.getElementById('edit-'+id+'-name').value.trim()||'Hechicero sin nombre',
+    user_name:'—',
+    character_side:document.getElementById('edit-'+id+'-side')?.value||'hechicero',
+    technique_type:document.getElementById('edit-'+id+'-type').value||null,
+    grade:document.getElementById('edit-'+id+'-grade').value||null,
+    control_em:document.getElementById('edit-'+id+'-control').value?Number(document.getElementById('edit-'+id+'-control').value):null,
+    current_stats:currentStats,
+    passives,
+    technique_description:document.getElementById('tech-desc-'+id)?.value.trim()||'',
+    technique_actions:collectTechniqueUses(id),
+    photo_path:photoPath,
+    updated_at:new Date().toISOString()
+  };
+  const {error}=await sb.from('characters').update(payload).eq('id',id);
+  if(error){toast(error.message);return}
+  delete pendingPassiveRemovals[id];
+
   const hpMax=Math.max(0,(normalizeStatValue(currentStats['Durabilidad'])??1)*50);
   const ceMax=Math.max(0,(normalizeStatValue(currentStats['Energía Maldita'])??1)*50);
   const resMax=Math.max(0,(normalizeStatValue(currentStats['Resistencia'])??1)*50);

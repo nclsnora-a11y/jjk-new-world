@@ -39,7 +39,7 @@
 .combat-quick-panel{margin-top:8px;padding:9px;background:#0f0f16;border:1px solid #2d2d3a;border-radius:9px}
 .combat-quick-panel.hidden{display:none}
 .quick-tech-desc{font-size:11px;color:var(--muted);line-height:1.45}
-.quick-action-list{display:flex;gap:6px;flex-wrap:wrap}
+.quick-action-list{display:flex;gap:6px;flex-wrap:wrap}.quick-tech-list{display:grid;gap:7px}.quick-tech-item{border:1px solid #2d2d3a;border-radius:9px;background:#101018;overflow:hidden}.quick-tech-item>summary{cursor:pointer;list-style:none;padding:9px 10px;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px}.quick-tech-item>summary::-webkit-details-marker{display:none}.quick-tech-item>summary:after{content:"▾";color:#8b5cf6}.quick-tech-item[open]>summary:after{content:"▴"}.quick-tech-actions{display:flex;gap:7px;flex-wrap:wrap;padding:0 9px 9px}.quick-tech-actions button{font-size:10px;padding:6px 9px}.quick-tech-note{font-size:10px;color:var(--muted);padding:0 9px 8px;line-height:1.4}
 .quick-passive-list{display:grid;gap:6px}
 .quick-passive-item{padding:7px 8px;border:1px solid #292938;border-radius:8px;background:#101018}
 .quick-passive-item b{font-size:11px}
@@ -2221,7 +2221,16 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     const bonus=techniqueStatValue(ch,stat);
     const cost=Math.max(0,Number(a.cost||0));
     const validRoll=stat==='Control EM'||rollableStatNames.includes(stat);
-    return '<button class="combat-technique-btn" title="'+esc([a.description,a.effect].filter(Boolean).join(' · '))+'" '+(canRoll&&validRoll?'onclick="event.stopPropagation();rollTechniqueAction(\''+campaignId+'\',\''+ch.id+'\','+i+')"':'disabled')+'>'+esc(a.name)+' · '+(validRoll?'d20+'+bonus:'configurar tirada')+(cost?' · '+cost+' EM':'')+(a.damage?' · Daño '+esc(a.damage):'')+(a.effect?' · '+esc(a.effect):'')+'</button>';
+    const damageDice=parseDiceExpressionFlexible(a.damage||'');
+    const note=[a.effect,a.description].filter(Boolean).join(' · ');
+    return '<details class="quick-tech-item">'+
+      '<summary>'+esc(a.name||'Uso de técnica')+'</summary>'+
+      (note?'<div class="quick-tech-note">'+esc(note)+'</div>':'')+
+      '<div class="quick-tech-actions">'+
+        '<button class="combat-technique-btn" '+(canRoll&&validRoll?'onclick="event.preventDefault();event.stopPropagation();rollTechniqueAttack(\''+campaignId+'\',\''+ch.id+'\','+i+')"':'disabled')+'>Ataque'+(validRoll?' · d20+'+bonus:'')+(cost?' · '+cost+' EM':'')+'</button>'+
+        (damageDice?'<button class="combat-technique-btn secondary" '+(canRoll?'onclick="event.preventDefault();event.stopPropagation();rollTechniqueDamage(\''+campaignId+'\',\''+ch.id+'\','+i+')"':'disabled')+'>Daño · '+esc(damageDice.expression)+'</button>':'')+
+      '</div>'+
+    '</details>';
   }).join(''):'<span class="muted">Sin usos de técnica configurados.</span>';
   const passiveHtml=passives.length?passives.map(p=>'<div class="quick-passive-item"><b>'+esc((p.category?p.category+' — ':'')+(p.name||'Pasiva'))+'</b>'+(p.description?'<div>'+esc(p.description)+'</div>':'')+'</div>').join(''):'<span class="muted">Sin pasivas.</span>';
   const awakeningActions=awakenings.length?awakenings.map(p=>'<button class="combat-technique-btn" type="button" onclick="event.stopPropagation();toast(\''+esc((p.name||'Despertar')+': '+(p.description||''))+'\')">⚡ '+esc(p.name||'Despertar')+'</button>').join(''):'<span class="muted">No hay despertares equipados.</span>';
@@ -2233,7 +2242,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     '</div>'+
     '<div class="combat-quick-panel" id="quick-panel-tech-'+ch.id+'">'+
       (ch.techniqueDescription?'<div class="quick-tech-desc">'+esc(ch.techniqueDescription)+'</div>':'<div class="muted">Sin descripción de técnica.</div>')+
-      '<div class="quick-action-list" style="margin-top:8px">'+techniqueButtons+'</div>'+
+      '<div class="quick-tech-list" style="margin-top:8px">'+techniqueButtons+'</div>'+
     '</div>'+
     '<div class="combat-quick-panel hidden" id="quick-panel-actions-'+ch.id+'"><div class="quick-action-list">'+awakeningActions+'</div></div>'+
     '<div class="combat-quick-panel hidden" id="quick-panel-passives-'+ch.id+'"><div class="quick-passive-list">'+passiveHtml+'</div></div>'+
@@ -2251,7 +2260,7 @@ function showCombatQuickTab(charId,tab){
     if(panel)panel.classList.toggle('hidden',t!==tab);
   });
 }
-async function rollTechniqueAction(campaignId,charId,index){
+async function rollTechniqueAttack(campaignId,charId,index){
   const ch=allCharacters.find(c=>c.id===charId);if(!ch)return;
   if(!isAdmin&&ch.owner_id!==currentUser?.id){toast('Solo podés usar técnicas de tus personajes.');return}
   const action=(ch.techniqueActions||[])[index];if(!action)return;
@@ -2265,7 +2274,7 @@ async function rollTechniqueAction(campaignId,charId,index){
   }
   const bonus=techniqueStatValue(ch,action.stat||'Control EM');
   const die=Math.floor(Math.random()*20)+1,total=die+bonus;
-  await animateD20(die,ch.sorcererName,action.name);
+  await animateD20(die,ch.sorcererName,action.name+' · Ataque');
 
   if(cost>0){
     const newCE=Math.max(0,Number(state.ce_current)-cost);
@@ -2279,30 +2288,29 @@ async function rollTechniqueAction(campaignId,charId,index){
 
   const {error}=await sb.from('combat_rolls').insert({
     campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
-    stat_name:'Técnica · '+action.name+(cost?' · -'+cost+' EM':''),
+    stat_name:'Ataque · '+action.name+(cost?' · -'+cost+' EM':''),
     die_result:die,stat_bonus:bonus,total
   });
   if(error){toast(error.message);return}
+  if(cost>0)updateCombatBarsFromState(charId);
+}
 
+async function rollTechniqueDamage(campaignId,charId,index){
+  const ch=allCharacters.find(c=>c.id===charId);if(!ch)return;
+  if(!isAdmin&&ch.owner_id!==currentUser?.id){toast('Solo podés usar técnicas de tus personajes.');return}
+  const action=(ch.techniqueActions||[])[index];if(!action)return;
   const damageDice=parseDiceExpressionFlexible(action.damage||'');
-  if(action.damage&&damageDice){
-    const damageResults=Array.from({length:damageDice.count},()=>Math.floor(Math.random()*damageDice.sides)+1);
-    const damageTotal=damageResults.reduce((a,b)=>a+b,0)+damageDice.modifier;
-    await animateDiceGroup(damageResults,damageDice.sides,ch.sorcererName+' · '+action.name+' · Daño '+damageDice.expression,damageDice.modifier);
-    const {error:damageError}=await sb.from('combat_rolls').insert({
-      campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
-      stat_name:'Daño · '+action.name,
-      die_result:damageResults[0],stat_bonus:damageDice.modifier,total:damageTotal,
-      roll_expression:damageDice.expression,roll_results:damageResults
-    });
-    if(damageError){toast('La técnica salió, pero no pude registrar el daño: '+damageError.message);return}
-  }else if(action.damage){
-    toast('El daño de '+action.name+' no tiene un formato válido. Usá por ejemplo 3D10.');
-  }
-
-  if(cost>0){
-    updateCombatBarsFromState(charId);
-  }
+  if(!damageDice){toast('Este uso no tiene un daño válido configurado.');return}
+  const damageResults=Array.from({length:damageDice.count},()=>Math.floor(Math.random()*damageDice.sides)+1);
+  const damageTotal=damageResults.reduce((a,b)=>a+b,0)+damageDice.modifier;
+  await animateDiceGroup(damageResults,damageDice.sides,ch.sorcererName+' · '+action.name+' · Daño '+damageDice.expression,damageDice.modifier);
+  const {error}=await sb.from('combat_rolls').insert({
+    campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
+    stat_name:'Daño · '+action.name,
+    die_result:damageResults[0],stat_bonus:damageDice.modifier,total:damageTotal,
+    roll_expression:damageDice.expression,roll_results:damageResults
+  });
+  if(error){toast(error.message);return}
 }
 async function loadCombatRolls(campaignId){
   const {data,error}=await sb.from('combat_rolls').select('*').eq('campaign_id',campaignId).order('created_at',{ascending:true}).limit(100);

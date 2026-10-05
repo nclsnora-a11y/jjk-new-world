@@ -26,7 +26,7 @@
 
 .combat-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}.roll-chat{background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:sticky;top:12px}.roll-chat-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:10px;align-items:center}.roll-chat-list{max-height:620px;overflow:auto;padding:10px;display:grid;gap:8px}.roll-msg{background:#101018;border:1px solid #292938;border-radius:10px;padding:9px}.roll-msg-top{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-bottom:4px}.roll-msg-main{font-size:13px}.roll-total{font-size:18px;font-weight:900;margin-left:4px}.combat-stat.rollable{cursor:pointer;transition:.15s ease}.combat-stat.rollable:hover{transform:translateY(-1px);border-color:#7c3aed;background:#171326}.combat-stat.rollable:active{transform:translateY(0)}.combat-stat small{display:block;color:var(--muted);margin-top:4px;font-size:10px}.roll-empty{padding:18px;text-align:center;color:var(--muted)}@media(max-width:900px){.combat-layout{grid-template-columns:1fr}.roll-chat{position:static}.roll-chat-list{max-height:330px}}
 
-.dice-overlay{position:fixed;inset:0;background:radial-gradient(circle at center,rgba(44,18,72,.38),rgba(5,5,10,.78));display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(3px)}.dice-overlay.hidden{display:none}.d20-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;perspective:900px}.d20-stage{position:relative;display:flex;align-items:center;justify-content:center}.d20-glow{position:absolute;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,.34),rgba(124,58,237,.08) 55%,transparent 72%);filter:blur(6px);opacity:.8;animation:glowPulse 1.4s ease-in-out infinite}.d20{position:relative;width:132px;height:132px;clip-path:polygon(50% 0%,95% 28%,82% 88%,18% 88%,5% 28%);background:linear-gradient(145deg,#3a1d5a,#8b5cf6 48%,#4c1d95 72%,#1c1230);display:flex;align-items:center;justify-content:center;font-size:46px;font-weight:900;color:white;box-shadow:0 22px 50px rgba(0,0,0,.52),0 0 36px rgba(124,58,237,.52);transform-style:preserve-3d;border:2px solid rgba(221,214,254,.9);text-shadow:0 2px 8px rgba(0,0,0,.65)}.d20:before,.d20:after{content:"";position:absolute;inset:14px;clip-path:polygon(50% 0%,95% 28%,82% 88%,18% 88%,5% 28%);border:1px solid rgba(255,255,255,.22)}.d20:after{inset:29px;border-color:rgba(255,255,255,.12)}.d20.rolling{animation:d20EpicRoll 1.8s cubic-bezier(.16,.84,.27,1)}.d20.resolved{animation:d20Land .42s ease-out}.d20.crit20{background:linear-gradient(145deg,#5b3b00,#f59e0b 48%,#fde68a 68%,#78350f);box-shadow:0 0 55px rgba(245,158,11,.85),0 26px 60px rgba(0,0,0,.5)}.d20.crit1{background:linear-gradient(145deg,#3f0d12,#991b1b 48%,#ef4444 68%,#2b0709);box-shadow:0 0 48px rgba(239,68,68,.72),0 26px 60px rgba(0,0,0,.5)}.d20-label{font-size:13px;color:#ede9fe;font-weight:800;letter-spacing:.02em;text-shadow:0 1px 6px rgba(0,0,0,.7)}.dice-result-burst{position:absolute;width:18px;height:18px;border-radius:50%;background:white;opacity:0;box-shadow:0 0 22px 8px rgba(255,255,255,.7)}.dice-result-burst.show{animation:resultBurst .5s ease-out}.dice-crit-text{font-size:15px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;opacity:0;transform:translateY(4px)}.dice-crit-text.show{animation:critText .6s ease-out forwards}@keyframes d20EpicRoll{0%{transform:translateY(-20px) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(.72)}18%{transform:translateY(-34px) rotateX(160deg) rotateY(120deg) rotateZ(90deg) scale(1.03)}42%{transform:translateY(-16px) rotateX(330deg) rotateY(270deg) rotateZ(190deg) scale(.98)}68%{transform:translateY(-6px) rotateX(500deg) rotateY(430deg) rotateZ(315deg) scale(1.05)}88%{transform:translateY(5px) rotateX(650deg) rotateY(590deg) rotateZ(345deg) scale(.97)}100%{transform:translateY(0) rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1)}}@keyframes d20Land{0%{transform:scale(1.08) translateY(-2px)}55%{transform:scale(.94) translateY(3px)}100%{transform:scale(1) translateY(0)}}@keyframes glowPulse{0%,100%{transform:scale(.92);opacity:.52}50%{transform:scale(1.08);opacity:.9}}@keyframes resultBurst{0%{opacity:.95;transform:scale(.4)}100%{opacity:0;transform:scale(7)}}@keyframes critText{0%{opacity:0;transform:translateY(6px) scale(.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.dice-overlay{position:fixed;inset:0;background:radial-gradient(circle at center,rgba(44,18,72,.38),rgba(5,5,10,.78));display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(3px)}.dice-overlay.hidden{display:none}.d20-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;perspective:900px}.d20-stage{position:relative;display:flex;align-items:center;justify-content:center}.d20-glow{position:absolute;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,.34),rgba(124,58,237,.08) 55%,transparent 72%);filter:blur(6px);opacity:.8;animation:glowPulse 1.4s ease-in-out infinite}.d20{position:relative;width:132px;height:132px;clip-path:polygon(50% 0%,95% 28%,82% 88%,18% 88%,5% 28%);background:linear-gradient(145deg,#3a1d5a,#8b5cf6 48%,#4c1d95 72%,#1c1230);display:flex;align-items:center;justify-content:center;font-size:46px;font-weight:900;color:white;box-shadow:0 22px 50px rgba(0,0,0,.52),0 0 36px rgba(124,58,237,.52);transform-style:preserve-3d;border:2px solid rgba(221,214,254,.9);text-shadow:0 2px 8px rgba(0,0,0,.65)}.d20:before,.d20:after{content:"";position:absolute;inset:14px;clip-path:polygon(50% 0%,95% 28%,82% 88%,18% 88%,5% 28%);border:1px solid rgba(255,255,255,.22)}.d20:after{inset:29px;border-color:rgba(255,255,255,.12)}.d20.rolling{animation:d20EpicRoll 1.8s cubic-bezier(.16,.84,.27,1)}.d20.resolved{animation:d20Land .42s ease-out}.d20.crit20{background:linear-gradient(145deg,#5b3b00,#f59e0b 48%,#fde68a 68%,#78350f);box-shadow:0 0 55px rgba(245,158,11,.85),0 26px 60px rgba(0,0,0,.5)}.d20.crit1{background:linear-gradient(145deg,#3f0d12,#991b1b 48%,#ef4444 68%,#2b0709);box-shadow:0 0 48px rgba(239,68,68,.72),0 26px 60px rgba(0,0,0,.5)}.d20-label{font-size:13px;color:#ede9fe;font-weight:800;letter-spacing:.02em;text-shadow:0 1px 6px rgba(0,0,0,.7)}.dice-result-burst{position:absolute;width:18px;height:18px;border-radius:50%;background:white;opacity:0;box-shadow:0 0 22px 8px rgba(255,255,255,.7)}.dice-result-burst.show{animation:resultBurst .5s ease-out}.dice-crit-text{font-size:15px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;opacity:0;transform:translateY(4px)}.dice-crit-text.show{animation:critText .6s ease-out forwards}.dice-multi-grid{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px;max-width:min(92vw,760px);min-height:150px}.dice-multi-grid.hidden{display:none}.multi-die{position:relative;width:96px;height:96px;clip-path:polygon(50% 0%,95% 28%,82% 88%,18% 88%,5% 28%);background:linear-gradient(145deg,#3a1d5a,#8b5cf6 48%,#4c1d95 72%,#1c1230);display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:32px;font-weight:900;color:#fff;border:2px solid rgba(221,214,254,.9);text-shadow:0 2px 8px rgba(0,0,0,.65);box-shadow:0 15px 36px rgba(0,0,0,.5),0 0 24px rgba(124,58,237,.42);transform-style:preserve-3d}.multi-die small{font-size:10px;opacity:.72;letter-spacing:.08em;margin-top:2px}.multi-die.rolling{animation:d20EpicRoll 1.8s cubic-bezier(.16,.84,.27,1)}.multi-die.resolved{animation:d20Land .42s ease-out}.multi-dice-more{width:100%;text-align:center;font-size:13px;color:#ede9fe;font-weight:800}@media(max-width:560px){.dice-multi-grid{gap:8px}.multi-die{width:74px;height:74px;font-size:25px}}@keyframes d20EpicRoll{0%{transform:translateY(-20px) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(.72)}18%{transform:translateY(-34px) rotateX(160deg) rotateY(120deg) rotateZ(90deg) scale(1.03)}42%{transform:translateY(-16px) rotateX(330deg) rotateY(270deg) rotateZ(190deg) scale(.98)}68%{transform:translateY(-6px) rotateX(500deg) rotateY(430deg) rotateZ(315deg) scale(1.05)}88%{transform:translateY(5px) rotateX(650deg) rotateY(590deg) rotateZ(345deg) scale(.97)}100%{transform:translateY(0) rotateX(720deg) rotateY(720deg) rotateZ(360deg) scale(1)}}@keyframes d20Land{0%{transform:scale(1.08) translateY(-2px)}55%{transform:scale(.94) translateY(3px)}100%{transform:scale(1) translateY(0)}}@keyframes glowPulse{0%,100%{transform:scale(.92);opacity:.52}50%{transform:scale(1.08);opacity:.9}}@keyframes resultBurst{0%{opacity:.95;transform:scale(.4)}100%{opacity:0;transform:scale(7)}}@keyframes critText{0%{opacity:0;transform:translateY(6px) scale(.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
 
 .technique-box{margin-top:14px;padding:12px;border:1px solid var(--border);border-radius:12px;background:#101018}.technique-box h4{margin:0 0 8px}.technique-use-list{display:grid;gap:8px;margin-top:8px}.technique-use-item{border:1px solid #2d2d3a;border-radius:9px;padding:9px;background:#0e0e15}.technique-use-row{display:grid;grid-template-columns:1.15fr .9fr .65fr .9fr;gap:8px;align-items:end}.technique-use-row input,.technique-use-row select,.technique-use-row textarea{width:100%}.technique-use-wide{grid-column:span 2}.technique-use-remove{display:flex;justify-content:flex-end;align-items:end}.technique-use-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.combat-technique-box{margin-top:8px;padding-top:8px;border-top:1px solid #2b2b39}.combat-technique-title{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}.combat-technique-desc{font-size:11px;color:var(--muted);margin-bottom:7px}.combat-technique-actions{display:flex;gap:6px;flex-wrap:wrap}.combat-technique-btn{font-size:11px;padding:6px 9px}.technique-count{font-size:11px;color:var(--muted)}@media(max-width:720px){.technique-use-row{grid-template-columns:1fr}.combat-technique-actions{display:grid;grid-template-columns:1fr 1fr}}
 
@@ -519,7 +519,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
     </div>
   </div>
 </div>
-<div class="toast" id="toast">Ficha copiada.</div><div id="dice-overlay" class="dice-overlay hidden"><div class="d20-wrap"><div class="d20-stage"><div class="d20-glow"></div><div id="dice-result-burst" class="dice-result-burst"></div><div id="d20-visual" class="d20">20</div></div><div id="d20-label" class="d20-label">Tirando d20...</div><div id="dice-crit-text" class="dice-crit-text"></div></div></div>
+<div class="toast" id="toast">Ficha copiada.</div><div id="dice-overlay" class="dice-overlay hidden"><div class="d20-wrap"><div class="d20-stage" id="single-die-stage"><div class="d20-glow"></div><div id="dice-result-burst" class="dice-result-burst"></div><div id="d20-visual" class="d20">20</div></div><div id="dice-multi-stage" class="dice-multi-grid hidden"></div><div id="d20-label" class="d20-label">Tirando d20...</div><div id="dice-crit-text" class="dice-crit-text"></div></div></div>
 <script>
 // Evita que el navegador/gestor de contraseñas trate los campos de JJK como campos de cuenta.
 // Los únicos campos que deben aceptar autofill de credenciales son los de inicio de sesión.
@@ -2283,6 +2283,23 @@ async function rollTechniqueAction(campaignId,charId,index){
     die_result:die,stat_bonus:bonus,total
   });
   if(error){toast(error.message);return}
+
+  const damageDice=parseDiceExpressionFlexible(action.damage||'');
+  if(action.damage&&damageDice){
+    const damageResults=Array.from({length:damageDice.count},()=>Math.floor(Math.random()*damageDice.sides)+1);
+    const damageTotal=damageResults.reduce((a,b)=>a+b,0)+damageDice.modifier;
+    await animateDiceGroup(damageResults,damageDice.sides,ch.sorcererName+' · '+action.name+' · Daño '+damageDice.expression,damageDice.modifier);
+    const {error:damageError}=await sb.from('combat_rolls').insert({
+      campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
+      stat_name:'Daño · '+action.name,
+      die_result:damageResults[0],stat_bonus:damageDice.modifier,total:damageTotal,
+      roll_expression:damageDice.expression,roll_results:damageResults
+    });
+    if(damageError){toast('La técnica salió, pero no pude registrar el daño: '+damageError.message);return}
+  }else if(action.damage){
+    toast('El daño de '+action.name+' no tiene un formato válido. Usá por ejemplo 3D10.');
+  }
+
   if(cost>0){
     updateCombatBarsFromState(charId);
   }
@@ -2324,7 +2341,9 @@ function combatRollMessageHtml(r){
     const time=new Date(r.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     const results=Array.isArray(r.roll_results)?r.roll_results:[];
     const shown=results.length<=12?results.join(', '):results.slice(0,12).join(', ')+'…';
-    return '<div class="roll-msg free-dice-roll"><div class="roll-msg-content"><div class="roll-msg-top"><span><b>Tirada libre</b> · '+esc(r.roll_expression)+'</span><span>'+esc(time)+'</span></div><div class="free-dice-main"><span class="free-dice-results">['+esc(shown)+']</span><span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div></div></div>';
+    const ch=r.character_id?allCharacters.find(c=>c.id===r.character_id):null;
+    const title=r.stat_name&&r.stat_name!=='Dados'?((ch?.sorcererName?ch.sorcererName+' · ':'')+r.stat_name):'Tirada libre';
+    return '<div class="roll-msg free-dice-roll"><div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(title)+'</b> · '+esc(r.roll_expression)+'</span><span>'+esc(time)+'</span></div><div class="free-dice-main"><span class="free-dice-results">['+esc(shown)+']</span>'+(Number(r.stat_bonus)?'<span class="roll-op">'+(Number(r.stat_bonus)>0?'+':'')+r.stat_bonus+'</span>':'')+'<span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div></div></div>';
   }
   const ch=allCharacters.find(c=>c.id===r.character_id);
   const name=ch?.sorcererName||'Personaje';
@@ -2336,21 +2355,78 @@ function combatRollMessageHtml(r){
   }
   return '<div class="roll-msg"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · '+esc(r.stat_name)+'</span><span>'+esc(time)+'</span></div><div class="roll-msg-main"><span class="roll-d20">'+r.die_result+'</span><span class="roll-op">+'+r.stat_bonus+'</span><span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div></div></div></div>';
 }
+function parseDiceExpressionFlexible(expression){
+  const raw=String(expression||'').trim().toUpperCase().replace(/\s+/g,'');
+  let m=raw.match(/^(\d{1,3})D(\d{1,4})([+-]\d+)?$/);
+  if(!m){
+    const natural=String(expression||'').trim().toLowerCase().match(/^(\d{1,3})\s*(?:de|d)\s*(\d{1,4})(?:\s*([+-])\s*(\d+))?$/i);
+    if(natural)m=[natural[0],natural[1],natural[2],natural[3]?(natural[3]+natural[4]):''];
+  }
+  if(!m)return null;
+  const count=Math.max(1,Number(m[1]||1)),sides=Number(m[2]),modifier=Number(m[3]||0);
+  if(count>100||sides<2||sides>1000)return null;
+  return {count,sides,modifier,expression:count+'D'+sides+(modifier?(modifier>0?'+':'')+modifier:'')};
+}
+function animateDiceGroup(results,sides,labelText,modifier=0){
+  return new Promise(resolve=>{
+    const overlay=document.getElementById('dice-overlay');
+    const single=document.getElementById('single-die-stage');
+    const multi=document.getElementById('dice-multi-stage');
+    const label=document.getElementById('d20-label');
+    const crit=document.getElementById('dice-crit-text');
+    if(!overlay||!multi){resolve();return}
+    const shown=results.slice(0,12);
+    single?.classList.add('hidden');
+    multi.classList.remove('hidden');
+    multi.innerHTML=shown.map((_,i)=>'<div class="multi-die rolling" data-i="'+i+'"><span>?</span><small>D'+sides+'</small></div>').join('')+
+      (results.length>12?'<div class="multi-dice-more">+'+(results.length-12)+' dados más</div>':'');
+    overlay.classList.remove('hidden');
+    if(label)label.textContent=labelText;
+    if(crit){crit.classList.remove('show');crit.textContent='';}
+    let ticks=0;
+    const timer=setInterval(()=>{
+      multi.querySelectorAll('.multi-die').forEach(el=>{
+        const span=el.querySelector('span');
+        if(span)span.textContent=String(Math.floor(Math.random()*sides)+1);
+      });
+      ticks++;
+      if(ticks>=18){
+        clearInterval(timer);
+        multi.querySelectorAll('.multi-die').forEach((el,i)=>{
+          el.classList.remove('rolling');
+          el.classList.add('resolved');
+          const span=el.querySelector('span');
+          if(span)span.textContent=String(shown[i]);
+        });
+        const subtotal=results.reduce((a,b)=>a+b,0),total=subtotal+modifier;
+        if(crit){
+          crit.textContent='TOTAL '+total+(modifier?' ('+subtotal+(modifier>0?'+':'')+modifier+')':'');
+          crit.classList.add('show');
+        }
+        setTimeout(()=>{
+          overlay.classList.add('hidden');
+          multi.classList.add('hidden');
+          multi.innerHTML='';
+          single?.classList.remove('hidden');
+          if(crit)crit.classList.remove('show');
+          resolve();
+        },1050);
+      }
+    },95);
+  });
+}
+
 async function rollFreeDice(campaignId,expression){
   if(!currentUser)return;
-  const raw=String(expression||'').trim().toUpperCase().replace(/\s+/g,'');
-  const m=raw.match(/^(\d{0,3})D(\d{1,4})$/);
-  if(!m){toast('Usá un formato como 2D8, 8D10 o 5D20.');return}
-  const count=Math.max(1,Number(m[1]||1)),sides=Number(m[2]);
-  if(count>100){toast('Máximo 100 dados por tirada.');return}
-  if(sides<2||sides>1000){toast('El dado debe tener entre 2 y 1000 caras.');return}
+  const parsed=parseDiceExpressionFlexible(expression);
+  if(!parsed){toast('Usá un formato como 2D8, 3D10 o 5D20.');return}
+  const {count,sides,modifier,expression:expr}=parsed;
   const results=Array.from({length:count},()=>Math.floor(Math.random()*sides)+1);
-  const total=results.reduce((a,b)=>a+b,0);
-  const expr=count+'D'+sides;
-  await animateFreeDiceRoll(total,expr);
+  const total=results.reduce((a,b)=>a+b,0)+modifier;
+  await animateDiceGroup(results,sides,expr+' · Tirada libre',modifier);
   const {error}=await sb.from('combat_rolls').insert({
     campaign_id:campaignId,character_id:null,rolled_by:currentUser.id,
-    stat_name:'Dados',die_result:results[0],stat_bonus:0,total,
+    stat_name:'Dados',die_result:results[0],stat_bonus:modifier,total,
     roll_expression:expr,roll_results:results
   });
   if(error){toast(error.message);return}

@@ -1574,7 +1574,7 @@ function renderAuth(){
     subtitle.textContent='Tu cuenta está conectada y sincronizando datos.';
     details.classList.remove('hidden');
     details.innerHTML='<div class="account-details-row"><span class="account-label">Correo</span><b>'+esc(currentUser.email||'—')+'</b></div>'+
-      '<div class="account-details-row"><span class="account-label">Rol</span><b>'+(isAdmin?'ADMIN / GM':'Jugador')+'</b></div>'+
+      '<div class="account-details-row"><span class="account-label">Rol</span><b>'+(currentProfile?.role==='admin'?'ADMIN':currentProfile?.role==='gm'?'GM':'Jugador')+'</b></div>'+
       '<div class="account-details-row"><span class="account-label">Estado</span><span class="sync-note">Sincronización activa</span></div>'+'<div class="account-details-row"><span class="account-label">Usuarios</span><b id="registered-users-count">Cargando...</b></div>';
     loadRegisteredUsersCount();
     const hasLocal=(localStorage.getItem('jjk-saved-characters')||localStorage.getItem('jjk-campaigns'))&&!localStorage.getItem('jjk-migrated-to-supabase');
@@ -1628,7 +1628,7 @@ async function initAuth(){
     if(currentUser){
       try{
         currentProfile=await getProfile();
-        isAdmin=currentProfile?.role==='admin';
+        isAdmin=['admin','gm'].includes(currentProfile?.role);
         await loadSharedData();
       }catch(e){
         console.error(e);
@@ -1672,7 +1672,7 @@ async function initAuth(){
     if(currentUser){
       try{
         currentProfile=await getProfile();
-        isAdmin=currentProfile?.role==='admin';
+        isAdmin=['admin','gm'].includes(currentProfile?.role);
         await loadSharedData();
       }catch(e){console.error(e)}
     }else{
@@ -2746,7 +2746,7 @@ async function loadCombatMessages(campaignId){
 }
 function combatChatSenderLabel(m){
   const p=m._sender;
-  if(p?.role==='admin')return 'GM';
+  if(['admin','gm'].includes(p?.role))return 'GM';
   if(p?.display_name)return p.display_name;
   if(p?.email)return p.email.split('@')[0];
   if(m.sender_id===currentUser?.id)return isAdmin?'GM':'Yo';

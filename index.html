@@ -3600,15 +3600,26 @@ async function ensureCombatMapTokens(map){
     await loadCombatMapTokens(map.id);
   }
 }
+function viewerHasHiddenCharacterInZone(){
+  if(!currentUser||!selectedCombatZoneId)return false;
+  const zoneIds=new Set(combatZoneCharacterIds(selectedCombatCampaignId,selectedCombatZoneId));
+  return allCharacters.some(ch=>{
+    if(ch.owner_id!==currentUser.id||!zoneIds.has(ch.id))return false;
+    const state=combatStates.find(s=>s.character_id===ch.id);
+    return state?.visible===false;
+  });
+}
 function visibleCombatMapTokens(map){
   const allowed=new Set(mapCharacterIds(map));
+  const hiddenViewer=viewerHasHiddenCharacterInZone();
   return combatMapTokens.filter(t=>{
     if(!allowed.has(t.character_id))return false;
     if(isAdmin)return true;
     const ch=allCharacters.find(c=>c.id===t.character_id);
     if(ch?.owner_id===currentUser?.id)return true;
     const state=combatStates.find(s=>s.character_id===t.character_id);
-    return state?.visible!==false;
+    if(state?.visible===false)return hiddenViewer;
+    return true;
   });
 }
 function combatTokenHtml(token){
@@ -4099,7 +4110,8 @@ function subscribeCombatMap(map){
       const allowed=new Set(mapCharacterIds(map));
       const ch=allCharacters.find(c=>c.id===row.character_id);
       const state=combatStates.find(s=>s.character_id===row.character_id);
-      const canSeeToken=allowed.has(row.character_id)&&(isAdmin||ch?.owner_id===currentUser?.id||state?.visible!==false);
+      const hiddenViewer=viewerHasHiddenCharacterInZone();
+      const canSeeToken=allowed.has(row.character_id)&&(isAdmin||ch?.owner_id===currentUser?.id||state?.visible!==false||hiddenViewer);
       if(!canSeeToken){
         if(el)el.remove();
         return;

@@ -296,6 +296,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .technique-detail .pd-cat{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#a1a1aa}
 .technique-detail .pd-name{font-size:18px;font-weight:800;margin-top:3px}
 .technique-detail .pd-desc{font-size:11px;color:#b8b8c2;margin-top:5px;line-height:1.45}
+.account-details-row button{margin-left:auto}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 </head>
@@ -1555,7 +1556,31 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
 let currentUser=null,currentProfile=null,isAdmin=false,allCharacters=[];
+let staffViewAsPlayer=false;
 let sharedZones=[],sharedMemberships=[];
+
+function hasStaffRole(){
+  return ['admin','gm'].includes(currentProfile?.role);
+}
+function applyEffectiveRole(){
+  isAdmin=hasStaffRole()&&!staffViewAsPlayer;
+}
+async function toggleStaffPlayerView(){
+  if(!hasStaffRole())return;
+  staffViewAsPlayer=!staffViewAsPlayer;
+  try{
+    if(currentUser?.id)localStorage.setItem('jjk-staff-player-view-'+currentUser.id,staffViewAsPlayer?'1':'0');
+  }catch(e){}
+  applyEffectiveRole();
+  selectedMapDrawingId=null;
+  mapDrawTool='none';
+  await loadSharedData();
+  renderAuth();
+  if(selectedCombatCampaignId&&typeof renderCombat==='function'){
+    await renderCombat();
+  }
+  toast(staffViewAsPlayer?'Vista de jugador activada.':'Modo GM restaurado.');
+}
 
 function imageUrl(path,version){
   if(!path)return null;
@@ -1657,7 +1682,9 @@ function renderAuth(){
     subtitle.textContent='Tu cuenta está conectada y sincronizando datos.';
     details.classList.remove('hidden');
     details.innerHTML='<div class="account-details-row"><span class="account-label">Correo</span><b>'+esc(currentUser.email||'—')+'</b></div>'+
-      '<div class="account-details-row"><span class="account-label">Rol</span><b>'+(currentProfile?.role==='admin'?'ADMIN':currentProfile?.role==='gm'?'GM':'Jugador')+'</b></div>'+
+      '<div class="account-details-row"><span class="account-label">Rol real</span><b>'+(currentProfile?.role==='admin'?'ADMIN':currentProfile?.role==='gm'?'GM':'Jugador')+'</b></div>'+
+      (hasStaffRole()?'<div class="account-details-row"><span class="account-label">Modo actual</span><b>'+(staffViewAsPlayer?'JUGADOR':'GM')+'</b></div>'+
+        '<div class="account-details-row"><span class="account-label">¿Estás en estado GM?</span><button type="button" class="secondary" onclick="toggleStaffPlayerView()">'+(staffViewAsPlayer?'Volver a GM':'Entrar como jugador')+'</button></div>':'')+
       '<div class="account-details-row"><span class="account-label">Estado</span><span class="sync-note">Sincronización activa</span></div>'+'<div class="account-details-row"><span class="account-label">Usuarios</span><b id="registered-users-count">Cargando...</b></div>';
     loadRegisteredUsersCount();
     const hasLocal=(localStorage.getItem('jjk-saved-characters')||localStorage.getItem('jjk-campaigns'))&&!localStorage.getItem('jjk-migrated-to-supabase');
@@ -1706,12 +1733,13 @@ async function initAuth(){
     const timeoutPromise=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),3500));
     const {data:{session}}=await Promise.race([sessionPromise,timeoutPromise]);
     currentUser=session?.user||null;
-    currentProfile=null;isAdmin=false;
+    currentProfile=null;isAdmin=false;staffViewAsPlayer=false;
 
     if(currentUser){
       try{
         currentProfile=await getProfile();
-        isAdmin=['admin','gm'].includes(currentProfile?.role);
+        try{staffViewAsPlayer=hasStaffRole()&&localStorage.getItem('jjk-staff-player-view-'+currentUser.id)==='1'}catch(e){staffViewAsPlayer=false}
+        applyEffectiveRole();
         await loadSharedData();
       }catch(e){
         console.error(e);
@@ -1765,11 +1793,12 @@ async function initAuth(){
       return;
     }
 
-    currentProfile=null;isAdmin=false;
+    currentProfile=null;isAdmin=false;staffViewAsPlayer=false;
     if(currentUser){
       try{
         currentProfile=await getProfile();
-        isAdmin=['admin','gm'].includes(currentProfile?.role);
+        try{staffViewAsPlayer=hasStaffRole()&&localStorage.getItem('jjk-staff-player-view-'+currentUser.id)==='1'}catch(e){staffViewAsPlayer=false}
+        applyEffectiveRole();
         await loadSharedData();
       }catch(e){console.error(e)}
     }else{

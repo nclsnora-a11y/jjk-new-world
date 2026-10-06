@@ -580,7 +580,7 @@ const configs={
 stats:{values:['1','2','3','4','5'],weights:[20,20,20,20,20],canvas:'canvas-stats',spin:'spin-stats',clear:'clear-stats',result:'result-stats',history:'history-stats'},
 type:{values:['Potenciación','Invocación','Creación','Control','Soporte','Marca','Técnica Existente','Restricción Celestial','Extraordinaria'],weights:[90/7,90/7,90/7,90/7,90/7,90/7,90/7,7,3],canvas:'canvas-type',spin:'spin-type',clear:'clear-type',result:'result-type',history:'history-type'},
 technique:{values:["Ilimitado","Santuario","Copia","Diez Sombras","Transfiguración Ociosa","Manipulación de Espíritus Malditos","Furia Estelar","Extinción de Técnicas","Construcción","Apuesta Mortal Ociosa","Sentencia Mortal","Manipulación del Cielo","Formación de Hielo","Manipulación de Sangre","Hechicería de Proyección","Habla Maldita","Cambio de Posición","Llamas del Desastre","Mareas del Desastre","Manipulación de Cuervos","Manipulación de Marionetas","Recreación Contractual","Sistema Antigravedad","Ámbar Bestial Mítico","Bastón de Guerra G","Descarga de Energía Maldita","Encuentro Amoroso","Invocación de Bestias Auspiciosas","Área Prohibida Individual","Canción de Oración","Técnica de Proporción","Técnica de Muñeca de Paja","Plantas del Desastre","Técnica de Putrefacción","Técnica de Séance / Sesión Espiritual","Inversión","Técnica de Clonación","Captura del Corazón","Manipulación de Herramientas","Milagros","Valor Ardiente"],weights:[0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545],canvas:'canvas-technique',spin:'spin-technique',clear:'clear-technique',result:'result-technique',history:'history-technique'},
-grade:{values:['Grado 4','Semigrado 4','Grado 3','Semigrado 3','Grado 2','Semigrado 2','Grado 1','Grado Especial'],weights:[32,22,16,11,8,5,4,2],canvas:'canvas-grade',spin:'spin-grade',clear:'clear-grade',result:'result-grade',history:'history-grade'},
+grade:{values:['Grado 4','Semigrado 3','Grado 3','Semigrado 2','Grado 2','Semigrado 1','Grado 1','Grado Especial'],weights:[32,22,16,11,8,5,4,2],canvas:'canvas-grade',spin:'spin-grade',clear:'clear-grade',result:'result-grade',history:'history-grade'},
 passives:{values:Array.from({length:140},(_,i)=>String(i+1)),weights:Array(140).fill(1),canvas:'canvas-passives',spin:'spin-passives',clear:'clear-passives',result:'result-passives',history:'history-passives'}
 };
 const states={stats:{rot:0,busy:false,h:[]},type:{rot:0,busy:false,h:[]},technique:{rot:0,busy:false,h:[]},grade:{rot:0,busy:false,h:[]},passives:{rot:0,busy:false,h:[]}};
@@ -600,11 +600,11 @@ function normalizeStatsObject(stats){
 
 const gradeDescriptions={
 "Grado 4":"Otorga +1 a 1 estadística a elección.",
-"Semigrado 4":"Otorga +1 a 2 estadísticas a elección.",
+"Semigrado 3":"Otorga +1 a 2 estadísticas a elección.",
 "Grado 3":"Otorga +2 a 1 estadística a elección.",
-"Semigrado 3":"Otorga +2 a 2 estadísticas a elección.",
+"Semigrado 2":"Otorga +2 a 2 estadísticas a elección.",
 "Grado 2":"Otorga +3 a 2 estadísticas a elección.",
-"Semigrado 2":"Otorga +3 a 3 estadísticas a elección.",
+"Semigrado 1":"Otorga +3 a 3 estadísticas a elección.",
 "Grado 1":"Otorga +4 a 3 estadísticas a elección.",
 "Grado Especial":"Otorga +5 a 4 estadísticas a elección."
 };
@@ -788,11 +788,11 @@ function infoTypesHtml(){
 function infoGradesHtml(){
   const grades=[
     ['Grado 4','+1 en 1 estadística a elección.','32%'],
-    ['Semigrado 4','+1 en 2 estadísticas a elección.','22%'],
+    ['Semigrado 3','+1 en 2 estadísticas a elección.','22%'],
     ['Grado 3','+2 en 1 estadística a elección.','16%'],
-    ['Semigrado 3','+2 en 2 estadísticas a elección.','11%'],
+    ['Semigrado 2','+2 en 2 estadísticas a elección.','11%'],
     ['Grado 2','+3 en 2 estadísticas a elección.','8%'],
-    ['Semigrado 2','+3 en 3 estadísticas a elección.','5%'],
+    ['Semigrado 1','+3 en 3 estadísticas a elección.','5%'],
     ['Grado 1','+4 en 3 estadísticas a elección.','4%'],
     ['Grado Especial','+5 en 4 estadísticas a elección.','2%']
   ];
@@ -1011,7 +1011,7 @@ function renderInformation(){
         '<p><b>IPT = Total de Estadísticas + Valor de Técnica + Bonificaciones especiales.</b></p>'+
         '<p>El tipo de técnica no suma poder por sí mismo. El grado representa el potencial de la técnica dentro del cálculo.</p>'+
         '<div class="info-table">'+
-          [['Grado 4','+20'],['Semigrado 4','+30'],['Grado 3','+45'],['Semigrado 3','+60'],['Grado 2','+80'],['Semigrado 2','+105'],['Grado 1','+135'],['Grado Especial','+180']].map(x=>'<div><b>'+x[0]+'</b><span>Valor provisional para IPT</span><strong>'+x[1]+'</strong></div>').join('')+
+          [['Grado 4','+20'],['Semigrado 3','+30'],['Grado 3','+45'],['Semigrado 2','+60'],['Grado 2','+80'],['Semigrado 1','+105'],['Grado 1','+135'],['Grado Especial','+180']].map(x=>'<div><b>'+x[0]+'</b><span>Valor provisional para IPT</span><strong>'+x[1]+'</strong></div>').join('')+
         '</div>'+
         '<p>El IPT es una referencia aproximada de poder: no determina automáticamente quién gana un combate.</p>'+
         '<div class="info-pending"><b>En desarrollo:</b> los valores por grado, bonificaciones especiales, combates grupales y vínculo con progresión/recompensas siguen sujetos a balance. El documento de IPT también contempla Output de EM, pero esa estadística todavía no está implementada en la página.</div>'+

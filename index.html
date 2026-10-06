@@ -1543,16 +1543,40 @@ async function loadSharedData(){
     allCharacters=[]; savedCharacters=[]; campaigns=[]; sharedZones=[]; sharedMemberships=[];
     renderCharacters();renderCampaigns();return;
   }
-  const [cr,ca,zo,me]=await Promise.all([
-    sb.from('characters').select('*').order('created_at',{ascending:false}),
+
+  // Primero cargamos la estructura compartida. Para jugadores comunes evitamos
+  // descargar personajes que no son propios ni participan en ninguna campaña.
+  const [ca,zo,me]=await Promise.all([
     sb.from('campaigns').select('*').order('created_at',{ascending:false}),
-    sb.from('zones').select('*').order('created_at',{ascending:true}),
-    sb.from('campaign_characters').select('*')
+    sb.from('zones').select('id,campaign_id,name,created_at').order('created_at',{ascending:true}),
+    sb.from('campaign_characters').select('id,campaign_id,zone_id,character_id,added_by,created_at')
   ]);
-  for(const r of [cr,ca,zo,me])if(r.error)throw r.error;
-  allCharacters=(cr.data||[]).map(normalizeCharacter);
+  for(const r of [ca,zo,me])if(r.error)throw r.error;
+
+  sharedZones=zo.data||[];
+  sharedMemberships=me.data||[];
+
+  let characterRows=[];
+  if(isAdmin){
+    const cr=await sb.from('characters').select('*').order('created_at',{ascending:false});
+    if(cr.error)throw cr.error;
+    characterRows=cr.data||[];
+  }else{
+    const campaignCharacterIds=[...new Set(sharedMemberships.map(m=>m.character_id).filter(Boolean))];
+    const ownPromise=sb.from('characters').select('*').eq('owner_id',currentUser.id).order('created_at',{ascending:false});
+    const campaignPromise=campaignCharacterIds.length
+      ?sb.from('characters').select('*').in('id',campaignCharacterIds).order('created_at',{ascending:false})
+      :Promise.resolve({data:[],error:null});
+    const [ownCr,campaignCr]=await Promise.all([ownPromise,campaignPromise]);
+    if(ownCr.error)throw ownCr.error;
+    if(campaignCr.error)throw campaignCr.error;
+    const byId=new Map();
+    [...(ownCr.data||[]),...(campaignCr.data||[])].forEach(row=>byId.set(row.id,row));
+    characterRows=[...byId.values()];
+  }
+
+  allCharacters=characterRows.map(normalizeCharacter);
   savedCharacters=allCharacters.filter(c=>c.owner_id===currentUser.id);
-  sharedZones=zo.data||[]; sharedMemberships=me.data||[];
   campaigns=(ca.data||[]).map(normalizeCampaign);
   campaigns.forEach(c=>{
     c.zones=sharedZones.filter(z=>z.campaign_id===c.id).map(z=>({

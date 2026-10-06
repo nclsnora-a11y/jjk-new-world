@@ -222,14 +222,21 @@ let currentPracticeItem=null;
 let practiceRevealed=false;
 let practiceCount=0;
 
-function defaultState(){return {units:{privado:{},penal:{}},tasks:{},reviews:[],rolloverAssignments:{},rolloverVersion:3};}
+function defaultState(){return {units:{privado:{},penal:{}},tasks:{},reviews:[],rolloverAssignments:{},rolloverVersion:4};}
 function loadState(){
   try{
     const raw=localStorage.getItem(STORE)||localStorage.getItem('nico-study-hub-v1');
-    const loaded=raw?Object.assign(defaultState(),JSON.parse(raw)):defaultState();
-    if(loaded.rolloverVersion!==3){
+    if(!raw)return defaultState();
+    const parsed=JSON.parse(raw);
+    const loaded=Object.assign(defaultState(),parsed);
+
+    // Migración real: si el estado fue guardado con una versión anterior,
+    // se eliminan SOLO las asignaciones dinámicas antiguas. Se conservan
+    // progreso de unidades, checks y repasos.
+    if(parsed.rolloverVersion!==4){
       loaded.rolloverAssignments={};
-      loaded.rolloverVersion=3;
+      loaded.rolloverVersion=4;
+      localStorage.setItem(STORE,JSON.stringify(loaded));
     }
     return loaded;
   }catch(e){return defaultState();}
@@ -264,66 +271,68 @@ function ensureTodayAssignment(){
   if(!isStudySlotDate(today))return null;
 
   state.rolloverAssignments=state.rolloverAssignments||{};
-  const existingId=state.rolloverAssignments[today];
-  if(existingId){
-    const existing=getDay(existingId);
-    if(existing)return existing;
-  }
 
+  // La jornada de HOY siempre debe ser el plan pendiente más antiguo.
+  // No confiamos ciegamente en una asignación guardada de versiones previas.
   const pending=studyPlanDays()
     .filter(d=>d.date<=today&&!planDayCompleted(d))
     .sort((a,b)=>a.date.localeCompare(b.date));
-  const chosen=pending[0]||fixed||null;
+
+  const chosen=pending.length?pending[0]:(fixed&&!planDayCompleted(fixed)?fixed:null);
 
   if(chosen){
     state.rolloverAssignments[today]=chosen.date;
-    state.rolloverVersion=3;
-    localStorage.setItem(STORE,JSON.stringify(state));
+  }else{
+    delete state.rolloverAssignments[today];
   }
+  state.rolloverVersion=4;
+  localStorage.setItem(STORE,JSON.stringify(state));
   return chosen;
 }
 function projectedPlanMap(){
   const today=localISO(new Date());
   const map={};
+
   const pending=studyPlanDays()
     .filter(d=>!planDayCompleted(d))
     .slice()
     .sort((a,b)=>a.date.localeCompare(b.date));
+
   const slots=studyPlanDays()
     .filter(d=>d.date>=today)
     .slice()
     .sort((a,b)=>a.date.localeCompare(b.date));
 
+  // Cola FIFO: el plan pendiente más antiguo ocupa el próximo día acordado.
+  // Luego todo lo demás se corre un día de estudio.
   slots.forEach(slot=>{
     const idx=pending.findIndex(p=>p.date<=slot.date);
     if(idx>=0){
-      const chosen=pending[idx];
-      map[slot.date]=chosen;
+      map[slot.date]=pending[idx];
       pending.splice(idx,1);
     }
   });
-
-  // Today must stay on the assignment selected when the page opened,
-  // even if the user completes it during the same day.
-  const todayAssigned=state.rolloverAssignments&&state.rolloverAssignments[today];
-  if(todayAssigned){
-    const assigned=getDay(todayAssigned);
-    if(assigned)map[today]=assigned;
-  }
   return map;
 }
 function effectivePlanForDate(date){
   const fixed=getDay(date);
   if(isExamDay(fixed))return fixed;
+
   const today=localISO(new Date());
-  if(date===today)return ensureTodayAssignment();
+
   if(date<today){
     if(fixed&&planDayCompleted(fixed))return fixed;
     return null;
   }
-  return projectedPlanMap()[date]||fixed;
-}
 
+  const projected=projectedPlanMap();
+  if(date===today){
+    const assigned=ensureTodayAssignment();
+    return assigned||projected[date]||null;
+  }
+
+  return projected[date]||null;
+}
 function taskUnit(t){
   const m=(t.title||'').match(/U(\d+)/i);
   if(!m)return null;

@@ -492,6 +492,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
         <button class="secondary" id="auth-register">Crear cuenta</button>
       </div>
       <div class="account-help">Si ya te registraste, usá “Iniciar sesión”. Si es tu primera vez, usá “Crear cuenta”.</div>
+      <div id="auth-register-cooldown" class="account-help" style="margin-top:6px;min-height:18px"></div>
     </div>
     <div id="account-user-box" class="hidden" style="margin-top:16px">
       <div class="campaign-actions">
@@ -1722,13 +1723,73 @@ document.getElementById('auth-login').onclick=async()=>{
   const {error}=await sb.auth.signInWithPassword({email,password});
   if(error)toast(error.message);else toast('Sesión iniciada.');
 };
+const REGISTER_COOLDOWN_MS=20000;
+const REGISTER_PROCESS_LABEL_MS=5000;
+const REGISTER_COOLDOWN_KEY='jjk-register-cooldown-until';
+let registerCooldownTimer=null;
+
+function updateRegisterCooldown(){
+  const btn=document.getElementById('auth-register');
+  const note=document.getElementById('auth-register-cooldown');
+  if(!btn||!note)return;
+  const until=Number(localStorage.getItem(REGISTER_COOLDOWN_KEY)||0);
+  const remaining=Math.max(0,until-Date.now());
+  if(remaining>0){
+    const seconds=Math.ceil(remaining/1000);
+    btn.disabled=true;
+    if(btn.dataset.processing!=='1')btn.textContent='Esperá '+seconds+' s';
+    note.textContent='Para volver a intentar crear una cuenta, esperá '+seconds+' segundos.';
+    clearTimeout(registerCooldownTimer);
+    registerCooldownTimer=setTimeout(updateRegisterCooldown,250);
+  }else{
+    localStorage.removeItem(REGISTER_COOLDOWN_KEY);
+    btn.disabled=false;
+    btn.dataset.processing='0';
+    btn.textContent='Crear cuenta';
+    note.textContent='';
+    clearTimeout(registerCooldownTimer);
+    registerCooldownTimer=null;
+  }
+}
+
+function startRegisterCooldown(){
+  localStorage.setItem(REGISTER_COOLDOWN_KEY,String(Date.now()+REGISTER_COOLDOWN_MS));
+  updateRegisterCooldown();
+}
+
+updateRegisterCooldown();
+
 document.getElementById('auth-register').onclick=async()=>{
+  const btn=document.getElementById('auth-register');
+  const until=Number(localStorage.getItem(REGISTER_COOLDOWN_KEY)||0);
+  if(until>Date.now()){updateRegisterCooldown();return}
+
   const email=document.getElementById('auth-email').value.trim(),password=document.getElementById('auth-password').value;
   if(!email||password.length<6){toast('Usá un email válido y contraseña de al menos 6 caracteres.');return}
-  const {data,error}=await sb.auth.signUp({email,password});
-  if(error){toast(error.message);return}
-  if(data.session)toast('Cuenta creada y sesión iniciada.');
-  else toast('Cuenta creada. Revisá tu email para confirmarla.');
+
+  startRegisterCooldown();
+  btn.dataset.processing='1';
+  btn.disabled=true;
+  btn.textContent='Creando cuenta...';
+
+  const restoreCountdownLabel=setTimeout(()=>{
+    btn.dataset.processing='0';
+    updateRegisterCooldown();
+  },REGISTER_PROCESS_LABEL_MS);
+
+  try{
+    const {data,error}=await sb.auth.signUp({email,password});
+    if(error){
+      toast(error.message);
+      return;
+    }
+    if(data.session)toast('Cuenta creada y sesión iniciada.');
+    else toast('Cuenta creada. Revisá tu email para confirmarla.');
+  }finally{
+    clearTimeout(restoreCountdownLabel);
+    btn.dataset.processing='0';
+    updateRegisterCooldown();
+  }
 };
 document.getElementById('auth-logout').onclick=async()=>{await sb.auth.signOut();toast('Sesión cerrada.');};
 

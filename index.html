@@ -3440,6 +3440,7 @@ function renderMapDrawings(){
   const svg=document.getElementById('map-drawings-svg');if(!svg)return;
   svg.innerHTML=combatMapDrawings.map(mapDrawingElementHtml).join('');
   svg.classList.toggle('select-mode',isAdmin&&mapDrawTool==='select');
+  bindMapDrawingDragInteractions();
 }
 function mapDrawingToolbarHtml(){
   if(!isAdmin)return '';
@@ -3469,6 +3470,80 @@ function selectMapDrawing(id){
   if(!isAdmin||mapDrawTool!=='select')return;
   selectedMapDrawingId=id;
   renderMapDrawings();
+}
+function drawingBounds(d){
+  if(d.kind==='freehand'||d.kind==='line'){
+    const pts=Array.isArray(d.points)?d.points:[];
+    if(!pts.length)return {minX:0,maxX:0,minY:0,maxY:0};
+    return {
+      minX:Math.min(...pts.map(p=>Number(p.x))),maxX:Math.max(...pts.map(p=>Number(p.x))),
+      minY:Math.min(...pts.map(p=>Number(p.y))),maxY:Math.max(...pts.map(p=>Number(p.y)))
+    };
+  }
+  const x1=Number(d.x1||0),x2=Number(d.x2||0),y1=Number(d.y1||0),y2=Number(d.y2||0);
+  return {minX:Math.min(x1,x2),maxX:Math.max(x1,x2),minY:Math.min(y1,y2),maxY:Math.max(y1,y2)};
+}
+function clampDrawingDelta(d,dx,dy){
+  const b=drawingBounds(d);
+  return {
+    dx:Math.max(-b.minX,Math.min(100-b.maxX,dx)),
+    dy:Math.max(-b.minY,Math.min(100-b.maxY,dy))
+  };
+}
+function movedDrawingPayload(d,dx,dy){
+  const clamped=clampDrawingDelta(d,Number(dx)||0,Number(dy)||0);
+  dx=clamped.dx;dy=clamped.dy;
+  if(d.kind==='freehand'||d.kind==='line'){
+    const pts=Array.isArray(d.points)?d.points:[];
+    return {points:pts.map(p=>({x:Number(p.x)+dx,y:Number(p.y)+dy}))};
+  }
+  return {
+    x1:Number(d.x1||0)+dx,y1:Number(d.y1||0)+dy,
+    x2:Number(d.x2||0)+dx,y2:Number(d.y2||0)+dy
+  };
+}
+function bindMapDrawingDragInteractions(){
+  if(!isAdmin||mapDrawTool!=='select')return;
+  const canvas=document.getElementById('tactical-map'),svg=document.getElementById('map-drawings-svg');
+  if(!canvas||!svg)return;
+  svg.querySelectorAll('.map-drawing-shape').forEach(el=>{
+    el.addEventListener('pointerdown',ev=>{
+      ev.preventDefault();ev.stopPropagation();
+      const id=el.dataset.drawingId;
+      const d=combatMapDrawings.find(x=>x.id===id);if(!d)return;
+      selectedMapDrawingId=id;
+      svg.querySelectorAll('.map-drawing-shape').forEach(s=>s.classList.toggle('selected',s===el));
+      const start=pctPointFromEvent(canvas,ev);
+      let dx=0,dy=0,finished=false;
+      try{el.setPointerCapture(ev.pointerId)}catch(e){}
+      const move=e=>{
+        if(finished)return;
+        const p=pctPointFromEvent(canvas,e);
+        const clamped=clampDrawingDelta(d,p.x-start.x,p.y-start.y);
+        dx=clamped.dx;dy=clamped.dy;
+        el.setAttribute('transform','translate('+dx+' '+dy+')');
+      };
+      const finish=async e=>{
+        if(finished)return;finished=true;
+        if(e&&typeof e.clientX==='number')move(e);
+        el.removeEventListener('pointermove',move);
+        el.removeEventListener('pointerup',finish);
+        el.removeEventListener('pointercancel',finish);
+        el.removeEventListener('lostpointercapture',finish);
+        el.removeAttribute('transform');
+        if(Math.abs(dx)<.01&&Math.abs(dy)<.01){renderMapDrawings();return}
+        const patch={...movedDrawingPayload(d,dx,dy),updated_at:new Date().toISOString()};
+        const {error}=await sb.from('combat_map_drawings').update(patch).eq('id',d.id);
+        if(error){toast(error.message);renderMapDrawings();return}
+        Object.assign(d,patch);
+        renderMapDrawings();
+      };
+      el.addEventListener('pointermove',move);
+      el.addEventListener('pointerup',finish);
+      el.addEventListener('pointercancel',finish);
+      el.addEventListener('lostpointercapture',finish);
+    });
+  });
 }
 async function saveNewMapDrawing(map,payload){
   if(!isAdmin||!currentUser||!selectedCombatZoneId)return;
@@ -3612,6 +3687,7 @@ async function renderActiveCombatMap(campaignId){
       visibleCombatMapTokens(map).map(combatTokenHtml).join('')+
     '</div></div>'+mapDrawingToolbarHtml();
   bindCombatMapInteractions(map);
+  bindMapDrawingDragInteractions();
   subscribeCombatMap(map);
   subscribeCombatMapDrawings(map);
 }

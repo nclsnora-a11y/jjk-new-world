@@ -3670,9 +3670,10 @@ function mapDrawingToolbarHtml(){
   '</div>';
 }
 function setMapDrawTool(tool){
-  mapDrawTool=tool||'none';
-  if(tool!=='select')selectedMapDrawingId=null;
-  if(tool!=='none')mapMeasureMode=false;
+  const requested=tool||'none';
+  mapDrawTool=(mapDrawTool===requested&&requested!=='none')?'none':requested;
+  if(mapDrawTool!=='select')selectedMapDrawingId=null;
+  if(mapDrawTool!=='none')mapMeasureMode=false;
   document.querySelectorAll('[data-draw-tool]').forEach(b=>b.classList.toggle('active',b.dataset.drawTool===mapDrawTool));
   const ruler=document.getElementById('map-ruler-btn');if(ruler)ruler.classList.remove('active');
   renderMapDrawings();

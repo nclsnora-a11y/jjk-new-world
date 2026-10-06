@@ -1757,7 +1757,7 @@ document.getElementById('auth-forgot-password').onclick=async()=>{
   btn.disabled=true;
   btn.textContent='Enviando...';
   try{
-    const redirectTo=window.location.origin+window.location.pathname;
+    const redirectTo='https://jjknewworld.uk';
     const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
     if(error){toast(error.message);return}
     toast('Te enviamos un correo para restablecer tu contraseña.');
@@ -1843,7 +1843,11 @@ document.getElementById('auth-register').onclick=async()=>{
   },REGISTER_PROCESS_LABEL_MS);
 
   try{
-    const {data,error}=await sb.auth.signUp({email,password});
+    const {data,error}=await sb.auth.signUp({
+      email,
+      password,
+      options:{emailRedirectTo:'https://jjknewworld.uk'}
+    });
     if(error){
       toast(error.message);
       return;

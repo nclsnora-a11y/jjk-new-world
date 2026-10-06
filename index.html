@@ -365,19 +365,19 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 
 <section class="card" id="card-type">
 <h2>Tipo de Técnica</h2>
-<p class="muted">Las 7 categorías comunes reparten el 90% en partes iguales. Restricción Celestial tiene 7% y Extraordinaria / Regla 3%.</p>
+<p class="muted">Las 7 categorías comunes reparten el 94% en partes iguales. Restricción Celestial y Extraordinaria / Regla tienen 3% cada una.</p>
 <div class="wheel"><div class="pointer"></div><canvas id="canvas-type" width="700" height="700"></canvas></div>
 <div class="actions"><button id="spin-type">Girar ruleta</button><button class="secondary" id="clear-type">Limpiar</button></div>
 <div class="result" id="result-type">Resultado: —</div><div class="tech-desc" id="type-description">Girá la ruleta para ver qué representa cada tipo de técnica.</div>
 <div class="legend">
-<span>Potenciación / Alteración corporal</span><span>12,86%</span>
-<span>Invocación</span><span>12,86%</span>
-<span>Creación / Manifestación</span><span>12,86%</span>
-<span>Control / Manipulación</span><span>12,86%</span>
-<span>Soporte / Condición</span><span>12,86%</span>
-<span>Marca</span><span>12,86%</span>
-<span>Técnica Existente</span><span>12,86%</span>
-<span>Restricción Celestial</span><span>7%</span>
+<span>Potenciación / Alteración corporal</span><span>13,43%</span>
+<span>Invocación</span><span>13,43%</span>
+<span>Creación / Manifestación</span><span>13,43%</span>
+<span>Control / Manipulación</span><span>13,43%</span>
+<span>Soporte / Condición</span><span>13,43%</span>
+<span>Marca</span><span>13,43%</span>
+<span>Técnica Existente</span><span>13,43%</span>
+<span>Restricción Celestial</span><span>3%</span>
 <span>Extraordinaria / Regla</span><span>3%</span>
 </div>
 <h3>Historial</h3><div class="chips" id="history-type"></div>
@@ -578,7 +578,7 @@ const passiveData=[["Fuerza","Cuerpo Entrenado","+1 Fuerza. El daño recibido po
 const colors=['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#22c55e','#14b8a6','#3b82f6','#6366f1','#a855f7'];
 const configs={
 stats:{values:['1','2','3','4','5'],weights:[20,20,20,20,20],canvas:'canvas-stats',spin:'spin-stats',clear:'clear-stats',result:'result-stats',history:'history-stats'},
-type:{values:['Potenciación','Invocación','Creación','Control','Soporte','Marca','Técnica Existente','Restricción Celestial','Extraordinaria'],weights:[90/7,90/7,90/7,90/7,90/7,90/7,90/7,7,3],canvas:'canvas-type',spin:'spin-type',clear:'clear-type',result:'result-type',history:'history-type'},
+type:{values:['Potenciación','Invocación','Creación','Control','Soporte','Marca','Técnica Existente','Restricción Celestial','Extraordinaria'],weights:[94/7,94/7,94/7,94/7,94/7,94/7,94/7,3,3],canvas:'canvas-type',spin:'spin-type',clear:'clear-type',result:'result-type',history:'history-type'},
 technique:{values:["Ilimitado","Santuario","Copia","Diez Sombras","Transfiguración Ociosa","Manipulación de Espíritus Malditos","Furia Estelar","Extinción de Técnicas","Construcción","Apuesta Mortal Ociosa","Sentencia Mortal","Manipulación del Cielo","Formación de Hielo","Manipulación de Sangre","Hechicería de Proyección","Habla Maldita","Cambio de Posición","Llamas del Desastre","Mareas del Desastre","Manipulación de Cuervos","Manipulación de Marionetas","Recreación Contractual","Sistema Antigravedad","Ámbar Bestial Mítico","Bastón de Guerra G","Descarga de Energía Maldita","Encuentro Amoroso","Invocación de Bestias Auspiciosas","Área Prohibida Individual","Canción de Oración","Técnica de Proporción","Técnica de Muñeca de Paja","Plantas del Desastre","Técnica de Putrefacción","Técnica de Séance / Sesión Espiritual","Inversión","Técnica de Clonación","Captura del Corazón","Manipulación de Herramientas","Milagros","Valor Ardiente"],weights:[0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545],canvas:'canvas-technique',spin:'spin-technique',clear:'clear-technique',result:'result-technique',history:'history-technique'},
 grade:{values:['Grado 4','Semigrado 3','Grado 3','Semigrado 2','Grado 2','Semigrado 1','Grado 1','Grado Especial'],weights:[32,22,16,11,8,5,4,2],canvas:'canvas-grade',spin:'spin-grade',clear:'clear-grade',result:'result-grade',history:'history-grade'},
 passives:{values:Array.from({length:140},(_,i)=>String(i+1)),weights:Array(140).fill(1),canvas:'canvas-passives',spin:'spin-passives',clear:'clear-passives',result:'result-passives',history:'history-passives'}
@@ -839,7 +839,7 @@ function renderInformation(){
       '<div class="info-section-body info-rules">'+
         '<h4>Identidad</h4><p>La ficha usa el nombre del personaje y su bando: <b>Hechicero</b> o <b>Maldición</b>.</p>'+
         '<h4>Estadísticas</h4><p>Las estadísticas base usan valores enteros de <b>1 a 5</b>: Fuerza, Agilidad, Velocidad, Resistencia, Durabilidad, Inteligencia, Energía Maldita y Barreras. <b>Control de EM</b> también usa escala 1–5 y se tira desde la misma ruleta de estadísticas.</p>'+
-        '<h4>Tipo de Técnica</h4><p>Las siete categorías comunes reparten el 90% en partes iguales (≈12,86% cada una), Restricción Celestial tiene 7% y Extraordinaria / Regla 3%.</p>'+
+        '<h4>Tipo de Técnica</h4><p>Las siete categorías comunes reparten el 94% en partes iguales (≈13,43% cada una), mientras Restricción Celestial y Extraordinaria / Regla tienen 3% cada una.</p>'+
         '<h4>Grado inicial</h4>'+infoGradesHtml()+
         '<h4>Pasivas</h4><p>La ruleta contiene actualmente <b>'+passiveData.length+' talentos</b>. Todos los resultados tienen la misma probabilidad dentro de esa ruleta.</p>'+
         '<div class="info-pending"><b>En desarrollo:</b> todavía quedan reglas de creación y balance por cerrar; esta sección se irá ampliando a medida que se definan.</div>'+
@@ -1144,7 +1144,8 @@ function toggleEditor(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
   const el=document.getElementById('editor-'+id);
   if(!el.classList.contains('hidden')){delete pendingPassiveRemovals[id];el.classList.add('hidden');return}
-  const statsHtml=statNames.map(n=>`<div class="editor-stat"><small>${esc(n)}</small><input type="number" id="edit-${id}-stat-${statNames.indexOf(n)}" value="${esc(ch.currentStats?.[n]??'')}" min="0" step="1"><div class="initial-note">Inicial: ${esc(ch.initialStats?.[n]??'—')}</div></div>`).join('');
+  const statsHtml=statNames.map(n=>`<div class="editor-stat"><small>${esc(n)}</small><input type="number" id="edit-${id}-stat-${statNames.indexOf(n)}" value="${esc(ch.currentStats?.[n]??'')}" min="0" step="1"><div class="initial-note">Inicial: ${esc(ch.initialStats?.[n]??'—')}</div></div>`).join('')+
+    `<div class="editor-stat"><small>Control de EM</small><input type="number" id="edit-${id}-control" value="${esc(ch.control??'')}" min="0" step="1"><div class="initial-note">Valor actual</div></div>`;
   pendingPassiveRemovals[id]=new Set();
   const passivesHtml=(ch.passives||[]).map((p,i)=>({p,i})).filter(x=>x.p.category!=='Despertar').map(({p,i})=>`<div class="passive-edit" id="pe-${id}-${i}"><div><b>${esc(p.category)} — ${esc(p.name)}</b><div class="muted">${esc(p.description||'')}</div></div><div class="character-actions" style="margin:0"><button type="button" class="secondary" onclick="editPassive('${id}',${i})">Editar</button><button type="button" class="secondary danger" id="pe-btn-${id}-${i}" onclick="togglePassiveRemoval('${id}',${i})">Quitar</button></div></div>`).join('')||'<div class="muted">Sin pasivas.</div>';
   el.innerHTML=`
@@ -1154,7 +1155,6 @@ function toggleEditor(id){
       <div><label>Bando</label><select id="edit-${id}-side"><option value="hechicero" ${ch.side!=='maldicion'?'selected':''}>Hechicero</option><option value="maldicion" ${ch.side==='maldicion'?'selected':''}>Maldición</option></select></div>
       <div><label>Tipo de técnica</label><select id="edit-${id}-type"><option value="">—</option>${optionList(configs.type.values,ch.type)}</select></div>
       <div><label>Grado</label><select id="edit-${id}-grade"><option value="">—</option>${optionList(configs.grade.values,ch.grade)}</select></div>
-      <div><label>Control de EM</label><input type="number" min="0" step="1" id="edit-${id}-control" value="${esc(ch.control??'')}" placeholder="0"></div>
     </div>
     <h4>Estadísticas actuales</h4>
     <div class="editor-stats">${statsHtml}</div>
@@ -1188,7 +1188,7 @@ function toggleEditor(id){
   el.classList.remove('hidden');
 }
 function techniqueStatOptions(current){
-  const valid=rollableStatNames.concat(['Control EM']);
+  const valid=['Sin tirada'].concat(rollableStatNames,['Control EM']);
   const legacy=current&&!valid.includes(current)
     ?'<option value="" selected disabled>⚠ Reconfigurar: '+esc(current)+'</option>'
     :'';
@@ -2614,6 +2614,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     const stat=a.stat||'';
     const bonus=techniqueStatValue(ch,stat);
     const cost=Math.max(0,Number(a.cost||0));
+    const noRoll=stat==='Sin tirada';
     const validRoll=stat==='Control EM'||rollableStatNames.includes(stat);
     const damageDice=parseDiceExpressionFlexible(a.damage||'');
     const note=[a.effect,a.description].filter(Boolean).join(' · ');
@@ -2621,7 +2622,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
       '<summary>'+esc(a.name||'Uso de técnica')+'</summary>'+
       (note?'<div class="quick-tech-note">'+esc(note)+'</div>':'')+
       '<div class="quick-tech-actions">'+
-        '<button class="combat-technique-btn" '+(canRoll&&validRoll?'onclick="event.preventDefault();event.stopPropagation();rollTechniqueAttack(\''+campaignId+'\',\''+ch.id+'\','+i+')"':'disabled')+'>Ataque'+(validRoll?' · d20+'+bonus:'')+(cost?' · '+cost+' EM':'')+'</button>'+
+        '<button class="combat-technique-btn" '+(canRoll&&(validRoll||noRoll)?'onclick="event.preventDefault();event.stopPropagation();rollTechniqueAttack(\''+campaignId+'\',\''+ch.id+'\','+i+')"':'disabled')+'>'+(noRoll?'Usar':'Ataque'+(validRoll?' · d20+'+bonus:''))+(cost?' · '+cost+' EM':'')+'</button>'+
         (damageDice?'<button class="combat-technique-btn secondary" '+(canRoll?'onclick="event.preventDefault();event.stopPropagation();rollTechniqueDamage(\''+campaignId+'\',\''+ch.id+'\','+i+')"':'disabled')+'>Daño · '+esc(damageDice.expression)+'</button>':'')+
       '</div>'+
     '</details>';
@@ -2659,13 +2660,35 @@ async function rollTechniqueAttack(campaignId,charId,index){
   if(!isAdmin&&ch.owner_id!==currentUser?.id){toast('Solo podés usar técnicas de tus personajes.');return}
   const action=(ch.techniqueActions||[])[index];if(!action)return;
   const actionStat=action.stat||'';
-  if(actionStat!=='Control EM'&&!rollableStatNames.includes(actionStat)){toast('Este uso necesita una estadística de tirada válida. Editalo en Mis personajes.');return}
+  const noRoll=actionStat==='Sin tirada';
+  if(!noRoll&&actionStat!=='Control EM'&&!rollableStatNames.includes(actionStat)){toast('Este uso necesita una estadística de tirada válida. Editalo en Mis personajes.');return}
   const cost=Math.max(0,Number(action.cost||0));
   const state=combatStates.find(s=>s.character_id===charId);
   if(cost>0){
     if(!state){toast('No hay estado de combate cargado para este personaje.');return}
     if(Number(state.ce_current)<cost){toast('No tenés suficiente Energía Maldita para usar '+action.name+'.');return}
   }
+
+  if(noRoll){
+    if(cost>0){
+      const newCE=Math.max(0,Number(state.ce_current)-cost);
+      const {error:ceError}=await sb.from('combat_states')
+        .update({ce_current:newCE,updated_at:new Date().toISOString()})
+        .eq('campaign_id',campaignId)
+        .eq('character_id',charId);
+      if(ceError){toast('No pude descontar la Energía Maldita: '+ceError.message);return}
+      state.ce_current=newCE;
+      updateCombatBarsFromState(charId);
+    }
+    const {error}=await sb.from('combat_rolls').insert({
+      campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
+      stat_name:'Uso · '+action.name+(cost?' · -'+cost+' EM':'')+' · Sin tirada',
+      die_result:0,stat_bonus:0,total:0
+    });
+    if(error){toast(error.message);return}
+    return;
+  }
+
   const bonus=techniqueStatValue(ch,action.stat||'Control EM');
   const die=Math.floor(Math.random()*20)+1,total=die+bonus;
   await animateD20(die,ch.sorcererName,action.name+' · Ataque');
@@ -2713,10 +2736,16 @@ async function loadCombatRolls(campaignId){
 }
 function combatRollChatHtml(campaignId){
   const msgs=combatRolls.length?combatRolls.map(r=>combatRollMessageHtml(r)).join(''):'<div class="roll-empty">Todavía no hay tiradas.</div>';
+  const eligibleChars=allCharacters.filter(ch=>{
+    const inCampaign=sharedMemberships.some(m=>m.campaign_id===campaignId&&m.character_id===ch.id);
+    return inCampaign&&(isAdmin||ch.owner_id===currentUser?.id);
+  });
+  const charOptions=eligibleChars.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+'</option>').join('');
+  const selector=charOptions?'<select id="free-roll-character-'+campaignId+'" title="Personaje que realiza la tirada">'+charOptions+'</select>':'';
   const quick=[4,6,8,10,12,20].map(d=>'<button class="dice-quick-btn" onclick="rollFreeDice(\''+campaignId+'\',\'1D'+d+'\')">D'+d+'</button>').join('');
   return '<aside class="roll-chat">'+
     '<div class="roll-chat-head"><div><b>Tiradas</b><div class="muted" style="font-size:11px">Registro compartido</div></div>'+(isAdmin?'<button class="secondary danger mini-clear-btn" onclick="clearCombatRolls(\''+campaignId+'\')">Borrar tiradas</button>':'')+'</div>'+
-    '<div class="dice-panel"><div class="dice-quick-row">'+quick+'</div>'+
+    '<div class="dice-panel">'+selector+'<div class="dice-quick-row">'+quick+'</div>'+
       '<div class="dice-expression-row"><input id="dice-expression-'+campaignId+'" placeholder="Ej: 2D8, 8D10, 5D20" onkeydown="if(event.key===\'Enter\')rollFreeDice(\''+campaignId+'\',this.value)"><button onclick="rollFreeDice(\''+campaignId+'\',document.getElementById(\'dice-expression-'+campaignId+'\').value)">Tirar</button></div>'+
     '</div>'+
     '<div class="roll-chat-list" id="roll-chat-list">'+msgs+'</div>'+
@@ -2744,14 +2773,18 @@ function combatRollMessageHtml(r){
     const results=Array.isArray(r.roll_results)?r.roll_results:[];
     const shown=results.length<=12?results.join(', '):results.slice(0,12).join(', ')+'…';
     const ch=r.character_id?allCharacters.find(c=>c.id===r.character_id):null;
-    const title=r.stat_name&&r.stat_name!=='Dados'?((ch?.sorcererName?ch.sorcererName+' · ':'')+r.stat_name):'Tirada libre';
-    return '<div class="roll-msg free-dice-roll"><div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(title)+'</b> · '+esc(r.roll_expression)+'</span><span>'+esc(time)+'</span></div><div class="free-dice-main"><span class="free-dice-results">['+esc(shown)+']</span>'+(Number(r.stat_bonus)?'<span class="roll-op">'+(Number(r.stat_bonus)>0?'+':'')+r.stat_bonus+'</span>':'')+'<span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div></div></div>';
+    const title=r.stat_name&&r.stat_name!=='Dados'?((ch?.sorcererName?ch.sorcererName+' · ':'')+r.stat_name):((ch?.sorcererName?ch.sorcererName+' · ':'')+'Tirada libre');
+    const avatar=ch?.photo?'<img class="roll-msg-mini-avatar" src="'+ch.photo+'" alt="">':'<div class="roll-msg-mini-avatar">術</div>';
+    return '<div class="roll-msg free-dice-roll"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(title)+'</b> · '+esc(r.roll_expression)+'</span><span>'+esc(time)+'</span></div><div class="free-dice-main"><span class="free-dice-results">['+esc(shown)+']</span>'+(Number(r.stat_bonus)?'<span class="roll-op">'+(Number(r.stat_bonus)>0?'+':'')+r.stat_bonus+'</span>':'')+'<span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div></div></div></div>';
   }
   const ch=allCharacters.find(c=>c.id===r.character_id);
   const name=ch?.sorcererName||'Personaje';
   const time=new Date(r.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   const avatar=ch?.photo?'<img class="roll-msg-mini-avatar" src="'+ch.photo+'" alt="">':'<div class="roll-msg-mini-avatar">術</div>';
   const canSee=!ch||canSeeCombatDetails(r.campaign_id,ch);
+  if(String(r.stat_name||'').startsWith('Uso · ')){
+    return '<div class="roll-msg"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · '+esc(r.stat_name)+'</span><span>'+esc(time)+'</span></div><div class="muted" style="font-size:11px">Técnica utilizada sin tirada de dados.</div></div></div></div>';
+  }
   if(!canSee){
     return '<div class="roll-msg roll-msg-hidden"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · Tirada</span><span>'+esc(time)+'</span></div><div class="roll-msg-main enemy-roll-total-only"><span class="roll-hidden-text">Total:</span><span class="roll-total">'+r.total+'</span></div></div></div></div>';
   }
@@ -2822,12 +2855,14 @@ async function rollFreeDice(campaignId,expression){
   if(!currentUser)return;
   const parsed=parseDiceExpressionFlexible(expression);
   if(!parsed){toast('Usá un formato como 2D8, 3D10 o 5D20.');return}
+  const charId=document.getElementById('free-roll-character-'+campaignId)?.value||null;
+  const ch=charId?allCharacters.find(c=>c.id===charId):null;
   const {count,sides,modifier,expression:expr}=parsed;
   const results=Array.from({length:count},()=>Math.floor(Math.random()*sides)+1);
   const total=results.reduce((a,b)=>a+b,0)+modifier;
-  await animateDiceGroup(results,sides,expr+' · Tirada libre',modifier);
+  await animateDiceGroup(results,sides,(ch?ch.sorcererName+' · ':'')+expr+' · Tirada libre',modifier);
   const {error}=await sb.from('combat_rolls').insert({
-    campaign_id:campaignId,character_id:null,rolled_by:currentUser.id,
+    campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
     stat_name:'Dados',die_result:results[0],stat_bonus:modifier,total,
     roll_expression:expr,roll_results:results
   });

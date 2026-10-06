@@ -492,12 +492,24 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
         <button class="secondary" id="auth-register">Crear cuenta</button>
       </div>
       <div class="account-help">Si ya te registraste, usá “Iniciar sesión”. Si es tu primera vez, usá “Crear cuenta”.</div>
+      <div style="margin-top:8px"><button type="button" class="secondary" id="auth-forgot-password">Olvidé mi contraseña</button></div>
       <div id="auth-register-cooldown" class="account-help" style="margin-top:6px;min-height:18px"></div>
     </div>
     <div id="account-user-box" class="hidden" style="margin-top:16px">
       <div class="campaign-actions">
         <button class="secondary hidden" id="migrate-local">Importar datos locales</button>
         <button class="secondary" id="auth-logout">Cerrar sesión</button>
+      </div>
+    </div>
+    <div id="password-recovery-box" class="hidden" style="margin-top:16px">
+      <h3>Nueva contraseña</h3>
+      <div class="account-help" style="margin-bottom:8px">Escribí una contraseña nueva para tu cuenta.</div>
+      <div class="campaign-form">
+        <input id="recovery-password" type="password" autocomplete="new-password" placeholder="Nueva contraseña">
+        <input id="recovery-password-confirm" type="password" autocomplete="new-password" placeholder="Repetir nueva contraseña">
+      </div>
+      <div class="campaign-actions">
+        <button id="auth-save-new-password">Guardar nueva contraseña</button>
       </div>
     </div>
   </div>
@@ -1685,6 +1697,20 @@ async function initAuth(){
 
     currentUser=nextUser;
 
+    if(_event==='PASSWORD_RECOVERY'){
+      const loginBox=document.getElementById('account-login-box');
+      const userBox=document.getElementById('account-user-box');
+      const recoveryBox=document.getElementById('password-recovery-box');
+      if(loginBox)loginBox.classList.add('hidden');
+      if(userBox)userBox.classList.add('hidden');
+      if(recoveryBox)recoveryBox.classList.remove('hidden');
+      const accountSection=document.getElementById('account-section');
+      document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));
+      if(accountSection)accountSection.classList.remove('hidden');
+      toast('Elegí una nueva contraseña.');
+      return;
+    }
+
     // Al volver a la pestaña Supabase puede renovar/reemitir la misma sesión.
     // Si es el mismo usuario y los datos ya están cargados, no reconstruimos
     // Combate ni las demás vistas: así se conserva exactamente el scroll.
@@ -1722,6 +1748,45 @@ document.getElementById('auth-login').onclick=async()=>{
   if(!email||!password){toast('Completá email y contraseña.');return}
   const {error}=await sb.auth.signInWithPassword({email,password});
   if(error)toast(error.message);else toast('Sesión iniciada.');
+};
+
+document.getElementById('auth-forgot-password').onclick=async()=>{
+  const email=document.getElementById('auth-email').value.trim();
+  if(!email){toast('Escribí tu email primero.');return}
+  const btn=document.getElementById('auth-forgot-password');
+  btn.disabled=true;
+  btn.textContent='Enviando...';
+  try{
+    const redirectTo=window.location.origin+window.location.pathname;
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
+    if(error){toast(error.message);return}
+    toast('Te enviamos un correo para restablecer tu contraseña.');
+    btn.textContent='Correo enviado';
+    setTimeout(()=>{btn.disabled=false;btn.textContent='Olvidé mi contraseña'},20000);
+  }catch(e){
+    console.error(e);
+    toast('No pude enviar el correo de recuperación.');
+    btn.disabled=false;
+    btn.textContent='Olvidé mi contraseña';
+  }
+};
+
+document.getElementById('auth-save-new-password').onclick=async()=>{
+  const p1=document.getElementById('recovery-password').value;
+  const p2=document.getElementById('recovery-password-confirm').value;
+  if(p1.length<6){toast('La contraseña debe tener al menos 6 caracteres.');return}
+  if(p1!==p2){toast('Las contraseñas no coinciden.');return}
+  const btn=document.getElementById('auth-save-new-password');
+  btn.disabled=true;btn.textContent='Guardando...';
+  const {error}=await sb.auth.updateUser({password:p1});
+  if(error){
+    toast(error.message);
+    btn.disabled=false;btn.textContent='Guardar nueva contraseña';
+    return;
+  }
+  document.getElementById('password-recovery-box').classList.add('hidden');
+  toast('Contraseña actualizada correctamente.');
+  renderAuth();
 };
 const REGISTER_COOLDOWN_MS=20000;
 const REGISTER_PROCESS_LABEL_MS=5000;

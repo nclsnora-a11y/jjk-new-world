@@ -2075,6 +2075,9 @@ async function loadCombatViewState(campaignId){
     if(row.active_zone_id&&zones.some(z=>z.id===row.active_zone_id)){
       selectedCombatZoneId=row.active_zone_id;
       localStorage.setItem('jjk-combat-zone-'+campaignId,selectedCombatZoneId);
+    }else if(!row.active_zone_id){
+      selectedCombatZoneId=null;
+      localStorage.removeItem('jjk-combat-zone-'+campaignId);
     }
     if(row.active_map_id){
       selectedCombatMapId=row.active_map_id;
@@ -2666,6 +2669,7 @@ function syncCombatStateRow(row){
   const card=document.getElementById('combat-char-'+row.character_id);
   if(!isAdmin&&row.visible===false&&ch.owner_id!==currentUser?.id){
     if(card){card.classList.add('live-removing');setTimeout(()=>card.remove(),190)}
+    if(selectedCombatMapId)renderActiveCombatMap(row.campaign_id).catch(console.error);
     return;
   }
   if(!card&&(row.visible!==false||ch.owner_id===currentUser?.id)){
@@ -2682,6 +2686,7 @@ function syncCombatStateRow(row){
     card.classList.add('live-updated');
     setTimeout(()=>card.classList.remove('live-updated'),350);
   }
+  if(selectedCombatMapId)renderActiveCombatMap(row.campaign_id).catch(console.error);
 }
 function updateCombatBarsFromState(charId){
   const s=combatStateByChar(charId);if(!s)return;

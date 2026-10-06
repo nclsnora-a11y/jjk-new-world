@@ -1146,7 +1146,7 @@ function toggleEditor(id){
   if(!el.classList.contains('hidden')){delete pendingPassiveRemovals[id];el.classList.add('hidden');return}
   const statsHtml=statNames.map(n=>`<div class="editor-stat"><small>${esc(n)}</small><input type="number" id="edit-${id}-stat-${statNames.indexOf(n)}" value="${esc(ch.currentStats?.[n]??'')}" min="0" step="1"><div class="initial-note">Inicial: ${esc(ch.initialStats?.[n]??'—')}</div></div>`).join('');
   pendingPassiveRemovals[id]=new Set();
-  const passivesHtml=(ch.passives||[]).map((p,i)=>({p,i})).filter(x=>x.p.category!=='Despertar').map(({p,i})=>`<div class="passive-edit" id="pe-${id}-${i}"><div><b>${esc(p.category)} — ${esc(p.name)}</b><div class="muted">${esc(p.description||'')}</div></div><button type="button" class="secondary danger" id="pe-btn-${id}-${i}" onclick="togglePassiveRemoval('${id}',${i})">Quitar</button></div>`).join('')||'<div class="muted">Sin pasivas.</div>';
+  const passivesHtml=(ch.passives||[]).map((p,i)=>({p,i})).filter(x=>x.p.category!=='Despertar').map(({p,i})=>`<div class="passive-edit" id="pe-${id}-${i}"><div><b>${esc(p.category)} — ${esc(p.name)}</b><div class="muted">${esc(p.description||'')}</div></div><div class="character-actions" style="margin:0"><button type="button" class="secondary" onclick="editPassive('${id}',${i})">Editar</button><button type="button" class="secondary danger" id="pe-btn-${id}-${i}" onclick="togglePassiveRemoval('${id}',${i})">Quitar</button></div></div>`).join('')||'<div class="muted">Sin pasivas.</div>';
   el.innerHTML=`
     <div class="editor-grid">
       <div><label>Foto del personaje</label>${ch.photo?'<img class="photo-preview" src="'+ch.photo+'" alt="Vista previa">':'<div class="photo-preview character-avatar placeholder">術</div>'}<input id="edit-${id}-photo" type="file" accept="image/*" onchange="openCharacterCropper('${id}',this)"><div class="photo-note">Elegí la foto y ajustá el encuadre antes de guardarla.</div>${ch.photo?'<button class="secondary danger" style="margin-top:7px" onclick="removePhoto(\''+id+'\')">Quitar foto</button>':''}</div>
@@ -1384,6 +1384,23 @@ function togglePassiveRemoval(id,index){
   const marked=set.has(index);
   if(row)row.classList.toggle('pending-remove',marked);
   if(btn)btn.textContent=marked?'Deshacer':'Quitar';
+}
+function editPassive(id,index){
+  const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
+  const p=(ch.passives||[])[index];if(!p||p.category==='Despertar')return;
+  const cat=prompt('Categoría de la pasiva:',p.category||'General');
+  if(cat===null)return;
+  const name=prompt('Nombre de la pasiva:',p.name||'');
+  if(name===null)return;
+  const cleanName=name.trim();
+  if(!cleanName){toast('El nombre de la pasiva no puede quedar vacío.');return}
+  const desc=prompt('Descripción / efecto de la pasiva:',p.description||'');
+  if(desc===null)return;
+  ch.passives[index]={...p,category:cat.trim()||'General',name:cleanName,description:desc.trim()};
+  saveCharacters();
+  renderCharacters();
+  setTimeout(()=>toggleEditor(id),0);
+  toast('Pasiva editada.');
 }
 function addPassive(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
@@ -2030,6 +2047,33 @@ removePassive=async function(id,index){
   const {error}=await sb.from('characters').update({passives,updated_at:new Date().toISOString()}).eq('id',id);if(error){toast(error.message);return}
   await loadSharedData();toast('Pasiva eliminada.');
 };
+editPassive=async function(id,index){
+  const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
+  const current=(ch.passives||[])[index];if(!current||current.category==='Despertar')return;
+  const cat=prompt('Categoría de la pasiva:',current.category||'General');
+  if(cat===null)return;
+  const name=prompt('Nombre de la pasiva:',current.name||'');
+  if(name===null)return;
+  const cleanName=name.trim();
+  if(!cleanName){toast('El nombre de la pasiva no puede quedar vacío.');return}
+  const desc=prompt('Descripción / efecto de la pasiva:',current.description||'');
+  if(desc===null)return;
+
+  const passives=[...(ch.passives||[])];
+  passives[index]={...current,category:cat.trim()||'General',name:cleanName,description:desc.trim()};
+
+  const {error}=await sb.from('characters').update({
+    passives,
+    updated_at:new Date().toISOString()
+  }).eq('id',id);
+  if(error){toast(error.message);return}
+
+  await loadSharedData();
+  renderCharacters();
+  setTimeout(()=>toggleEditor(id),0);
+  toast('Pasiva editada.');
+};
+
 addPassive=async function(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
   const cat=document.getElementById('add-'+id+'-pcat').value.trim()||'General',name=document.getElementById('add-'+id+'-pname').value.trim(),desc=document.getElementById('add-'+id+'-pdesc').value.trim();

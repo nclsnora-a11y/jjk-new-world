@@ -2429,7 +2429,7 @@ function subscribeCombatView(campaignId){
 function combatDefaultMax(ch,key){
   const raw=ch?.currentStats?.[key]??ch?.initialStats?.[key]??1;
   const v=normalizeStatValue(raw);
-  return Math.max(0,(v===null?1:v)*50);
+  return Math.max(1,(v===null?1:v)*50);
 }
 async function loadCombatStates(campaignId){
   const {data,error}=await sb.from('combat_states').select('*').eq('campaign_id',campaignId);

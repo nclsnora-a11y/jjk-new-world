@@ -299,6 +299,29 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .account-details-row button{margin-left:auto}
 .special-bars-toggle-cell{display:flex;flex-direction:column;justify-content:flex-end}.special-bars-editor{margin:10px 0 14px;padding:11px;border:1px solid #343443;border-radius:10px;background:#0e0e15}.special-bar-editor-row{display:grid;grid-template-columns:1.5fr .55fr .7fr auto;gap:8px;align-items:end;padding:8px 0;border-top:1px solid #292938}.special-bar-editor-row:first-child{border-top:0}.special-bar-color{height:39px;padding:3px}.special-bar-remove{display:flex;align-items:end}@media(max-width:720px){.special-bar-editor-row{grid-template-columns:1fr 90px}.special-bar-remove{grid-column:1/-1}.special-bar-editor-row>div:nth-child(3){grid-column:1/2}}
 .combat-chat-compose select.hidden{display:none!important}.combat-chat-compose select[id^="combat-chat-recipient-"]{min-width:150px}
+
+/* Map UX refinement */
+.map-drawing-toolbar{position:sticky;bottom:10px;z-index:20;box-shadow:0 12px 30px rgba(0,0,0,.35);backdrop-filter:blur(8px);background:rgba(16,16,24,.94)!important}
+.map-drawing-toolbar button{transition:transform .12s ease,border-color .12s ease,background .12s ease}
+.map-drawing-toolbar button:hover{transform:translateY(-1px)}
+.map-drawing-toolbar button.active{box-shadow:0 0 0 1px rgba(167,139,250,.3)}
+.map-drawing-help{flex-basis:100%;opacity:.88}
+.map-drawings-svg.select-mode .map-drawing-shape{cursor:grab}
+.map-drawings-svg.select-mode .map-drawing-shape:active{cursor:grabbing}
+.map-drawing-shape.selected{filter:drop-shadow(0 0 5px rgba(255,255,255,.95)) drop-shadow(0 0 8px rgba(139,92,246,.8))!important}
+.gm-map-token{position:absolute;transform:translate(-50%,-50%);border-radius:50%;border:2px solid rgba(255,255,255,.95);box-shadow:0 4px 14px rgba(0,0,0,.7);z-index:7;cursor:default;user-select:none;touch-action:none}
+.gm-map-token img{width:100%;height:100%;display:block;border-radius:50%;object-fit:cover}
+.gm-map-token.dragging{cursor:grabbing;z-index:12;box-shadow:0 0 0 3px rgba(139,92,246,.45),0 7px 20px rgba(0,0,0,.8)}
+.gm-map-token.selected{box-shadow:0 0 0 3px rgba(139,92,246,.7),0 7px 20px rgba(0,0,0,.8)}
+.gm-token-panel{margin-top:10px;border:1px solid #343443;border-radius:11px;background:#0f0f16;overflow:hidden}
+.gm-token-panel>summary{cursor:pointer;padding:10px 12px;font-weight:800}
+.gm-token-panel-body{padding:0 10px 10px}
+.gm-token-create{display:grid;grid-template-columns:1fr 1.5fr .65fr auto;gap:8px;align-items:end;padding:9px;border:1px solid #2d2d3a;border-radius:9px;background:#101018}
+.gm-token-list{display:grid;gap:7px;margin-top:8px}
+.gm-token-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto auto;gap:7px;align-items:center;padding:7px 8px;border:1px solid #292938;border-radius:9px;background:#101018}
+.gm-token-row img{width:38px;height:38px;object-fit:cover;border-radius:50%;border:1px solid #444457}
+.gm-token-row-main{min-width:0;display:flex;flex-direction:column}.gm-token-row-main b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gm-token-row-main small{color:var(--muted)}
+@media(max-width:760px){.gm-token-create{grid-template-columns:1fr}.gm-token-row{grid-template-columns:38px minmax(0,1fr) auto auto}.gm-token-row .danger{grid-column:2/-1}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 </head>
@@ -2332,12 +2355,15 @@ let combatMessages=[];
 let combatChatChannel=null;
 let combatMaps=[];
 let combatMapTokens=[];
+let combatCustomTokens=[];
 let selectedCombatZoneId=null;
 let selectedCombatMapId=localStorage.getItem('jjk-combat-map')||null;
 let combatMapChannel=null;
+let combatCustomTokenChannel=null;
 let combatDrawingChannel=null;
 let combatViewChannel=null;
 let combatMapDrawings=[];
+let selectedCustomTokenId=null;
 let mapDrawTool='none';
 let mapDrawColor='#ff3b30';
 let mapDrawStroke=0.65;
@@ -2504,7 +2530,7 @@ async function enterCombatCampaign(id){
   localStorage.removeItem('jjk-combat-map');
   renderCombat();
 }
-document.getElementById('combat-back').onclick=()=>{selectedCombatCampaignId=null;selectedCombatZoneId=null;localStorage.removeItem('jjk-combat-campaign');localStorage.removeItem('jjk-combat-map');combatStates=[];combatRolls=[];combatMessages=[];combatMaps=[];combatMapTokens=[];selectedCombatMapId=null;if(combatRollChannel){sb.removeChannel(combatRollChannel);combatRollChannel=null}if(combatChatChannel){sb.removeChannel(combatChatChannel);combatChatChannel=null}if(combatMapChannel){sb.removeChannel(combatMapChannel);combatMapChannel=null}if(combatDrawingChannel){sb.removeChannel(combatDrawingChannel);combatDrawingChannel=null}if(combatViewChannel){sb.removeChannel(combatViewChannel);combatViewChannel=null}renderCombat()};
+document.getElementById('combat-back').onclick=()=>{selectedCombatCampaignId=null;selectedCombatZoneId=null;localStorage.removeItem('jjk-combat-campaign');localStorage.removeItem('jjk-combat-map');combatStates=[];combatRolls=[];combatMessages=[];combatMaps=[];combatMapTokens=[];combatCustomTokens=[];selectedCombatMapId=null;selectedCustomTokenId=null;if(combatRollChannel){sb.removeChannel(combatRollChannel);combatRollChannel=null}if(combatChatChannel){sb.removeChannel(combatChatChannel);combatChatChannel=null}if(combatMapChannel){sb.removeChannel(combatMapChannel);combatMapChannel=null}if(combatCustomTokenChannel){sb.removeChannel(combatCustomTokenChannel);combatCustomTokenChannel=null}if(combatDrawingChannel){sb.removeChannel(combatDrawingChannel);combatDrawingChannel=null}if(combatViewChannel){sb.removeChannel(combatViewChannel);combatViewChannel=null}renderCombat()};
 
 async function renderCombatCampaign(campaignId){
   const root=document.getElementById('combat-root'),camp=campaigns.find(c=>c.id===campaignId);
@@ -2570,6 +2596,8 @@ async function selectCombatZone(campaignId,zoneId){
   localStorage.removeItem('jjk-combat-map');
   combatStates=[];
   combatMapTokens=[];
+  combatCustomTokens=[];
+  selectedCustomTokenId=null;
   if(isAdmin){
     try{await saveCombatViewState(campaignId,selectedCombatZoneId,null)}
     catch(e){console.error(e);toast('No pude sincronizar la zona con los jugadores.')}
@@ -3113,6 +3141,8 @@ function subscribeCombatRolls(campaignId){
 }
 function syncCombatStateRow(row){
   const idx=combatStates.findIndex(s=>s.character_id===row.character_id);
+  const previous=idx>=0?combatStates[idx]:null;
+  const visibilityChanged=!!previous&&previous.visible!==row.visible;
   if(idx>=0)combatStates[idx]={...combatStates[idx],...row};else combatStates.push(row);
   if(selectedCombatCampaignId!==row.campaign_id)return;
   const ch=allCharacters.find(c=>c.id===row.character_id);
@@ -3152,7 +3182,7 @@ function syncCombatStateRow(row){
     setTimeout(()=>card.classList.remove('live-updated'),350);
   }
   reorderCombatRoster(row.campaign_id);
-  if(selectedCombatMapId)renderActiveCombatMap(row.campaign_id).catch(console.error);
+  if(selectedCombatMapId&&visibilityChanged)refreshCombatMapVisibility(row.campaign_id).catch(console.error);
 }
 function updateCombatBarsFromState(charId){
   const s=combatStateByChar(charId);if(!s)return;
@@ -3610,7 +3640,7 @@ async function createCombatMap(campaignId){
 }
 async function selectCombatMap(campaignId,mapId){
   selectedCombatMapId=mapId||null;
-  combatMapDrawings=[];selectedMapDrawingId=null;mapDrawTool='none';
+  combatMapDrawings=[];combatCustomTokens=[];selectedMapDrawingId=null;selectedCustomTokenId=null;mapDrawTool='none';
   mapZoom=.78;
   if(selectedCombatMapId)localStorage.setItem('jjk-combat-map',selectedCombatMapId);else localStorage.removeItem('jjk-combat-map');
   if(isAdmin){
@@ -3699,6 +3729,170 @@ function combatTokenHtml(token){
   return '<div class="map-token" id="map-token-'+token.id+'" data-token-id="'+token.id+'" data-can-move="'+(canMove?'1':'0')+'" style="left:'+Number(token.x_pct)+'%;top:'+Number(token.y_pct)+'%;width:'+Number(token.size_pct)+'%;aspect-ratio:1">'+content+'<span class="map-token-name">'+esc(ch.sorcererName)+'</span></div>';
 }
 
+function customTokenImageUrl(path){
+  return path?sb.storage.from('jjk-images').getPublicUrl(path).data.publicUrl:null;
+}
+async function loadCombatCustomTokens(mapId){
+  if(!selectedCombatZoneId){combatCustomTokens=[];return combatCustomTokens}
+  const {data,error}=await sb.from('combat_custom_tokens').select('*').eq('map_id',mapId).eq('zone_id',selectedCombatZoneId).order('created_at',{ascending:true});
+  if(error)throw error;
+  combatCustomTokens=(data||[]).map(t=>({...t,image:customTokenImageUrl(t.image_path)}));
+  return combatCustomTokens;
+}
+function customCombatTokenHtml(token){
+  const selected=isAdmin&&token.id===selectedCustomTokenId?' selected':'';
+  return '<div class="gm-map-token'+selected+'" id="gm-map-token-'+token.id+'" data-custom-token-id="'+token.id+'" style="left:'+Number(token.x_pct)+'%;top:'+Number(token.y_pct)+'%;width:'+Number(token.size_pct)+'%;aspect-ratio:1">'+
+    '<img src="'+esc(token.image||'')+'" alt="'+esc(token.name||'Token')+'">'+
+    '<span class="map-token-name">'+esc(token.name||'Token')+'</span>'+
+  '</div>';
+}
+function renderCustomMapTokens(map){
+  const canvas=document.getElementById('tactical-map');if(!canvas)return;
+  canvas.querySelectorAll('.gm-map-token').forEach(el=>el.remove());
+  const ruler=canvas.querySelector('.map-ruler-svg');
+  const html=combatCustomTokens.map(customCombatTokenHtml).join('');
+  if(ruler)ruler.insertAdjacentHTML('beforebegin',html);else canvas.insertAdjacentHTML('beforeend',html);
+  bindCustomTokenInteractions(map);
+}
+function gmTokenPanelBodyHtml(map){
+  if(!isAdmin)return '';
+  const list=combatCustomTokens.length?combatCustomTokens.map(t=>
+    '<div class="gm-token-row" id="gm-token-row-'+t.id+'">'+
+      '<img src="'+esc(t.image||'')+'" alt="">'+
+      '<div class="gm-token-row-main"><b>'+esc(t.name||'Token')+'</b><small>Tamaño: <span id="gm-token-size-label-'+t.id+'">'+Number(t.size_pct).toFixed(1)+'</span>%</small></div>'+
+      '<button class="secondary" type="button" onclick="resizeCustomToken(\''+t.id+'\',0.85)">−</button>'+
+      '<button class="secondary" type="button" onclick="resizeCustomToken(\''+t.id+'\',1.18)">+</button>'+
+      '<button class="secondary danger" type="button" onclick="deleteCustomToken(\''+t.id+'\')">Eliminar</button>'+
+    '</div>'
+  ).join(''):'<div class="muted">Todavía no agregaste tokens personalizados a esta zona.</div>';
+  return '<div class="gm-token-create">'+
+      '<div><label>Nombre</label><input id="gm-token-name" placeholder="Ej: Maldición, shikigami, NPC"></div>'+
+      '<div><label>Imagen</label><input id="gm-token-file" type="file" accept="image/*"></div>'+
+      '<div><label>Tamaño inicial</label><input id="gm-token-size" type="number" min="1" max="40" step=".5" value="6"></div>'+
+      '<button type="button" onclick="createCustomToken(\''+map.id+'\')">+ Agregar token</button>'+
+    '</div>'+
+    '<div class="gm-token-list">'+list+'</div>';
+}
+function gmTokenPanelHtml(map){
+  if(!isAdmin)return '';
+  return '<details class="gm-token-panel" id="gm-token-panel" open><summary>🎭 Tokens del GM</summary><div class="gm-token-panel-body" id="gm-token-panel-body">'+gmTokenPanelBodyHtml(map)+'</div></details>';
+}
+function refreshGmTokenPanel(map){
+  const body=document.getElementById('gm-token-panel-body');
+  if(body)body.innerHTML=gmTokenPanelBodyHtml(map);
+}
+async function createCustomToken(mapId){
+  if(!isAdmin||!currentUser||!selectedCombatZoneId)return;
+  const map=combatMaps.find(m=>m.id===mapId);if(!map)return;
+  const name=(document.getElementById('gm-token-name')?.value||'').trim()||'Token';
+  const file=document.getElementById('gm-token-file')?.files?.[0];
+  const size=Math.max(1,Math.min(40,Number(document.getElementById('gm-token-size')?.value||6)));
+  if(!file){toast('Elegí una imagen para el token.');return}
+  const id=crypto.randomUUID();
+  const path=currentUser.id+'/map-tokens/'+id+'.jpg';
+  try{
+    const dataUrl=await resizeCharacterPhoto(file);
+    await uploadDataUrl(dataUrl,path);
+    const {data,error}=await sb.from('combat_custom_tokens').insert({
+      id,map_id:mapId,zone_id:selectedCombatZoneId,name,image_path:path,x_pct:50,y_pct:50,size_pct:size,created_by:currentUser.id
+    }).select().single();
+    if(error)throw error;
+    combatCustomTokens.push({...data,image:customTokenImageUrl(path)});
+    selectedCustomTokenId=id;
+    renderCustomMapTokens(map);
+    refreshGmTokenPanel(map);
+    toast('Token agregado al mapa.');
+  }catch(e){
+    console.error(e);
+    await sb.storage.from('jjk-images').remove([path]);
+    toast('No pude crear el token: '+(e?.message||'error desconocido'));
+  }
+}
+function selectCustomToken(id){
+  if(!isAdmin)return;
+  selectedCustomTokenId=id;
+  document.querySelectorAll('.gm-map-token').forEach(el=>el.classList.toggle('selected',el.dataset.customTokenId===id));
+}
+async function resizeCustomToken(id,factor){
+  if(!isAdmin)return;
+  const tok=combatCustomTokens.find(t=>t.id===id);if(!tok)return;
+  const size=Math.max(1,Math.min(40,Math.round(Number(tok.size_pct||6)*Number(factor)*10)/10));
+  const {error}=await sb.from('combat_custom_tokens').update({size_pct:size,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){toast(error.message);return}
+  tok.size_pct=size;
+  const el=document.getElementById('gm-map-token-'+id);if(el)el.style.width=size+'%';
+  const label=document.getElementById('gm-token-size-label-'+id);if(label)label.textContent=size.toFixed(1);
+}
+async function deleteCustomToken(id){
+  if(!isAdmin)return;
+  const tok=combatCustomTokens.find(t=>t.id===id);if(!tok)return;
+  const {error}=await sb.from('combat_custom_tokens').delete().eq('id',id);
+  if(error){toast(error.message);return}
+  if(tok.image_path)await sb.storage.from('jjk-images').remove([tok.image_path]);
+  combatCustomTokens=combatCustomTokens.filter(t=>t.id!==id);
+  if(selectedCustomTokenId===id)selectedCustomTokenId=null;
+  document.getElementById('gm-map-token-'+id)?.remove();
+  const map=combatMaps.find(m=>m.id===selectedCombatMapId);if(map)refreshGmTokenPanel(map);
+}
+function bindCustomTokenInteractions(map){
+  if(!isAdmin)return;
+  const canvas=document.getElementById('tactical-map');if(!canvas)return;
+  canvas.querySelectorAll('.gm-map-token').forEach(el=>{
+    el.addEventListener('pointerdown',ev=>{
+      if(mapDrawTool!=='none'||mapMeasureMode)return;
+      ev.preventDefault();ev.stopPropagation();
+      const id=el.dataset.customTokenId;
+      const tok=combatCustomTokens.find(t=>t.id===id);if(!tok)return;
+      selectCustomToken(id);
+      el.classList.add('dragging');
+      try{el.setPointerCapture(ev.pointerId)}catch(e){}
+      let finished=false;
+      const move=e=>{
+        if(finished)return;
+        const r=canvas.getBoundingClientRect();
+        const x=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));
+        const y=Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100));
+        el.style.left=x+'%';el.style.top=y+'%';
+      };
+      const finish=async e=>{
+        if(finished)return;finished=true;
+        if(e&&typeof e.clientX==='number')move(e);
+        el.classList.remove('dragging');
+        el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);
+        const x=Math.max(0,Math.min(100,parseFloat(el.style.left)||0)),y=Math.max(0,Math.min(100,parseFloat(el.style.top)||0));
+        tok.x_pct=x;tok.y_pct=y;
+        const {error}=await sb.from('combat_custom_tokens').update({x_pct:x,y_pct:y,updated_at:new Date().toISOString()}).eq('id',id);
+        if(error)toast(error.message);
+      };
+      el.addEventListener('pointermove',move);el.addEventListener('pointerup',finish);el.addEventListener('pointercancel',finish);el.addEventListener('lostpointercapture',finish);
+    });
+  });
+}
+function subscribeCombatCustomTokens(map){
+  if(combatCustomTokenChannel){sb.removeChannel(combatCustomTokenChannel);combatCustomTokenChannel=null}
+  combatCustomTokenChannel=sb.channel('combat-custom-tokens-'+map.id+'-'+selectedCombatZoneId)
+    .on('postgres_changes',{event:'*',schema:'public',table:'combat_custom_tokens',filter:'map_id=eq.'+map.id},async payload=>{
+      const row=payload.new||payload.old;
+      if(row?.zone_id&&row.zone_id!==selectedCombatZoneId)return;
+      try{
+        await loadCombatCustomTokens(map.id);
+        renderCustomMapTokens(map);
+        refreshGmTokenPanel(map);
+      }catch(e){console.error(e)}
+    }).subscribe();
+}
+async function refreshCombatMapVisibility(campaignId){
+  const map=combatMaps.find(m=>m.id===selectedCombatMapId);if(!map)return;
+  await loadCombatMapTokens(map.id);
+  combatMapTokens=visibleCombatMapTokens(map);
+  const canvas=document.getElementById('tactical-map');if(!canvas)return;
+  canvas.querySelectorAll('.map-token').forEach(el=>el.remove());
+  const ruler=canvas.querySelector('.map-ruler-svg');
+  const html=combatMapTokens.map(combatTokenHtml).join('');
+  if(ruler)ruler.insertAdjacentHTML('beforebegin',html);else canvas.insertAdjacentHTML('beforeend',html);
+  bindCombatMapInteractions(map);
+}
+
 async function loadCombatMapDrawings(mapId){
   if(!selectedCombatZoneId){combatMapDrawings=[];return combatMapDrawings}
   const {data,error}=await sb.from('combat_map_drawings')
@@ -3723,7 +3917,11 @@ function mapDrawingElementHtml(d){
   const minX=Math.min(x1,x2),minY=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1);
   if(d.kind==='circle'){
     const cx=(x1+x2)/2,cy=(y1+y2)/2,r=Math.max(.1,Math.min(w,h)/2);
-    return '<circle id="map-drawing-'+id+'" class="map-drawing-shape'+sel+'" data-drawing-id="'+id+'" cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+color+'" fill-opacity="'+fill+'" stroke="'+color+'" stroke-width="'+sw+'"'+click+'></circle>';
+    const canvas=document.getElementById('tactical-map');
+    const rect=canvas?.getBoundingClientRect();
+    const aspect=rect&&rect.height?rect.width/rect.height:1;
+    const ry=Math.max(.1,r*aspect);
+    return '<ellipse id="map-drawing-'+id+'" class="map-drawing-shape'+sel+'" data-drawing-id="'+id+'" cx="'+cx+'" cy="'+cy+'" rx="'+r+'" ry="'+ry+'" fill="'+color+'" fill-opacity="'+fill+'" stroke="'+color+'" stroke-width="'+sw+'"'+click+'></ellipse>';
   }
   if(d.kind==='triangle'){
     const cx=(x1+x2)/2;
@@ -3742,19 +3940,20 @@ function mapDrawingToolbarHtml(){
   if(!isAdmin)return '';
   const tool=(key,label)=>'<button type="button" data-draw-tool="'+key+'" class="'+(mapDrawTool===key?'active':'')+'" onclick="setMapDrawTool(\''+key+'\')">'+label+'</button>';
   return '<div class="map-drawing-toolbar" id="map-drawing-toolbar">'+
-    tool('select','↖ Seleccionar')+tool('freehand','✎ Dibujar')+tool('line','╱ Línea')+tool('rectangle','▭ Rectángulo')+tool('square','□ Cuadrado')+tool('circle','○ Círculo')+tool('triangle','△ Triángulo')+
-    '<span class="draw-sep"></span><label title="Color"><input type="color" id="map-draw-color" value="'+esc(mapDrawColor)+'" onchange="mapDrawColor=this.value"></label>'+
+    '<button type="button" data-draw-tool="none" class="'+(mapDrawTool==='none'?'active':'')+'" onclick="setMapDrawTool(\'none\')">✋ Mover tokens</button>'+
+    tool('select','↖ Mover dibujo')+tool('freehand','✎ Trazo')+tool('line','╱ Línea')+tool('rectangle','▭ Rectángulo')+tool('square','□ Cuadrado')+tool('circle','○ Círculo')+tool('triangle','△ Triángulo')+
+    '<span class="draw-sep"></span><label class="draw-color-label" title="Color"><input type="color" id="map-draw-color" value="'+esc(mapDrawColor)+'" onchange="mapDrawColor=this.value"></label>'+
     '<span class="draw-size"><button class="secondary" onclick="changeMapDrawStroke(-0.15)">−</button><span id="map-draw-stroke-label">'+mapDrawStroke.toFixed(2)+'</span><button class="secondary" onclick="changeMapDrawStroke(0.15)">+</button></span>'+
-    '<span class="draw-sep"></span><button class="secondary" onclick="scaleSelectedMapDrawing(0.85)">− Tamaño</button><button class="secondary" onclick="scaleSelectedMapDrawing(1.18)">+ Tamaño</button>'+
-    '<button class="secondary danger" onclick="deleteSelectedMapDrawing()">Eliminar</button><button class="secondary danger" onclick="clearMapDrawings()">Borrar dibujos</button>'+
-    '<div class="map-drawing-help">Solo GM · Elegí una herramienta y arrastrá sobre el mapa. Con “Seleccionar” tocá una figura para agrandarla, reducirla o eliminarla. Todos los jugadores ven los cambios en tiempo real.</div>'+
+    '<span class="draw-sep"></span><button class="secondary" onclick="scaleSelectedMapDrawing(0.88)">− Tamaño</button><button class="secondary" onclick="scaleSelectedMapDrawing(1.14)">+ Tamaño</button>'+
+    '<button class="secondary danger" onclick="deleteSelectedMapDrawing()">Eliminar</button><button class="secondary danger" onclick="clearMapDrawings()">Borrar todos</button>'+
+    '<div class="map-drawing-help">GM · “Mover tokens” libera el mapa. “Mover dibujo” permite arrastrar figuras. <b>Supr/Delete</b> borra la figura seleccionada y <b>Esc</b> vuelve a mover tokens. Tocá dos veces la herramienta activa para soltarla.</div>'+
   '</div>';
 }
 function setMapDrawTool(tool){
   const requested=tool||'none';
   mapDrawTool=(mapDrawTool===requested&&requested!=='none')?'none':requested;
   if(mapDrawTool!=='select')selectedMapDrawingId=null;
-  if(mapDrawTool!=='none')mapMeasureMode=false;
+  if(mapDrawTool!=='none'){mapMeasureMode=false;selectedCustomTokenId=null}
   document.querySelectorAll('[data-draw-tool]').forEach(b=>b.classList.toggle('active',b.dataset.drawTool===mapDrawTool));
   const ruler=document.getElementById('map-ruler-btn');if(ruler)ruler.classList.remove('active');
   renderMapDrawings();
@@ -3883,13 +4082,30 @@ async function clearMapDrawings(){
   if(error){toast(error.message);return}
   combatMapDrawings=[];selectedMapDrawingId=null;renderMapDrawings();toast('Dibujos borrados.');
 }
+
+document.addEventListener('keydown',e=>{
+  if(!isAdmin||selectedCombatCampaignId==null)return;
+  const tag=(e.target?.tagName||'').toLowerCase();
+  if(['input','textarea','select'].includes(tag)||e.target?.isContentEditable)return;
+  if(e.key==='Escape'){
+    selectedMapDrawingId=null;selectedCustomTokenId=null;mapDrawTool='none';mapMeasureMode=false;
+    document.querySelectorAll('[data-draw-tool]').forEach(b=>b.classList.toggle('active',b.dataset.drawTool==='none'));
+    renderMapDrawings();
+    document.querySelectorAll('.gm-map-token').forEach(el=>el.classList.remove('selected'));
+    return;
+  }
+  if(e.key==='Delete'||e.key==='Backspace'){
+    if(selectedMapDrawingId){e.preventDefault();deleteSelectedMapDrawing();return}
+    if(selectedCustomTokenId){e.preventDefault();deleteCustomToken(selectedCustomTokenId)}
+  }
+});
 function pctPointFromEvent(canvas,e){
   const r=canvas.getBoundingClientRect();
   return {x:Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)),y:Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100))};
 }
 function beginMapDrawingInteraction(canvas,map,e){
   if(!isAdmin||mapDrawTool==='none'||mapDrawTool==='select')return false;
-  if(e.target.closest('.map-token'))return false;
+  if(e.target.closest('.map-token,.gm-map-token'))return false;
   e.preventDefault();e.stopPropagation();
   const svg=document.getElementById('map-drawings-svg');if(!svg)return false;
   const start=pctPointFromEvent(canvas,e);
@@ -3899,7 +4115,7 @@ function beginMapDrawingInteraction(canvas,map,e){
     const ns='http://www.w3.org/2000/svg';
     if(mapDrawTool==='freehand'||mapDrawTool==='line'){preview=document.createElementNS(ns,'polyline');preview.setAttribute('fill','none');preview.setAttribute('stroke-linecap','round');preview.setAttribute('stroke-linejoin','round')}
     else if(mapDrawTool==='triangle')preview=document.createElementNS(ns,'polygon');
-    else if(mapDrawTool==='circle')preview=document.createElementNS(ns,'circle');
+    else if(mapDrawTool==='circle')preview=document.createElementNS(ns,'ellipse');
     else preview=document.createElementNS(ns,'rect');
     preview.setAttribute('stroke',mapDrawColor);preview.setAttribute('stroke-width',mapDrawStroke);preview.setAttribute('vector-effect','non-scaling-stroke');
     if(!['freehand','line'].includes(mapDrawTool)){preview.setAttribute('fill',mapDrawColor);preview.setAttribute('fill-opacity','.16')}
@@ -3907,8 +4123,11 @@ function beginMapDrawingInteraction(canvas,map,e){
   };
   makePreview();
   const updatePreview=p=>{
+    if(mapDrawTool==='freehand'){
+      if(points.length&&Math.hypot(p.x-last.x,p.y-last.y)<.16)return;
+      last=p;points.push(p);preview.setAttribute('points',points.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' '));return;
+    }
     last=p;
-    if(mapDrawTool==='freehand'){points.push(p);preview.setAttribute('points',points.map(q=>q.x+','+q.y).join(' '));return}
     if(mapDrawTool==='line'){points=[start,p];preview.setAttribute('points',start.x+','+start.y+' '+p.x+','+p.y);return}
     let x2=p.x,y2=p.y;
     if(mapDrawTool==='square'||mapDrawTool==='circle'){
@@ -3916,8 +4135,11 @@ function beginMapDrawingInteraction(canvas,map,e){
       x2=start.x+(dx<0?-side:side);y2=start.y+(dy<0?-side:side);
     }
     const minX=Math.min(start.x,x2),minY=Math.min(start.y,y2),w=Math.abs(x2-start.x),h=Math.abs(y2-start.y);
-    if(mapDrawTool==='circle'){preview.setAttribute('cx',(start.x+x2)/2);preview.setAttribute('cy',(start.y+y2)/2);preview.setAttribute('r',Math.max(.1,Math.min(w,h)/2))}
-    else if(mapDrawTool==='triangle'){preview.setAttribute('points',((start.x+x2)/2)+','+minY+' '+(minX+w)+','+(minY+h)+' '+minX+','+(minY+h))}
+    if(mapDrawTool==='circle'){
+      const rect=canvas.getBoundingClientRect(),aspect=rect.height?rect.width/rect.height:1;
+      const r=Math.max(.1,Math.min(w,h)/2);
+      preview.setAttribute('cx',(start.x+x2)/2);preview.setAttribute('cy',(start.y+y2)/2);preview.setAttribute('rx',r);preview.setAttribute('ry',Math.max(.1,r*aspect));
+    }else if(mapDrawTool==='triangle'){preview.setAttribute('points',((start.x+x2)/2)+','+minY+' '+(minX+w)+','+(minY+h)+' '+minX+','+(minY+h))}
     else {preview.setAttribute('x',minX);preview.setAttribute('y',minY);preview.setAttribute('width',Math.max(.1,w));preview.setAttribute('height',Math.max(.1,h))}
   };
   updatePreview(start);
@@ -3965,12 +4187,13 @@ async function renderActiveCombatMap(campaignId){
   if(!map){
     root.innerHTML='<div class="map-empty">'+(isAdmin?'Todavía no hay mapas. Subí uno arriba.':'El GM todavía no cargó un mapa para esta campaña.')+'</div>';
     if(combatMapChannel){sb.removeChannel(combatMapChannel);combatMapChannel=null}
+    if(combatCustomTokenChannel){sb.removeChannel(combatCustomTokenChannel);combatCustomTokenChannel=null}
     if(combatDrawingChannel){sb.removeChannel(combatDrawingChannel);combatDrawingChannel=null}
-    combatMapDrawings=[];selectedMapDrawingId=null;
+    combatMapDrawings=[];combatCustomTokens=[];selectedMapDrawingId=null;selectedCustomTokenId=null;
     return;
   }
   root.innerHTML='<div class="map-empty">Cargando '+esc(map.name)+'...</div>';
-  try{await ensureCombatMapTokens(map);await loadCombatMapDrawings(map.id)}catch(e){console.error(e);root.innerHTML='<div class="map-empty">No pude cargar el mapa compartido.</div>';return}
+  try{await ensureCombatMapTokens(map);await Promise.all([loadCombatMapDrawings(map.id),loadCombatCustomTokens(map.id)])}catch(e){console.error(e);root.innerHTML='<div class="map-empty">No pude cargar el mapa compartido.</div>';return}
   combatMapTokens=visibleCombatMapTokens(map);
   const zoneIds=mapZoneIds(map);
   const zonesText=mapZoneLabel(map);
@@ -3982,10 +4205,13 @@ async function renderActiveCombatMap(campaignId){
       '<svg class="map-ruler-svg"><line id="map-ruler-line" class="map-ruler-line" x1="0" y1="0" x2="0" y2="0" style="display:none"></line></svg>'+
       '<div id="map-measure-label" class="map-measure-label"></div>'+
       visibleCombatMapTokens(map).map(combatTokenHtml).join('')+
-    '</div></div>'+mapDrawingToolbarHtml();
+      combatCustomTokens.map(customCombatTokenHtml).join('')+
+    '</div></div>'+mapDrawingToolbarHtml()+gmTokenPanelHtml(map);
+  renderMapDrawings();
   bindCombatMapInteractions(map);
-  bindMapDrawingDragInteractions();
+  bindCustomTokenInteractions(map);
   subscribeCombatMap(map);
+  subscribeCombatCustomTokens(map);
   subscribeCombatMapDrawings(map);
 }
 async function deleteCombatMap(campaignId,mapId){
@@ -4136,7 +4362,7 @@ function bindCombatMapInteractions(map){
   canvas.onpointerdown=e=>{
     if(beginMapDrawingInteraction(canvas,map,e))return;
     if(mapDrawTool==='select')return;
-    if(!mapMeasureMode||e.target.closest('.map-token'))return;
+    if(!mapMeasureMode||e.target.closest('.map-token,.gm-map-token'))return;
     clearMeasureHideTimer();
     const r=canvas.getBoundingClientRect();
     start={x:e.clientX-r.left,y:e.clientY-r.top};

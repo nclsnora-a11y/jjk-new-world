@@ -322,6 +322,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .gm-token-row img{width:38px;height:38px;object-fit:cover;border-radius:50%;border:1px solid #444457}
 .gm-token-row-main{min-width:0;display:flex;flex-direction:column}.gm-token-row-main b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gm-token-row-main small{color:var(--muted)}
 @media(max-width:760px){.gm-token-create{grid-template-columns:1fr}.gm-token-row{grid-template-columns:38px minmax(0,1fr) auto auto}.gm-token-row .danger{grid-column:2/-1}}
+.free-dice-results{white-space:normal;line-height:1.45}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 </head>
@@ -2894,7 +2895,7 @@ function combatRollChatHtml(campaignId){
   return '<aside class="roll-chat">'+
     '<div class="roll-chat-head"><div><b>Tiradas</b><div class="muted" style="font-size:11px">Registro compartido</div></div>'+(isAdmin?'<button class="secondary danger mini-clear-btn" onclick="clearCombatRolls(\''+campaignId+'\')">Borrar tiradas</button>':'')+'</div>'+
     '<div class="dice-panel">'+selector+'<div class="dice-quick-row">'+quick+'</div>'+
-      '<div class="dice-expression-row"><input id="dice-expression-'+campaignId+'" placeholder="Ej: 2D8, 8D10, 5D20" onkeydown="if(event.key===\'Enter\')rollFreeDice(\''+campaignId+'\',this.value)"><button onclick="rollFreeDice(\''+campaignId+'\',document.getElementById(\'dice-expression-'+campaignId+'\').value)">Tirar</button></div>'+
+      '<div class="dice-expression-row"><input id="dice-expression-'+campaignId+'" placeholder="Ej: D20 + 3D8 + 7" onkeydown="if(event.key===\'Enter\')rollFreeDice(\''+campaignId+'\',this.value)"><button onclick="rollFreeDice(\''+campaignId+'\',document.getElementById(\'dice-expression-'+campaignId+'\').value)">Tirar</button></div>'+
     '</div>'+
     '<div class="roll-chat-list" id="roll-chat-list">'+msgs+'</div>'+
     combatChatHtml(campaignId)+
@@ -2919,7 +2920,11 @@ function combatRollMessageHtml(r){
   if(r.roll_expression){
     const time=new Date(r.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     const results=Array.isArray(r.roll_results)?r.roll_results:[];
-    const shown=results.length<=12?results.join(', '):results.slice(0,12).join(', ')+'…';
+    const compound=results.some(x=>x&&typeof x==='object');
+    const compactResults=compound
+      ?results.map(x=>x&&typeof x==='object'?'D'+Number(x.sides||0)+': '+Number(x.value||0):String(x))
+      :results.map(x=>String(x));
+    const shown=compactResults.length<=12?compactResults.join(' · '):compactResults.slice(0,12).join(' · ')+'…';
     const ch=r.character_id?allCharacters.find(c=>c.id===r.character_id):null;
     const title=r.stat_name&&r.stat_name!=='Dados'?((ch?.sorcererName?ch.sorcererName+' · ':'')+r.stat_name):((ch?.sorcererName?ch.sorcererName+' · ':'')+'Tirada libre');
     const avatar=ch?.photo?'<img class="roll-msg-mini-avatar" src="'+ch.photo+'" alt="">':'<div class="roll-msg-mini-avatar">術</div>';
@@ -2950,6 +2955,91 @@ function parseDiceExpressionFlexible(expression){
   if(count>100||sides<2||sides>1000)return null;
   return {count,sides,modifier,expression:count+'D'+sides+(modifier?(modifier>0?'+':'')+modifier:'')};
 }
+function parseCompoundDiceExpression(expression){
+  const raw=String(expression||'').trim().toUpperCase().replace(/\s+/g,'');
+  if(!raw)return null;
+  const tokens=raw.match(/[+-]?[^+-]+/g);
+  if(!tokens||tokens.join('')!==raw)return null;
+  const dice=[];
+  let modifier=0,totalDice=0;
+  for(const token of tokens){
+    let sign=1,body=token;
+    if(body[0]==='+')body=body.slice(1);
+    else if(body[0]==='-'){sign=-1;body=body.slice(1)}
+    const dm=body.match(/^(\d{0,3})D(\d{1,4})$/);
+    if(dm){
+      if(sign<0)return null;
+      const count=dm[1]?Number(dm[1]):1;
+      const sides=Number(dm[2]);
+      if(count<1||count>100||sides<2||sides>1000)return null;
+      totalDice+=count;
+      if(totalDice>100)return null;
+      dice.push({count,sides});
+      continue;
+    }
+    if(!/^\d+$/.test(body))return null;
+    modifier+=sign*Number(body);
+    if(Math.abs(modifier)>100000)return null;
+  }
+  if(!dice.length)return null;
+  const expression=dice.map((d,i)=>(i?'+':'')+(d.count===1?'D'+d.sides:d.count+'D'+d.sides)).join('')+
+    (modifier?(modifier>0?'+':'')+modifier:'');
+  return {dice,modifier,expression};
+}
+function rollCompoundDice(parsed){
+  const rolled=[];
+  for(const group of parsed.dice){
+    for(let i=0;i<group.count;i++){
+      rolled.push({sides:group.sides,value:Math.floor(Math.random()*group.sides)+1});
+    }
+  }
+  const subtotal=rolled.reduce((sum,r)=>sum+r.value,0);
+  return {rolled,subtotal,total:subtotal+parsed.modifier};
+}
+function animateCompoundDice(rolled,labelText,modifier=0){
+  return new Promise(resolve=>{
+    const overlay=document.getElementById('dice-overlay');
+    const single=document.getElementById('single-die-stage');
+    const multi=document.getElementById('dice-multi-stage');
+    const label=document.getElementById('d20-label');
+    const crit=document.getElementById('dice-crit-text');
+    if(!overlay||!multi){resolve();return}
+    const shown=rolled.slice(0,12);
+    single?.classList.add('hidden');
+    multi.classList.remove('hidden');
+    multi.innerHTML=shown.map((r,i)=>'<div class="multi-die rolling" data-i="'+i+'"><span>?</span><small>D'+r.sides+'</small></div>').join('')+
+      (rolled.length>12?'<div class="multi-dice-more">+'+(rolled.length-12)+' dados más</div>':'');
+    overlay.classList.remove('hidden');
+    if(label)label.textContent=labelText;
+    if(crit){crit.classList.remove('show');crit.textContent=''}
+    let ticks=0;
+    const timer=setInterval(()=>{
+      multi.querySelectorAll('.multi-die').forEach((el,i)=>{
+        const span=el.querySelector('span'),sides=shown[i]?.sides||20;
+        if(span)span.textContent=String(Math.floor(Math.random()*sides)+1);
+      });
+      ticks++;
+      if(ticks>=18){
+        clearInterval(timer);
+        multi.querySelectorAll('.multi-die').forEach((el,i)=>{
+          el.classList.remove('rolling');el.classList.add('resolved');
+          const span=el.querySelector('span');
+          if(span)span.textContent=String(shown[i]?.value??'');
+        });
+        const subtotal=rolled.reduce((a,r)=>a+Number(r.value||0),0),total=subtotal+modifier;
+        if(crit){
+          crit.textContent='TOTAL '+total+(modifier?' ('+subtotal+(modifier>0?'+':'')+modifier+')':'');
+          crit.classList.add('show');
+        }
+        setTimeout(()=>{
+          overlay.classList.add('hidden');multi.classList.add('hidden');multi.innerHTML='';
+          single?.classList.remove('hidden');if(crit)crit.classList.remove('show');resolve();
+        },1050);
+      }
+    },95);
+  });
+}
+
 function animateDiceGroup(results,sides,labelText,modifier=0){
   return new Promise(resolve=>{
     const overlay=document.getElementById('dice-overlay');
@@ -3001,18 +3091,20 @@ function animateDiceGroup(results,sides,labelText,modifier=0){
 
 async function rollFreeDice(campaignId,expression){
   if(!currentUser)return;
-  const parsed=parseDiceExpressionFlexible(expression);
-  if(!parsed){toast('Usá un formato como 2D8, 3D10 o 5D20.');return}
+  const parsed=parseCompoundDiceExpression(expression);
+  if(!parsed){toast('Usá formatos como D20, 3D8, D20 + 3D8 o D20 + 3D8 + 7.');return}
   const charId=document.getElementById('free-roll-character-'+campaignId)?.value||null;
   const ch=charId?allCharacters.find(c=>c.id===charId):null;
-  const {count,sides,modifier,expression:expr}=parsed;
-  const results=Array.from({length:count},()=>Math.floor(Math.random()*sides)+1);
-  const total=results.reduce((a,b)=>a+b,0)+modifier;
-  await animateDiceGroup(results,sides,(ch?ch.sorcererName+' · ':'')+expr+' · Tirada libre',modifier);
+  const result=rollCompoundDice(parsed);
+  await animateCompoundDice(result.rolled,(ch?ch.sorcererName+' · ':'')+parsed.expression+' · Tirada libre',parsed.modifier);
   const {error}=await sb.from('combat_rolls').insert({
     campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
-    stat_name:'Dados',die_result:results[0],stat_bonus:modifier,total,
-    roll_expression:expr,roll_results:results
+    stat_name:'Dados',
+    die_result:result.rolled[0]?.value||0,
+    stat_bonus:parsed.modifier,
+    total:result.total,
+    roll_expression:parsed.expression,
+    roll_results:result.rolled
   });
   if(error){toast(error.message);return}
   const input=document.getElementById('dice-expression-'+campaignId);

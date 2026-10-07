@@ -2439,6 +2439,35 @@ async function ensureCombatStates(campaignId){
   if(!isAdmin)return loadCombatStates(campaignId);
   const ids=selectedCombatZoneId?combatZoneCharacterIds(campaignId,selectedCombatZoneId):campaignCharacterIds(campaignId);
   await loadCombatStates(campaignId);
+
+  // Mantener las barras especiales del combate sincronizadas con la ficha.
+  // Conservamos el valor actual si la barra ya existía; si es nueva, empieza llena.
+  for(const id of ids){
+    const ch=allCharacters.find(c=>c.id===id);
+    const state=combatStates.find(s=>s.character_id===id);
+    if(!ch||!state)continue;
+    const desired=(Array.isArray(ch.specialBars)?ch.specialBars:[]).slice(0,2).map(bar=>{
+      const prev=(Array.isArray(state.special_bars)?state.special_bars:[]).find(x=>x.id===bar.id);
+      const max=Math.max(1,Number(bar.max||100));
+      return {
+        id:bar.id,
+        name:bar.name||'Barra especial',
+        color:bar.color||'#8b5cf6',
+        max,
+        current:Math.min(max,Math.max(0,Number(prev?.current??max)))
+      };
+    });
+    const current=Array.isArray(state.special_bars)?state.special_bars:[];
+    if(JSON.stringify(current)!==JSON.stringify(desired)){
+      const {error}=await sb.from('combat_states')
+        .update({special_bars:desired,updated_at:new Date().toISOString()})
+        .eq('campaign_id',campaignId)
+        .eq('character_id',id);
+      if(error)throw error;
+      state.special_bars=desired;
+    }
+  }
+
   const existing=new Set(combatStates.map(s=>s.character_id));
   const rows=ids.filter(id=>!existing.has(id)).map(id=>{
     const ch=allCharacters.find(c=>c.id===id);

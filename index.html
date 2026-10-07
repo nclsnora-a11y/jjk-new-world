@@ -3928,7 +3928,12 @@ function mapDrawingElementHtml(d){
     const points=cx+','+minY+' '+(minX+w)+','+(minY+h)+' '+minX+','+(minY+h);
     return '<polygon id="map-drawing-'+id+'" class="map-drawing-shape'+sel+'" data-drawing-id="'+id+'" points="'+points+'" fill="'+color+'" fill-opacity="'+fill+'" stroke="'+color+'" stroke-width="'+sw+'" stroke-linejoin="round"'+click+'></polygon>';
   }
-  return '<rect id="map-drawing-'+id+'" class="map-drawing-shape'+sel+'" data-drawing-id="'+id+'" x="'+minX+'" y="'+minY+'" width="'+Math.max(.1,w)+'" height="'+Math.max(.1,h)+'" fill="'+color+'" fill-opacity="'+fill+'" stroke="'+color+'" stroke-width="'+sw+'" rx="'+(d.kind==='square'?'.7':'.3')+'"'+click+'></rect>';
+  if(d.kind==='square'){
+    const canvas=document.getElementById('tactical-map'),rect=canvas?.getBoundingClientRect(),aspect=rect&&rect.height?rect.width/rect.height:1;
+    const side=Math.max(.1,Math.min(w,h)),displayH=side*aspect,cy=(y1+y2)/2;
+    return '<rect id="map-drawing-'+id+'" class="map-drawing-shape'+sel+'" data-drawing-id="'+id+'" x="'+minX+'" y="'+(cy-displayH/2)+'" width="'+side+'" height="'+displayH+'" fill="'+color+'" fill-opacity="'+fill+'" stroke="'+color+'" stroke-width="'+sw+'" rx=".7"'+click+'></rect>';
+  }
+  return '<rect id="map-drawing-'+id+'" class="map-drawing-shape'+sel+'" data-drawing-id="'+id+'" x="'+minX+'" y="'+minY+'" width="'+Math.max(.1,w)+'" height="'+Math.max(.1,h)+'" fill="'+color+'" fill-opacity="'+fill+'" stroke="'+color+'" stroke-width="'+sw+'" rx=".3"'+click+'></rect>';
 }
 function renderMapDrawings(){
   const svg=document.getElementById('map-drawings-svg');if(!svg)return;
@@ -3946,7 +3951,7 @@ function mapDrawingToolbarHtml(){
     '<span class="draw-size"><button class="secondary" onclick="changeMapDrawStroke(-0.15)">−</button><span id="map-draw-stroke-label">'+mapDrawStroke.toFixed(2)+'</span><button class="secondary" onclick="changeMapDrawStroke(0.15)">+</button></span>'+
     '<span class="draw-sep"></span><button class="secondary" onclick="scaleSelectedMapDrawing(0.88)">− Tamaño</button><button class="secondary" onclick="scaleSelectedMapDrawing(1.14)">+ Tamaño</button>'+
     '<button class="secondary danger" onclick="deleteSelectedMapDrawing()">Eliminar</button><button class="secondary danger" onclick="clearMapDrawings()">Borrar todos</button>'+
-    '<div class="map-drawing-help">GM · “Mover tokens” libera el mapa. “Mover dibujo” permite arrastrar figuras. <b>Supr/Delete</b> borra la figura seleccionada y <b>Esc</b> vuelve a mover tokens. Tocá dos veces la herramienta activa para soltarla.</div>'+
+    '<div class="map-drawing-help">GM · “Mover tokens” libera el mapa. “Mover dibujo” permite arrastrar figuras. <b>Supr/Delete</b> borra la figura, las <b>flechas</b> la acomodan con precisión y <b>Esc</b> vuelve a mover tokens. Tocá dos veces la herramienta activa para soltarla.</div>'+
   '</div>';
 }
 function setMapDrawTool(tool){
@@ -4075,6 +4080,14 @@ async function deleteSelectedMapDrawing(){
   if(error){toast(error.message);return}
   combatMapDrawings=combatMapDrawings.filter(d=>d.id!==id);selectedMapDrawingId=null;renderMapDrawings();
 }
+async function nudgeSelectedMapDrawing(dx,dy){
+  if(!isAdmin||!selectedMapDrawingId)return;
+  const d=combatMapDrawings.find(x=>x.id===selectedMapDrawingId);if(!d)return;
+  const patch={...movedDrawingPayload(d,dx,dy),updated_at:new Date().toISOString()};
+  const {error}=await sb.from('combat_map_drawings').update(patch).eq('id',d.id);
+  if(error){toast(error.message);return}
+  Object.assign(d,patch);renderMapDrawings();
+}
 async function clearMapDrawings(){
   if(!isAdmin||!selectedCombatMapId||!selectedCombatZoneId)return;
   if(!confirm('¿Borrar todos los dibujos de este mapa en la zona actual?'))return;
@@ -4096,7 +4109,13 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='Delete'||e.key==='Backspace'){
     if(selectedMapDrawingId){e.preventDefault();deleteSelectedMapDrawing();return}
-    if(selectedCustomTokenId){e.preventDefault();deleteCustomToken(selectedCustomTokenId)}
+  }
+  if(selectedMapDrawingId&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();
+    const step=e.shiftKey?1.5:.35;
+    const dx=e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0;
+    const dy=e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0;
+    nudgeSelectedMapDrawing(dx,dy);
   }
 });
 function pctPointFromEvent(canvas,e){
@@ -4140,7 +4159,10 @@ function beginMapDrawingInteraction(canvas,map,e){
       const r=Math.max(.1,Math.min(w,h)/2);
       preview.setAttribute('cx',(start.x+x2)/2);preview.setAttribute('cy',(start.y+y2)/2);preview.setAttribute('rx',r);preview.setAttribute('ry',Math.max(.1,r*aspect));
     }else if(mapDrawTool==='triangle'){preview.setAttribute('points',((start.x+x2)/2)+','+minY+' '+(minX+w)+','+(minY+h)+' '+minX+','+(minY+h))}
-    else {preview.setAttribute('x',minX);preview.setAttribute('y',minY);preview.setAttribute('width',Math.max(.1,w));preview.setAttribute('height',Math.max(.1,h))}
+    else if(mapDrawTool==='square'){
+      const rect=canvas.getBoundingClientRect(),aspect=rect.height?rect.width/rect.height:1,side=Math.max(.1,Math.min(w,h)),displayH=side*aspect,cy=(start.y+y2)/2;
+      preview.setAttribute('x',minX);preview.setAttribute('y',cy-displayH/2);preview.setAttribute('width',side);preview.setAttribute('height',displayH);
+    }else {preview.setAttribute('x',minX);preview.setAttribute('y',minY);preview.setAttribute('width',Math.max(.1,w));preview.setAttribute('height',Math.max(.1,h))}
   };
   updatePreview(start);
   try{canvas.setPointerCapture(e.pointerId)}catch(err){}

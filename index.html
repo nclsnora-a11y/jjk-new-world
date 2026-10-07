@@ -298,6 +298,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .technique-detail .pd-desc{font-size:11px;color:#b8b8c2;margin-top:5px;line-height:1.45}
 .account-details-row button{margin-left:auto}
 .special-bars-toggle-cell{display:flex;flex-direction:column;justify-content:flex-end}.special-bars-editor{margin:10px 0 14px;padding:11px;border:1px solid #343443;border-radius:10px;background:#0e0e15}.special-bar-editor-row{display:grid;grid-template-columns:1.5fr .55fr .7fr auto;gap:8px;align-items:end;padding:8px 0;border-top:1px solid #292938}.special-bar-editor-row:first-child{border-top:0}.special-bar-color{height:39px;padding:3px}.special-bar-remove{display:flex;align-items:end}@media(max-width:720px){.special-bar-editor-row{grid-template-columns:1fr 90px}.special-bar-remove{grid-column:1/-1}.special-bar-editor-row>div:nth-child(3){grid-column:1/2}}
+.combat-chat-compose select.hidden{display:none!important}.combat-chat-compose select[id^="combat-chat-recipient-"]{min-width:150px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 </head>
@@ -3345,14 +3346,14 @@ async function loadCombatMessages(campaignId){
     .limit(200);
   if(error)throw error;
   const rows=data||[];
-  const ids=[...new Set(rows.map(m=>m.sender_id).filter(Boolean))];
+  const ids=[...new Set(rows.flatMap(m=>[m.sender_id,m.recipient_id]).filter(Boolean))];
   let profiles=[];
   if(ids.length){
     const {data:pd,error:pe}=await sb.from('profiles').select('id,email,display_name,role').in('id',ids);
     if(!pe)profiles=pd||[];
   }
   const byId=Object.fromEntries(profiles.map(p=>[p.id,p]));
-  combatMessages=rows.map(m=>({...m,_sender:byId[m.sender_id]||null}));
+  combatMessages=rows.map(m=>({...m,_sender:byId[m.sender_id]||null,_recipient:byId[m.recipient_id]||null}));
   return combatMessages;
 }
 function combatChatSenderLabel(m){
@@ -3363,9 +3364,34 @@ function combatChatSenderLabel(m){
   if(m.sender_id===currentUser?.id)return isAdmin?'GM':'Yo';
   return 'Jugador';
 }
+function campaignDirectRecipients(campaignId){
+  const ids=new Set(sharedMemberships.filter(m=>m.campaign_id===campaignId).map(m=>m.character_id));
+  const byOwner=new Map();
+  allCharacters.filter(ch=>ids.has(ch.id)).forEach(ch=>{
+    if(!ch.owner_id||ch.owner_id===currentUser?.id)return;
+    if(!byOwner.has(ch.owner_id))byOwner.set(ch.owner_id,[]);
+    byOwner.get(ch.owner_id).push(ch.sorcererName||'Personaje');
+  });
+  return [...byOwner.entries()].map(([userId,names])=>({userId,label:names.join(' / ')}));
+}
+function directRecipientLabel(m){
+  const chars=campaignDirectRecipients(m.campaign_id).find(x=>x.userId===m.recipient_id);
+  if(chars?.label)return chars.label;
+  const p=m._recipient;
+  if(p?.display_name)return p.display_name;
+  if(p?.email)return p.email.split('@')[0];
+  return 'Jugador';
+}
+function toggleCombatDirectRecipient(campaignId){
+  const mode=document.getElementById('combat-chat-mode-'+campaignId)?.value;
+  const target=document.getElementById('combat-chat-recipient-'+campaignId);
+  if(target)target.classList.toggle('hidden',mode!=='direct');
+}
 function combatChatMessageHtml(m){
   const own=m.sender_id===currentUser?.id;
-  const modeLabel=m.mode==='private'?'Privado':m.mode==='gm'?'GM':'Global';
+  const modeLabel=m.mode==='direct'
+    ?(m.sender_id===currentUser?.id?'Directo a '+directRecipientLabel(m):'Directo del GM')
+    :m.mode==='private'?'Privado':m.mode==='gm'?'GM':'Global';
   const time=new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   return '<div class="combat-chat-msg '+(own?'mine':'')+'">'+
     '<div class="combat-chat-msg-top"><span><b>'+esc(combatChatSenderLabel(m))+'</b><span class="combat-chat-mode mode-'+esc(m.mode)+'">'+esc(modeLabel)+'</span></span><span>'+esc(time)+'</span></div>'+
@@ -3376,15 +3402,22 @@ function combatChatHtml(campaignId){
   const msgs=combatMessages.length
     ?combatMessages.map(combatChatMessageHtml).join('')
     :'<div class="combat-chat-empty">Todavía no hay mensajes.</div>';
+  const directRecipients=isAdmin?campaignDirectRecipients(campaignId):[];
+  const directOptions=directRecipients.map(x=>'<option value="'+esc(x.userId)+'">'+esc(x.label)+'</option>').join('');
+  const directSelect=isAdmin
+    ?'<select id="combat-chat-recipient-'+campaignId+'" class="hidden" aria-label="Jugador destinatario"><option value="">Elegir jugador...</option>'+directOptions+'</select>'
+    :'';
   return '<div class="combat-text-chat compact">'+
     '<div class="combat-text-chat-head"><div><b>Chat</b><div class="muted">Jugadores</div></div>'+(isAdmin?'<button class="secondary danger mini-clear-btn" onclick="clearCombatMessages(\''+campaignId+'\')">Borrar chat</button>':'')+'</div>'+
     '<div class="combat-chat-list" id="combat-chat-list">'+msgs+'</div>'+
     '<div class="combat-chat-compose">'+
-      '<select id="combat-chat-mode-'+campaignId+'" aria-label="Destino del mensaje">'+
+      '<select id="combat-chat-mode-'+campaignId+'" aria-label="Destino del mensaje" onchange="toggleCombatDirectRecipient(\''+campaignId+'\')">'+
         '<option value="global">Global</option>'+
         '<option value="private">Privado</option>'+
         '<option value="gm">GM</option>'+
+        (isAdmin?'<option value="direct">Directo a jugador</option>':'')+
       '</select>'+
+      directSelect+
       '<input id="combat-chat-input-'+campaignId+'" maxlength="2000" placeholder="Mensaje..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendCombatMessage(\''+campaignId+'\')}">'+
       '<button onclick="sendCombatMessage(\''+campaignId+'\')">Enviar</button>'+
     '</div>'+
@@ -3404,11 +3437,19 @@ async function sendCombatMessage(campaignId){
   const input=document.getElementById('combat-chat-input-'+campaignId);
   const select=document.getElementById('combat-chat-mode-'+campaignId);
   const body=(input?.value||'').trim();
-  const mode=['global','private','gm'].includes(select?.value)?select.value:'global';
+  const requested=select?.value||'global';
+  const mode=['global','private','gm','direct'].includes(requested)?requested:'global';
   if(!body)return;
+  let recipientId=null;
+  if(mode==='direct'){
+    if(!isAdmin){toast('Solo el GM puede enviar mensajes directos.');return}
+    recipientId=document.getElementById('combat-chat-recipient-'+campaignId)?.value||null;
+    if(!recipientId){toast('Elegí a qué jugador querés enviarle el mensaje.');return}
+  }
   const {error}=await sb.from('combat_messages').insert({
     campaign_id:campaignId,
     sender_id:currentUser.id,
+    recipient_id:recipientId,
     mode,
     body
   });

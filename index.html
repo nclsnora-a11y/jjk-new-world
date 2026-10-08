@@ -553,7 +553,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
   <div class="characters-head">
     <div>
       <h2 style="margin:0 0 5px">Mis personajes</h2>
-      <div class="muted">Personajes guardados en este dispositivo. Podés modificar su progreso sin perder sus estadísticas iniciales.</div>
+      <div class="muted">Tus personajes sincronizados. Editá la ficha o consultá inventario, experiencia y puntos.</div>
     </div>
   </div>
   <div id="characters-list"></div>
@@ -1420,7 +1420,7 @@ async function sellInventoryItem(itemId){
 
 function shopListingHtml(listing){
   const seller=listing.seller_character_id?allCharacters.find(c=>c.id===listing.seller_character_id):null;
-  const sellerLabel=seller?'Jugador · '+seller.sorcererName:'Tienda oficial';
+  const sellerLabel=listing.seller_character_id?(seller?'Jugador · '+seller.sorcererName:'Venta de jugador'):'Tienda oficial';
   const ownSeller=listing.seller_user_id===currentUser?.id;
   return '<article class="shop-item-card">'+
     (listing.image_url?'<img class="shop-item-image" src="'+esc(listing.image_url)+'" alt="">':'<div class="shop-item-image placeholder">呪</div>')+
@@ -1456,6 +1456,7 @@ function shopAdminPanelHtml(){
 }
 function renderShop(){
   const root=document.getElementById('shop-root');if(!root)return;
+  if(typeof currentUser==='undefined')return;
   if(!currentUser){root.innerHTML='<div class="auth-required"><b>Iniciá sesión para usar la Tienda.</b></div>';return}
   const active=shopListings.filter(x=>x.is_active&&Number(x.stock)>0);
   const ownChars=savedCharacters;
@@ -2617,9 +2618,9 @@ saveCharacterEdit=async function(id){
   if(error){toast(error.message);return}
   delete pendingPassiveRemovals[id];
 
-  const hpMax=Math.max(0,(normalizeStatValue(currentStats['Durabilidad'])??1)*50);
-  const ceMax=Math.max(0,(normalizeStatValue(currentStats['Energía Maldita'])??1)*50);
-  const resMax=Math.max(0,(normalizeStatValue(currentStats['Resistencia'])??1)*50);
+  const hpMax=Math.max(1,(normalizeStatValue(currentStats['Durabilidad'])??1)*50);
+  const ceMax=Math.max(1,(normalizeStatValue(currentStats['Energía Maldita'])??1)*50);
+  const resMax=Math.max(1,(normalizeStatValue(currentStats['Resistencia'])??1)*50);
   const {data:states}=await sb.from('combat_states').select('campaign_id,hp_current,ce_current,durability_current,special_bars').eq('character_id',id);
   for(const s of (states||[])){
     const oldSpecial=Array.isArray(s.special_bars)?s.special_bars:[];

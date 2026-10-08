@@ -4659,18 +4659,35 @@ function bindCustomTokenInteractions(map){
       selectCustomToken(id);
       el.classList.add('dragging');
       try{el.setPointerCapture(ev.pointerId)}catch(e){}
+      const img=document.getElementById('tactical-map-image');
+      const line=document.getElementById('map-ruler-line');
+      const label=document.getElementById('map-measure-label');
+      const startX=(Number(tok.x_pct)||0)/100*canvas.clientWidth;
+      const startY=(Number(tok.y_pct)||0)/100*canvas.clientHeight;
+      if(line){line.style.display='block';line.setAttribute('x1',startX);line.setAttribute('y1',startY);line.setAttribute('x2',startX);line.setAttribute('y2',startY)}
+      if(label){label.style.display='block';label.style.left=startX+'px';label.style.top=startY+'px';label.textContent='0 pies'}
       let finished=false;
       const move=e=>{
         if(finished)return;
         const r=canvas.getBoundingClientRect();
-        const x=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));
-        const y=Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100));
+        const px=Math.max(0,Math.min(r.width,e.clientX-r.left));
+        const py=Math.max(0,Math.min(r.height,e.clientY-r.top));
+        const x=px/r.width*100,y=py/r.height*100;
         el.style.left=x+'%';el.style.top=y+'%';
+        if(line){line.style.display='block';line.setAttribute('x2',px);line.setAttribute('y2',py)}
+        if(label){
+          const sourceScale=(img?.naturalWidth||img?.clientWidth||r.width)/Math.max(1,img?.clientWidth||r.width);
+          const feet=Math.hypot(px-startX,py-startY)*sourceScale/Math.max(1,Number(map.grid_size_px)||1)*(Number(map.feet_per_cell)||0);
+          label.style.display='block';label.style.left=((startX+px)/2)+'px';label.style.top=((startY+py)/2)+'px';
+          label.textContent=feet.toFixed(1)+' pies';
+        }
       };
       const finish=async e=>{
         if(finished)return;finished=true;
         if(e&&typeof e.clientX==='number')move(e);
         el.classList.remove('dragging');
+        if(line)line.style.display='none';
+        if(label)label.style.display='none';
         el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);
         const x=Math.max(0,Math.min(100,parseFloat(el.style.left)||0)),y=Math.max(0,Math.min(100,parseFloat(el.style.top)||0));
         tok.x_pct=x;tok.y_pct=y;

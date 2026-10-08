@@ -584,7 +584,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
   </div>
   <div id="shop-root"></div>
 </section>
-<section id="ranking-section" class="hidden"><div class="ranking-heading"><h2>🏆 Ranking de personajes</h2><p>Clasificación por suma de estadísticas. Los administradores pueden establecer una puntuación manual.</p></div><div class="ranking-tabs"><button class="active" data-ranking-filter="global" onclick="setRankingFilter('global')">Global</button><button data-ranking-filter="hechicero" onclick="setRankingFilter('hechicero')">Hechiceros</button><button data-ranking-filter="brujo" onclick="setRankingFilter('brujo')">Brujos</button><button data-ranking-filter="maldicion" onclick="setRankingFilter('maldicion')">Maldiciones</button></div><div id="ranking-root"></div></section>
+<section id="ranking-section" class="hidden"><div class="ranking-heading"><h2>🏆 Ranking de personajes</h2><p>Clasificación por puntaje. Los administradores pueden modificarlo.</p></div><div class="ranking-tabs"><button class="active" data-ranking-filter="global" onclick="setRankingFilter('global')">Global</button><button data-ranking-filter="hechicero" onclick="setRankingFilter('hechicero')">Hechiceros</button><button data-ranking-filter="brujo" onclick="setRankingFilter('brujo')">Brujos</button><button data-ranking-filter="maldicion" onclick="setRankingFilter('maldicion')">Maldiciones</button></div><div id="ranking-root"></div></section>
 <section id="combat-section" class="hidden">
   <div class="combat-toolbar">
     <div>
@@ -1473,7 +1473,7 @@ function renderRanking(){
       '<div class="ranking-number">'+(i===0?'👑':(i+1)+'°')+'</div>'+
       (avatar?'<img class="ranking-avatar" src="'+esc(avatar)+'" alt="">':'<div class="ranking-avatar" style="display:grid;place-items:center;font-size:23px">呪</div>')+
       '<div class="ranking-info"><div class="ranking-name">'+esc(ch.sorcerer_name||'Sin nombre')+'</div><span class="ranking-side">'+esc(sideDisplayName(side))+'</span></div>'+
-      '<div class="ranking-score">'+score+'<small>'+(ch.score_override!=null?'Puntaje del administrador':'Suma de estadísticas')+'</small></div>'+
+      '<div class="ranking-score">'+score+'<small>'+(ch.score_override!=null?'Puntaje':'Puntaje')+'</small></div>'+
       (isAdmin?'<div class="ranking-admin"><input type="number" min="0" max="1000000" step="1" id="ranking-value-'+ch.id+'" value="'+(ch.score_override??'')+'" placeholder="Auto" title="Puntaje manual"><button type="button" onclick="saveRankingOverride(\''+ch.id+'\')">Guardar</button>'+(ch.score_override!=null?'<button class="secondary" type="button" onclick="resetRankingOverride(\''+ch.id+'\')">Auto</button>':'')+'</div>':'')+
       '</article>';
   }).join('')+'</div>';

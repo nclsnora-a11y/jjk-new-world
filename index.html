@@ -362,6 +362,41 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 
 .tenor-url-placeholder{display:grid;place-items:center;min-height:70px;padding:10px;border:1px dashed #3a3a49;border-radius:9px;color:var(--muted);font-size:11px;text-align:center}
 .tenor-resolve-failed a{color:#b78cff;text-decoration:none}
+
+/* Brujos */
+.character-card.character-side-brujo{border:2px solid #f59e0b!important;box-shadow:0 0 0 1px rgba(245,158,11,.12),0 8px 24px rgba(245,158,11,.08)}
+.combat-char.combat-side-brujo{border:2px solid #f59e0b!important;box-shadow:0 0 0 1px rgba(245,158,11,.11)}
+.combat-enemy-hidden.combat-side-brujo{border-color:#f59e0b!important}
+
+/* Technique multiline formatting */
+.quick-tech-desc,.quick-tech-note,.passive-edit .muted{white-space:pre-wrap}
+#characters-section textarea[id^="tech-desc-"],#characters-section textarea[id*="-desc"]{white-space:pre-wrap;line-height:1.45}
+
+/* Inventory & experience */
+.inventory-experience-panel{margin-top:10px;padding:12px;border:1px solid #343443;border-radius:12px;background:#0e0e15}
+.inventory-exp-head,.inventory-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.inventory-exp-head>div{display:flex;flex-direction:column}.inventory-exp-head small{color:var(--muted)}
+.progress-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.progress-cards>div{padding:10px;border:1px solid #30303d;border-radius:10px;background:#111119;display:grid;gap:3px}
+.progress-cards span{font-size:10px;color:var(--muted)}.progress-cards b{font-size:22px}.progress-cards small{font-size:9px;color:var(--muted)}
+.xp-rule-pending{font-size:10px;color:#c4b5fd;background:rgba(124,58,237,.09);border:1px dashed #4c3675;border-radius:8px;padding:8px;margin-bottom:10px}
+.inventory-list{display:grid;gap:7px;margin-top:7px}.inventory-empty{padding:12px;color:var(--muted);font-size:11px;text-align:center}
+.inventory-item{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px;border:1px solid #292938;border-radius:9px;background:#111119}
+.inventory-item img,.inventory-item-placeholder{width:42px;height:42px;border-radius:8px;object-fit:cover;background:#171720;display:grid;place-items:center}
+.inventory-item-copy{display:flex;flex-direction:column;min-width:0}.inventory-item-copy span{font-size:10px;color:var(--muted);white-space:pre-wrap}
+
+/* Shop */
+.shop-head{margin-bottom:12px}.shop-admin-panel{border:1px solid #373746;border-radius:12px;background:#101018;margin-bottom:12px}
+.shop-admin-panel>summary{cursor:pointer;padding:11px 12px;font-weight:800}.shop-admin-body{padding:0 12px 12px}
+.shop-admin-grid{display:grid;grid-template-columns:1.2fr .8fr .8fr auto;gap:8px;align-items:end}.shop-admin-grid.item{grid-template-columns:1fr 1.5fr 1fr auto}.shop-admin-grid.official{grid-template-columns:1fr 1.2fr 1fr .55fr .45fr auto}
+.shop-admin-grid label{display:block;font-size:10px;color:var(--muted);margin-bottom:4px}.shop-admin-divider{height:1px;background:#2a2a36;margin:10px 0}
+.shop-wallets{display:flex;gap:7px;overflow-x:auto;margin-bottom:12px}.shop-wallet-chip{flex:0 0 auto;padding:7px 10px;border:1px solid #343443;border-radius:999px;background:#111119;display:flex;gap:8px;font-size:11px}.shop-wallet-chip span{color:#c4b5fd}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.shop-empty{grid-column:1/-1;padding:30px;text-align:center;color:var(--muted);border:1px dashed #383846;border-radius:12px}
+.shop-item-card{overflow:hidden;border:1px solid #30303d;border-radius:12px;background:#101018}.shop-item-image{width:100%;height:150px;object-fit:cover;background:#171720}.shop-item-image.placeholder{display:grid;place-items:center;font-size:38px}
+.shop-item-body{padding:10px}.shop-item-source{font-size:9px;color:#a78bfa;text-transform:uppercase;letter-spacing:.05em}.shop-item-body h3{margin:4px 0 5px}.shop-item-body p{font-size:11px;color:var(--muted);white-space:pre-wrap;min-height:30px}
+.shop-item-bottom,.shop-item-actions{display:flex;justify-content:space-between;align-items:center;gap:7px;margin-top:8px}.shop-item-bottom span{font-size:10px;color:var(--muted)}.shop-item-actions button{flex:1}
+@media(max-width:850px){.shop-admin-grid,.shop-admin-grid.item,.shop-admin-grid.official{grid-template-columns:1fr 1fr}.progress-cards{grid-template-columns:1fr}}
+@media(max-width:560px){.shop-admin-grid,.shop-admin-grid.item,.shop-admin-grid.official{grid-template-columns:1fr}.inventory-item{grid-template-columns:42px minmax(0,1fr)}.inventory-item button{grid-column:2}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 </head>
@@ -373,6 +408,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
   <button id="nav-roulette" class="active">Ruletas</button>
   <button id="nav-characters">Mis personajes</button>
   <button id="nav-campaigns">Campañas</button>
+  <button id="nav-shop">Tienda</button>
   <button id="nav-combat">Combate</button>
 </div>
 <main>
@@ -385,7 +421,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
       <div class="muted">Cada resultado que saques se guarda acá automáticamente.</div>
 <div class="identity-grid">
   <div class="identity-field"><label for="sorcerer-name">Nombre del personaje</label><input id="sorcerer-name" type="text" placeholder="Ej: Ren Kuroda"></div>
-  <div class="identity-field"><label for="character-side">Bando</label><select id="character-side"><option value="hechicero">Hechicero</option><option value="maldicion">Maldición</option></select></div>
+  <div class="identity-field"><label for="character-side">Bando</label><select id="character-side"><option value="hechicero">Hechicero</option><option value="maldicion">Maldición</option><option value="brujo">Brujo</option></select></div>
 </div>
     </div>
     <div class="sheet-actions">
@@ -465,6 +501,16 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 <h3>Historial</h3><div class="chips" id="history-technique"></div>
 </section>
 
+<section class="card" id="card-side">
+<h2>Ruleta de Bando</h2>
+<p class="muted">Define si el personaje es Hechicero, Maldición o Brujo. Los tres resultados tienen la misma probabilidad.</p>
+<div class="wheel"><div class="pointer"></div><canvas id="canvas-side" width="700" height="700"></canvas></div>
+<div class="actions"><button id="spin-side">Girar ruleta</button><button class="secondary" id="clear-side">Limpiar</button></div>
+<div class="result" id="result-side">Resultado: —</div>
+<div class="legend"><span>Hechicero</span><span>33,33%</span><span>Maldición</span><span>33,33%</span><span>Brujo</span><span>33,33%</span></div>
+<h3>Historial</h3><div class="chips" id="history-side"></div>
+</section>
+
 <section class="card" id="card-grade">
 <h2>Grado Inicial</h2>
 <p class="muted">El grado otorga bonificaciones iniciales a estadísticas. Las estadísticas beneficiadas las elegís vos.</p>
@@ -532,6 +578,15 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
     <div class="campaign-note">Por ahora las campañas se guardan en este dispositivo, igual que los personajes. Los permisos reales los podremos agregar cuando conectemos una base de datos/login.</div>
   </div>
   <div id="campaigns-list"></div>
+</section>
+<section id="shop-section" class="hidden">
+  <div class="shop-head">
+    <div>
+      <h2 style="margin:0 0 5px">Tienda</h2>
+      <div class="muted">Comprá objetos con puntos o vendé objetos que ya estén en el inventario de uno de tus personajes.</div>
+    </div>
+  </div>
+  <div id="shop-root"></div>
 </section>
 <section id="combat-section" class="hidden">
   <div class="combat-toolbar">
@@ -644,12 +699,13 @@ const passiveData=[["Fuerza","Cuerpo Entrenado","+1 Fuerza. El daño recibido po
 const colors=['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#22c55e','#14b8a6','#3b82f6','#6366f1','#a855f7'];
 const configs={
 stats:{values:['1','2','3','4','5'],weights:[20,20,20,20,20],canvas:'canvas-stats',spin:'spin-stats',clear:'clear-stats',result:'result-stats',history:'history-stats'},
+side:{values:['Hechicero','Maldición','Brujo'],weights:[1,1,1],canvas:'canvas-side',spin:'spin-side',clear:'clear-side',result:'result-side',history:'history-side'},
 type:{values:['Potenciación','Invocación','Creación','Control','Soporte','Marca','Técnica Existente','Restricción Celestial','Extraordinaria'],weights:[94/7,94/7,94/7,94/7,94/7,94/7,94/7,3,3],canvas:'canvas-type',spin:'spin-type',clear:'clear-type',result:'result-type',history:'history-type'},
 technique:{values:["Ilimitado","Santuario","Copia","Diez Sombras","Transfiguración Ociosa","Manipulación de Espíritus Malditos","Furia Estelar","Extinción de Técnicas","Construcción","Apuesta Mortal Ociosa","Sentencia Mortal","Manipulación del Cielo","Formación de Hielo","Manipulación de Sangre","Hechicería de Proyección","Habla Maldita","Cambio de Posición","Llamas del Desastre","Mareas del Desastre","Manipulación de Cuervos","Manipulación de Marionetas","Recreación Contractual","Sistema Antigravedad","Ámbar Bestial Mítico","Bastón de Guerra G","Descarga de Energía Maldita","Encuentro Amoroso","Invocación de Bestias Auspiciosas","Área Prohibida Individual","Canción de Oración","Técnica de Proporción","Técnica de Muñeca de Paja","Plantas del Desastre","Técnica de Putrefacción","Técnica de Séance / Sesión Espiritual","Inversión","Técnica de Clonación","Captura del Corazón","Manipulación de Herramientas","Milagros","Valor Ardiente"],weights:[0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545],canvas:'canvas-technique',spin:'spin-technique',clear:'clear-technique',result:'result-technique',history:'history-technique'},
 grade:{values:['Grado 4','Semigrado 3','Grado 3','Semigrado 2','Grado 2','Semigrado 1','Grado 1','Grado Especial'],weights:[32,22,16,11,8,5,4,2],canvas:'canvas-grade',spin:'spin-grade',clear:'clear-grade',result:'result-grade',history:'history-grade'},
 passives:{values:Array.from({length:140},(_,i)=>String(i+1)),weights:Array(140).fill(1),canvas:'canvas-passives',spin:'spin-passives',clear:'clear-passives',result:'result-passives',history:'history-passives'}
 };
-const states={stats:{rot:0,busy:false,h:[]},type:{rot:0,busy:false,h:[]},technique:{rot:0,busy:false,h:[]},grade:{rot:0,busy:false,h:[]},passives:{rot:0,busy:false,h:[]}};
+const states={stats:{rot:0,busy:false,h:[]},side:{rot:0,busy:false,h:[]},type:{rot:0,busy:false,h:[]},technique:{rot:0,busy:false,h:[]},grade:{rot:0,busy:false,h:[]},passives:{rot:0,busy:false,h:[]}};
 const statNames=['Fuerza','Agilidad','Velocidad','Resistencia','Durabilidad','Inteligencia','Energía Maldita','Barreras'];
 const resourceStatNames=['Resistencia','Durabilidad','Energía Maldita'];
 const rollableStatNames=statNames.filter(n=>!resourceStatNames.includes(n));
@@ -677,6 +733,15 @@ const gradeDescriptions={
 const typeDescriptions={"Potenciación":"Técnicas cuyo efecto principal recae sobre el propio cuerpo del usuario: pueden potenciarlo, modificarlo, transformarlo o darle propiedades que normalmente no tendría.","Invocación":"Técnicas que permiten manifestar, convocar o mantener una o más entidades con cierto grado de autonomía respecto del usuario.","Creación":"Técnicas que transforman Energía Maldita en objetos, sustancias, armas, estructuras o fenómenos que antes no existían.","Control":"Técnicas que permiten controlar, mover, modificar, dirigir o alterar algo que ya existe.","Soporte":"Técnicas cuyo efecto principal consiste en otorgar, retirar, alterar o mantener estados y condiciones, en lugar de centrarse necesariamente en daño directo.","Marca":"Técnicas cuyo funcionamiento depende de establecer previamente una conexión, señal o vínculo con un objetivo.","Técnica Existente":"Permite obtener una Técnica Maldita que ya existe dentro de la obra original de Jujutsu Kaisen, adaptada a las estadísticas, acciones, costes y reglas del servidor.","Restricción Celestial":"Condición innata en la que el personaje pierde o sacrifica una capacidad fundamental a cambio de obtener una ventaja extraordinaria en otra área.","Extraordinaria":"Técnicas cuyo funcionamiento principal se basa en una regla, fenómeno anómalo o sistema propio que no encaja correctamente en las categorías normales."};
 const techniqueDescriptions={"Ilimitado":"Manipula el espacio a escala extrema: crea una distancia inalcanzable, atrae, repele y combina efectos espaciales para ataques devastadores.","Santuario":"Permite ejecutar cortes malditos a distancia y adaptar el corte al objetivo; también posee una aplicación de fuego de enorme poder.","Copia":"Permite copiar y utilizar Técnicas Malditas de otros usuarios bajo las condiciones propias de la técnica.","Diez Sombras":"Utiliza las sombras para invocar y controlar shikigami con habilidades diferentes que pueden combinarse entre sí.","Transfiguración Ociosa":"Manipula directamente el alma para cambiar la forma del cuerpo propio o de otras personas.","Manipulación de Espíritus Malditos":"Permite absorber, almacenar y controlar Espíritus Malditos para utilizarlos posteriormente.","Furia Estelar":"Añade masa virtual al usuario o a su shikigami, aumentando brutalmente el poder de sus ataques.","Extinción de Técnicas":"Anula Técnicas Malditas, barreras y otros fenómenos relacionados con la energía maldita dentro de su alcance.","Construcción":"Convierte Energía Maldita en materia real, creando objetos físicos; hacerlo consume enormes cantidades de energía.","Apuesta Mortal Ociosa":"Un sistema basado en un dominio tipo pachinko: al conseguir el premio mayor, el usuario obtiene una enorme reserva de Energía Maldita y regeneración automática durante un período limitado.","Sentencia Mortal":"Crea un tribunal que juzga al objetivo por sus acciones; según el veredicto puede confiscar recursos o conceder una herramienta capaz de ejecutar al condenado.","Manipulación del Cielo":"Manipula el espacio del cielo como si fuera una superficie, deformándolo para desviar ataques, alterar distancias y golpear mediante la distorsión.","Formación de Hielo":"Genera y controla grandes cantidades de hielo a partir de temperaturas extremadamente bajas.","Manipulación de Sangre":"Controla la propia sangre para convertirla en proyectiles, armas y refuerzos físicos, con técnicas como Perforación de Sangre y Supernova.","Hechicería de Proyección":"Divide un segundo en 24 fotogramas y obliga al usuario a seguir una trayectoria programada, permitiendo movimientos extremadamente rápidos.","Habla Maldita":"Las palabras imbuidas con Energía Maldita se convierten en órdenes que obligan al objetivo a obedecerlas, aunque el costo aumenta con la fuerza de la orden.","Cambio de Posición":"Al aplaudir, permite intercambiar instantáneamente la posición de dos objetivos que posean Energía Maldita.","Llamas del Desastre":"Genera y controla fuego volcánico de enorme temperatura y potencia.","Mareas del Desastre":"Manipula grandes cantidades de agua y puede crear ataques acuáticos y shikigami relacionados con el océano.","Manipulación de Cuervos":"Controla cuervos y puede convertirlos en armas ofensivas mediante la transferencia de Energía Maldita.","Manipulación de Marionetas":"Controla marionetas mecánicas a distancia, permitiendo combatir mediante cuerpos artificiales con diferentes armas y funciones.","Recreación Contractual":"Permite recrear mediante contratos o recibos aquello que fue adquirido, materializando objetos y determinados servicios.","Sistema Antigravedad":"Permite manipular la gravedad alrededor del usuario; su inversión puede producir efectos gravitacionales de enorme escala.","Ámbar Bestial Mítico":"Transforma el cuerpo para liberar y manipular energía eléctrica, aumentando las capacidades físicas y generando ataques eléctricos extremadamente potentes.","Bastón de Guerra G":"Un arma con forma de lanza-pluma que, al obtener sangre del objetivo, permite visualizar fragmentos de su futuro inmediato.","Descarga de Energía Maldita":"Dispara grandes cantidades de Energía Maldita concentrada como un cañón, pudiendo cargarla para aumentar su potencia.","Encuentro Amoroso":"Marca la Energía Maldita con estrellas de la Cruz del Sur y establece reglas de proximidad: algunos objetivos no pueden acercarse entre sí salvo siguiendo un orden determinado.","Invocación de Bestias Auspiciosas":"Permite manifestar las capacidades de cuatro bestias auspiciosas, cada una con una función diferente.","Área Prohibida Individual":"Mediante un ritual, aumenta la potencia de Energía Maldita del usuario y puede potenciar también a aliados cercanos.","Canción de Oración":"Marca un ritmo con el cuerpo para potenciar las capacidades físicas propias y repeler o debilitar la energía maldita del oponente.","Técnica de Proporción":"Divide al objetivo siguiendo una proporción 7:3 y crea un punto débil en la zona resultante.","Técnica de Muñeca de Paja":"Utiliza muñecos, clavos y un martillo para transmitir el efecto de sus ataques al objetivo, incluso mediante una conexión indirecta.","Plantas del Desastre":"Manipula vegetación y raíces gigantes, creando estructuras, ataques y formas de vida vegetal.","Técnica de Putrefacción":"Inyecta o transmite un veneno corrosivo que deteriora progresivamente el cuerpo del objetivo.","Técnica de Séance / Sesión Espiritual":"Permite utilizar un cuerpo como médium para manifestar información o capacidades de un espíritu, bajo condiciones específicas.","Inversión":"Invierte la fuerza de los ataques recibidos: golpes muy fuertes se vuelven débiles y ataques débiles pueden resultar peligrosos.","Técnica de Clonación":"Crea copias del usuario que pueden actuar y combatir, aunque las copias presentan limitaciones respecto del original.","Captura del Corazón":"Manifiesta una mano virtual capaz de agarrar y mover objetivos; puede regenerarse cuando es destruida, aunque el daño repercute parcialmente en el usuario.","Manipulación de Herramientas":"Permite controlar y mover herramientas u objetos, utilizándolos principalmente mediante una herramienta maldita voladora.","Milagros":"Almacena pequeños milagros cotidianos y los consume automáticamente cuando la vida del usuario está en peligro para evitar daños potencialmente mortales.","Valor Ardiente":"Recubre una espada con llamas intensas, pudiendo lanzar fuego y mantener una hoja de llamas cuando el arma física se rompe."};
 const blankStats=()=>Object.fromEntries(statNames.map(n=>[n,null]));
+function normalizeCharacterSide(value){
+  return ['hechicero','maldicion','brujo'].includes(value)?value:'hechicero';
+}
+function sideValueFromLabel(value){
+  return value==='Maldición'?'maldicion':value==='Brujo'?'brujo':'hechicero';
+}
+function sideDisplayName(value){
+  return value==='maldicion'?'Maldición':value==='brujo'?'Brujo':'Hechicero';
+}
 let sheetState={stats:blankStats(),type:null,technique:null,grade:null,control:null,passives:[],sorcererName:'',userName:'',side:'hechicero',undo:[]};
 try{
   const saved=JSON.parse(localStorage.getItem('jjk-character-sheet')||'null');
@@ -684,7 +749,7 @@ try{
     sheetState.stats=normalizeStatsObject({...blankStats(),...(saved.stats||{})});
     sheetState.type=saved.type||null; sheetState.technique=saved.technique||null; sheetState.grade=saved.grade||null; sheetState.control=saved.control||null;
     sheetState.passives=Array.isArray(saved.passives)?saved.passives:[];
-    sheetState.sorcererName=saved.sorcererName||''; sheetState.userName=''; sheetState.side=saved.side==='maldicion'?'maldicion':'hechicero';
+    sheetState.sorcererName=saved.sorcererName||''; sheetState.userName=''; sheetState.side=normalizeCharacterSide(saved.side);
     sheetState.undo=[];
   }
 }catch(e){}
@@ -706,12 +771,13 @@ function registerResult(key,idx){
   else if(key==='type')sheetState.type=configs[key].values[idx];
   else if(key==='technique')sheetState.technique=configs[key].values[idx];
   else if(key==='grade')sheetState.grade=configs[key].values[idx];
+  else if(key==='side')sheetState.side=sideValueFromLabel(configs[key].values[idx]);
   else if(key==='control')sheetState.control=configs[key].values[idx];
   else if(key==='passives'){const p=passiveData[idx];sheetState.passives.push({category:p[0],name:p[1],description:p[2]})}
   renderSheet();
 }
 function sheetText(){
-  const total=Object.values(sheetState.stats).reduce((a,v)=>a+(Number(v)||0),0);const lines=['JJK NEW WORLD — FICHA GENERADA','Nombre: '+(sheetState.sorcererName||'—'),'Bando: '+(sheetState.side==='maldicion'?'Maldición':'Hechicero'),'','ESTADÍSTICAS'];
+  const total=Object.values(sheetState.stats).reduce((a,v)=>a+(Number(v)||0),0);const lines=['JJK NEW WORLD — FICHA GENERADA','Nombre: '+(sheetState.sorcererName||'—'),'Bando: '+sideDisplayName(sheetState.side),'','ESTADÍSTICAS'];
   statNames.forEach(n=>lines.push(n+': '+(sheetState.stats[n]??'—')));lines.push('Total: '+total);
   lines.push('','TÉCNICA','Tipo: '+(sheetState.type||'—'),'Técnica Maldita: '+(sheetState.technique||'—'),'Descripción: '+(sheetState.type?(typeDescriptions[sheetState.type]||'—'):'—'),'Grado inicial: '+(sheetState.grade||'—'),'Control de Energía Maldita: '+(sheetState.control||'—'),'','PASIVAS');
   if(sheetState.passives.length)sheetState.passives.forEach((p,i)=>lines.push((i+1)+'. '+p.category+' — '+p.name+' | '+p.description));
@@ -721,7 +787,7 @@ function sheetText(){
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
 document.getElementById('undo-sheet').addEventListener('click',()=>{if(!sheetState.undo.length){toast('No hay tiradas para deshacer.');return}const prev=JSON.parse(sheetState.undo.pop());sheetState={...sheetState,...prev,undo:sheetState.undo};renderSheet();});
 document.getElementById('new-sheet').addEventListener('click',()=>{pushUndo();sheetState.stats=blankStats();sheetState.type=null;sheetState.technique=null;sheetState.grade=null;sheetState.control=null;sheetState.passives=[];sheetState.sorcererName='';sheetState.userName='';sheetState.side='hechicero';renderSheet();toast('Ficha nueva creada.');});
-document.getElementById('sorcerer-name').addEventListener('input',e=>{sheetState.sorcererName=e.target.value;saveSheet()});document.getElementById('character-side').addEventListener('change',e=>{sheetState.side=e.target.value==='maldicion'?'maldicion':'hechicero';saveSheet()});
+document.getElementById('sorcerer-name').addEventListener('input',e=>{sheetState.sorcererName=e.target.value;saveSheet()});document.getElementById('character-side').addEventListener('change',e=>{sheetState.side=normalizeCharacterSide(e.target.value);saveSheet()});
 document.getElementById('copy-sheet').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(sheetText());toast('Ficha copiada para Discord.')}catch(e){const ta=document.createElement('textarea');ta.value=sheetText();document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Ficha copiada para Discord.')}});
 renderSheet();
 
@@ -794,21 +860,24 @@ window.addEventListener('pagehide',freezeBrowserScrollPosition);
 window.addEventListener('pageshow',()=>restoreBrowserScrollPosition());
 
 function showTab(tab){
-  const roulette=tab==='roulette',characters=tab==='characters',campaigns=tab==='campaigns',account=tab==='account',combat=tab==='combat',info=tab==='info';
+  const roulette=tab==='roulette',characters=tab==='characters',campaigns=tab==='campaigns',shop=tab==='shop',account=tab==='account',combat=tab==='combat',info=tab==='info';
   document.getElementById('roulette-section').classList.toggle('hidden',!roulette);
   document.getElementById('characters-section').classList.toggle('hidden',!characters);
   document.getElementById('campaigns-section').classList.toggle('hidden',!campaigns);
+  document.getElementById('shop-section').classList.toggle('hidden',!shop);
   document.getElementById('combat-section').classList.toggle('hidden',!combat);
   document.getElementById('account-section').classList.toggle('hidden',!account);
   document.getElementById('info-section').classList.toggle('hidden',!info);
   document.getElementById('nav-roulette').classList.toggle('active',roulette);
   document.getElementById('nav-characters').classList.toggle('active',characters);
   document.getElementById('nav-campaigns').classList.toggle('active',campaigns);
+  document.getElementById('nav-shop').classList.toggle('active',shop);
   document.getElementById('nav-combat').classList.toggle('active',combat);
   document.getElementById('nav-account').classList.toggle('active',account);
   document.getElementById('nav-info').classList.toggle('active',info);
   if(characters)renderCharacters();
   if(campaigns)renderCampaigns();
+  if(shop&&typeof renderShop==='function')renderShop();
   if(combat&&typeof renderCombat==='function')renderCombat();
   if(account&&typeof renderAuth==='function')renderAuth();
   if(info&&typeof renderInformation==='function')renderInformation();
@@ -817,6 +886,7 @@ function showTab(tab){
 document.getElementById('nav-roulette').addEventListener('click',()=>showTab('roulette'));
 document.getElementById('nav-characters').addEventListener('click',()=>showTab('characters'));
 document.getElementById('nav-campaigns').addEventListener('click',()=>showTab('campaigns'));
+document.getElementById('nav-shop').addEventListener('click',()=>showTab('shop'));
 document.getElementById('nav-account').addEventListener('click',()=>showTab('account'));
 document.getElementById('nav-combat').addEventListener('click',()=>showTab('combat'));
 document.getElementById('nav-info').addEventListener('click',()=>showTab('info'));
@@ -903,7 +973,7 @@ function renderInformation(){
     '<details class="info-section-card">'+
       '<summary><span>Creación de personajes</span><small>Sistema actual</small></summary>'+
       '<div class="info-section-body info-rules">'+
-        '<h4>Identidad</h4><p>La ficha usa el nombre del personaje y su bando: <b>Hechicero</b> o <b>Maldición</b>.</p>'+
+        '<h4>Identidad</h4><p>La ficha usa el nombre del personaje y su bando: <b>Hechicero</b>, <b>Maldición</b> o <b>Brujo</b>.</p>'+
         '<h4>Estadísticas</h4><p>Las estadísticas base usan valores enteros de <b>1 a 5</b>: Fuerza, Agilidad, Velocidad, Resistencia, Durabilidad, Inteligencia, Energía Maldita y Barreras. <b>Control de EM</b> también usa escala 1–5 y se tira desde la misma ruleta de estadísticas.</p>'+
         '<h4>Tipo de Técnica</h4><p>Las siete categorías comunes reparten el 94% en partes iguales (≈13,43% cada una), mientras Restricción Celestial y Extraordinaria / Regla tienen 3% cada una.</p>'+
         '<h4>Grado inicial</h4>'+infoGradesHtml()+
@@ -1112,7 +1182,7 @@ function makeCharacterFromSheet(){
     type:sheetState.type||null,
     grade:sheetState.grade||null,
     control:sheetState.control||null,
-    side:sheetState.side==='maldicion'?'maldicion':'hechicero',
+    side:normalizeCharacterSide(sheetState.side),
     passives:sheetState.passives.map(p=>({...p})),
     photo:null,
     createdAt:new Date().toISOString()
@@ -1126,7 +1196,7 @@ document.getElementById('save-character').addEventListener('click',()=>{
 function characterCard(ch){
   const total=characterTotal(ch.currentStats);
   const initialTotal=characterTotal(ch.initialStats);
-  return `<article class="character-card character-side-${ch.side==='maldicion'?'maldicion':'hechicero'}" id="card-${esc(ch.id)}">
+  return `<article class="character-card character-side-${normalizeCharacterSide(ch.side)}" id="card-${esc(ch.id)}">
     <div class="character-top">
       ${ch.photo?'<img class="character-avatar" src="'+ch.photo+'" alt="Foto de '+esc(ch.sorcererName)+'">':'<div class="character-avatar placeholder">術</div>'}
       <div><h3>${esc(ch.sorcererName)}</h3><div class="character-meta">Creado: ${new Date(ch.createdAt).toLocaleDateString('es-AR')}</div></div>
@@ -1134,7 +1204,7 @@ function characterCard(ch){
     <div class="character-summary">
       <span>Tipo de técnica</span><strong>${esc(ch.type||'—')}</strong>
       <span>Grado</span><strong>${esc(ch.grade||'—')}</strong>
-      <span>Bando</span><strong>${ch.side==='maldicion'?'Maldición':'Hechicero'}</strong>
+      <span>Bando</span><strong>${sideDisplayName(ch.side)}</strong>
       <span>Control de EM</span><strong>${esc(ch.control||'—')}</strong>
       <span>Total inicial</span><strong>${initialTotal}</strong>
       <span>Total actual</span><strong>${total}</strong>
@@ -1143,9 +1213,11 @@ function characterCard(ch){
     </div>
     <div class="character-actions">
       <button onclick="toggleEditor('${esc(ch.id)}')">Editar</button>
+      <button class="secondary" onclick="toggleInventoryExperience('${esc(ch.id)}')">Inventario y experiencia</button>
       <button class="secondary danger" onclick="deleteCharacter('${esc(ch.id)}')">Eliminar</button>
     </div>
     <div class="editor hidden" id="editor-${esc(ch.id)}"></div>
+    <div class="inventory-experience-panel hidden" id="inventory-exp-${esc(ch.id)}"></div>
   </article>`;
 }
 function renderCharacters(){
@@ -1259,7 +1331,7 @@ function toggleEditor(id){
     <div class="editor-grid">
       <div><label>Foto del personaje</label>${ch.photo?'<img class="photo-preview" src="'+ch.photo+'" alt="Vista previa">':'<div class="photo-preview character-avatar placeholder">術</div>'}<input id="edit-${id}-photo" type="file" accept="image/*" onchange="openCharacterCropper('${id}',this)"><div class="photo-note">Elegí la foto y ajustá el encuadre antes de guardarla.</div>${ch.photo?'<button class="secondary danger" style="margin-top:7px" onclick="removePhoto(\''+id+'\')">Quitar foto</button>':''}</div>
       <div><label>Nombre del personaje</label><input id="edit-${id}-name" value="${esc(ch.sorcererName)}"></div>
-      <div><label>Bando</label><select id="edit-${id}-side"><option value="hechicero" ${ch.side!=='maldicion'?'selected':''}>Hechicero</option><option value="maldicion" ${ch.side==='maldicion'?'selected':''}>Maldición</option></select></div>
+      <div><label>Bando</label><select id="edit-${id}-side"><option value="hechicero" ${ch.side==='hechicero'?'selected':''}>Hechicero</option><option value="maldicion" ${ch.side==='maldicion'?'selected':''}>Maldición</option><option value="brujo" ${ch.side==='brujo'?'selected':''}>Brujo</option></select></div>
       <div><label>Tipo de técnica</label><select id="edit-${id}-type"><option value="">—</option>${optionList(configs.type.values,ch.type)}</select></div>
       <div><label>Grado</label><select id="edit-${id}-grade"><option value="">—</option>${optionList(configs.grade.values,ch.grade)}</select></div>
       <div class="special-bars-toggle-cell"><label>Barras adicionales</label><button type="button" class="secondary" onclick="toggleSpecialBarsEditor('${id}')">• Adicionar barras especiales</button></div>
@@ -1274,7 +1346,7 @@ function toggleEditor(id){
     <div class="technique-box">
       <h4>Técnica</h4>
       <label>Descripción general de la técnica</label>
-      <textarea id="tech-desc-${id}" placeholder="Explicá qué hace la técnica, sus reglas y su funcionamiento.">${esc(ch.techniqueDescription||'')}</textarea>
+      <textarea id="tech-desc-${id}" placeholder="Explicá qué hace la técnica, sus reglas y su funcionamiento." onkeydown="techniqueMultilineKeydown(event)">${esc(ch.techniqueDescription||'')}</textarea>
       <div class="technique-use-list" id="tech-use-list-${id}">
         ${(ch.techniqueActions||[]).map((a,i)=>techniqueUseEditorHtml(id,a,i)).join('')||'<div class="muted">Todavía no agregaste usos de técnica.</div>'}
       </div>
@@ -1296,6 +1368,160 @@ function toggleEditor(id){
     </div>`;
   el.classList.remove('hidden');
 }
+function techniqueMultilineKeydown(event){
+  if(event.key!=='Enter'||!event.shiftKey)return;
+  event.preventDefault();
+  const el=event.currentTarget;
+  const start=el.selectionStart??el.value.length,end=el.selectionEnd??start;
+  el.value=el.value.slice(0,start)+'\n\n'+el.value.slice(end);
+  el.selectionStart=el.selectionEnd=start+2;
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+}
+
+function progressForCharacter(id){
+  return characterProgressById[id]||{character_id:id,experience:0,points:0};
+}
+function inventoryForCharacter(id){
+  return characterInventory.filter(x=>x.character_id===id);
+}
+function inventoryItemHtml(item){
+  return '<div class="inventory-item">'+
+    (item.image_url?'<img src="'+esc(item.image_url)+'" alt="">':'<div class="inventory-item-placeholder">◆</div>')+
+    '<div class="inventory-item-copy"><b>'+esc(item.name)+'</b>'+(item.description?'<span>'+esc(item.description)+'</span>':'')+'</div>'+
+    '<button class="secondary" type="button" onclick="sellInventoryItem(\''+item.id+'\')">Vender</button>'+
+  '</div>';
+}
+function toggleInventoryExperience(characterId){
+  const panel=document.getElementById('inventory-exp-'+characterId);if(!panel)return;
+  if(!panel.classList.contains('hidden')){panel.classList.add('hidden');return}
+  const ch=savedCharacters.find(c=>c.id===characterId);if(!ch)return;
+  const p=progressForCharacter(characterId);
+  const items=inventoryForCharacter(characterId);
+  panel.innerHTML='<div class="inventory-exp-head"><div><b>Inventario y experiencia</b><small>'+esc(ch.sorcererName)+'</small></div><button class="secondary" onclick="toggleInventoryExperience(\''+characterId+'\')">Cerrar</button></div>'+
+    '<div class="progress-cards"><div><span>Experiencia</span><b>'+Number(p.experience||0)+'</b><small>La experiencia solo puede ser otorgada por GM/ADMIN.</small></div>'+
+    '<div><span>Puntos</span><b>'+Number(p.points||0)+'</b><small>Se usan para comprar en la Tienda.</small></div></div>'+
+    '<div class="xp-rule-pending">Requisitos de ascenso por grado: pendiente de la regla de experiencia.</div>'+
+    '<div class="inventory-title"><b>Inventario</b><span>'+items.length+' objeto(s)</span></div>'+
+    '<div class="inventory-list">'+(items.length?items.map(inventoryItemHtml).join(''):'<div class="inventory-empty">Todavía no hay objetos en este inventario.</div>')+'</div>';
+  panel.classList.remove('hidden');
+}
+
+async function sellInventoryItem(itemId){
+  const item=characterInventory.find(x=>x.id===itemId);if(!item)return;
+  const raw=prompt('¿Por cuántos puntos querés vender “'+item.name+'”?','10');
+  if(raw===null)return;
+  const price=Math.floor(Number(raw));
+  if(!Number.isFinite(price)||price<0){toast('Ingresá un precio válido.');return}
+  const {error}=await sb.rpc('sell_inventory_item',{p_inventory_item_id:itemId,p_price_points:price});
+  if(error){toast(error.message);return}
+  await loadSharedData();
+  toast('Objeto publicado en la tienda.');
+}
+
+function shopListingHtml(listing){
+  const seller=listing.seller_character_id?allCharacters.find(c=>c.id===listing.seller_character_id):null;
+  const sellerLabel=seller?'Jugador · '+seller.sorcererName:'Tienda oficial';
+  const ownSeller=listing.seller_user_id===currentUser?.id;
+  return '<article class="shop-item-card">'+
+    (listing.image_url?'<img class="shop-item-image" src="'+esc(listing.image_url)+'" alt="">':'<div class="shop-item-image placeholder">呪</div>')+
+    '<div class="shop-item-body"><div class="shop-item-source">'+esc(sellerLabel)+'</div><h3>'+esc(listing.item_name)+'</h3>'+
+    (listing.description?'<p>'+esc(listing.description)+'</p>':'')+
+    '<div class="shop-item-bottom"><b>'+Number(listing.price_points||0)+' pts</b><span>Stock '+Number(listing.stock||0)+'</span></div>'+
+    '<div class="shop-item-actions">'+
+      (!ownSeller?'<button onclick="buyShopListing(\''+listing.id+'\')">Comprar</button>':'')+
+      ((ownSeller||isAdmin)?'<button class="secondary danger" onclick="cancelShopListing(\''+listing.id+'\')">Quitar</button>':'')+
+    '</div></div></article>';
+}
+function shopAdminPanelHtml(){
+  if(!isAdmin)return '';
+  const opts=allCharacters.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+' · '+esc(sideDisplayName(ch.side))+'</option>').join('');
+  return '<details class="shop-admin-panel"><summary>Administración de economía e inventario</summary><div class="shop-admin-body">'+
+    '<div class="shop-admin-grid"><div><label>Personaje</label><select id="shop-admin-character"><option value="">Elegir...</option>'+opts+'</select></div>'+
+    '<div><label>XP a sumar/restar</label><input type="number" id="shop-admin-xp" value="0"></div>'+
+    '<div><label>Puntos a sumar/restar</label><input type="number" id="shop-admin-points" value="0"></div>'+
+    '<button onclick="adminAdjustProgress()">Aplicar progreso</button></div>'+
+    '<div class="shop-admin-divider"></div>'+
+    '<div class="shop-admin-grid item"><div><label>Dar objeto · nombre</label><input id="shop-grant-name" placeholder="Ej: Katana"></div>'+
+    '<div><label>Descripción</label><input id="shop-grant-desc" placeholder="Descripción opcional"></div>'+
+    '<div><label>Imagen URL</label><input id="shop-grant-image" placeholder="https://..."></div>'+
+    '<button onclick="adminGrantInventoryItem()">Dar objeto</button></div>'+
+    '<div class="shop-admin-divider"></div>'+
+    '<div class="shop-admin-grid official"><div><label>Publicar en tienda · nombre</label><input id="shop-listing-name" placeholder="Objeto"></div>'+
+    '<div><label>Descripción</label><input id="shop-listing-desc" placeholder="Descripción"></div>'+
+    '<div><label>Imagen URL</label><input id="shop-listing-image" placeholder="https://..."></div>'+
+    '<div><label>Precio</label><input type="number" min="0" id="shop-listing-price" value="10"></div>'+
+    '<div><label>Stock</label><input type="number" min="1" id="shop-listing-stock" value="1"></div>'+
+    '<button onclick="adminCreateShopListing()">Publicar</button></div>'+
+  '</div></details>';
+}
+function renderShop(){
+  const root=document.getElementById('shop-root');if(!root)return;
+  if(!currentUser){root.innerHTML='<div class="auth-required"><b>Iniciá sesión para usar la Tienda.</b></div>';return}
+  const active=shopListings.filter(x=>x.is_active&&Number(x.stock)>0);
+  const ownChars=savedCharacters;
+  const wallet=ownChars.map(ch=>{const p=progressForCharacter(ch.id);return '<div class="shop-wallet-chip"><b>'+esc(ch.sorcererName)+'</b><span>'+Number(p.points||0)+' pts</span></div>'}).join('');
+  root.innerHTML=shopAdminPanelHtml()+
+    '<div class="shop-wallets">'+(wallet||'<span class="muted">No tenés personajes propios para comprar.</span>')+'</div>'+
+    '<div class="shop-grid">'+(active.length?active.map(shopListingHtml).join(''):'<div class="shop-empty">No hay publicaciones activas.</div>')+'</div>';
+}
+async function adminAdjustProgress(){
+  if(!isAdmin)return;
+  const characterId=document.getElementById('shop-admin-character')?.value;
+  if(!characterId){toast('Elegí un personaje.');return}
+  const xp=Math.trunc(Number(document.getElementById('shop-admin-xp')?.value||0));
+  const points=Math.trunc(Number(document.getElementById('shop-admin-points')?.value||0));
+  const {error}=await sb.rpc('admin_adjust_character_progress',{p_character_id:characterId,p_experience_delta:xp,p_points_delta:points});
+  if(error){toast(error.message);return}
+  await loadSharedData();toast('Progreso actualizado.');
+}
+async function adminGrantInventoryItem(){
+  if(!isAdmin)return;
+  const characterId=document.getElementById('shop-admin-character')?.value;
+  const name=(document.getElementById('shop-grant-name')?.value||'').trim();
+  if(!characterId||!name){toast('Elegí personaje y escribí el nombre del objeto.');return}
+  const description=(document.getElementById('shop-grant-desc')?.value||'').trim();
+  const image=sanitizeTechniqueMediaUrl(document.getElementById('shop-grant-image')?.value||'')||null;
+  const {error}=await sb.from('character_inventory').insert({character_id:characterId,name,description,image_url:image,created_by:currentUser.id});
+  if(error){toast(error.message);return}
+  await loadSharedData();toast('Objeto agregado al inventario.');
+}
+async function adminCreateShopListing(){
+  if(!isAdmin)return;
+  const name=(document.getElementById('shop-listing-name')?.value||'').trim();
+  const price=Math.max(0,Math.trunc(Number(document.getElementById('shop-listing-price')?.value||0)));
+  const stock=Math.max(1,Math.trunc(Number(document.getElementById('shop-listing-stock')?.value||1)));
+  if(!name){toast('Escribí el nombre del objeto.');return}
+  const description=(document.getElementById('shop-listing-desc')?.value||'').trim();
+  const image=sanitizeTechniqueMediaUrl(document.getElementById('shop-listing-image')?.value||'')||null;
+  const {error}=await sb.from('shop_listings').insert({item_name:name,description,image_url:image,price_points:price,stock,is_active:true,created_by:currentUser.id});
+  if(error){toast(error.message);return}
+  await loadSharedData();toast('Objeto publicado en la tienda.');
+}
+async function buyShopListing(listingId){
+  if(!savedCharacters.length){toast('Necesitás un personaje propio para comprar.');return}
+  let characterId=savedCharacters.length===1?savedCharacters[0].id:null;
+  if(!characterId){
+    const names=savedCharacters.map((c,i)=>(i+1)+'. '+c.sorcererName).join('\n');
+    const raw=prompt('¿Con qué personaje querés comprar?\n'+names,'1');
+    if(raw===null)return;
+    const index=Math.trunc(Number(raw))-1;
+    characterId=savedCharacters[index]?.id;
+  }
+  if(!characterId){toast('Personaje inválido.');return}
+  const listing=shopListings.find(x=>x.id===listingId);
+  if(!listing)return;
+  if(!confirm('Comprar “'+listing.item_name+'” por '+listing.price_points+' puntos?'))return;
+  const {error}=await sb.rpc('purchase_shop_listing',{p_listing_id:listingId,p_buyer_character_id:characterId});
+  if(error){toast(error.message);return}
+  await loadSharedData();toast('Compra realizada. El objeto ya está en tu inventario.');
+}
+async function cancelShopListing(listingId){
+  if(!confirm('¿Quitar esta publicación de la tienda?'))return;
+  const {error}=await sb.rpc('cancel_shop_listing',{p_listing_id:listingId});
+  if(error){toast(error.message);return}
+  await loadSharedData();toast('Publicación retirada.');
+}
+
 function techniqueStatOptions(current){
   const valid=['Sin tirada'].concat(rollableStatNames,['Control EM']);
   const legacy=current&&!valid.includes(current)
@@ -1320,7 +1546,7 @@ function techniqueUseEditorHtml(id,a,i){
       '<div class="technique-media-preview" id="tech-use-'+id+'-'+i+'-media-preview">'+techniqueMediaPreviewHtml(a.mediaUrl||a.media_url||'')+'</div>'+
     '</div>'+
     '<div class="technique-use-wide"><label>Efecto / modificador (opcional)</label><input id="tech-use-'+id+'-'+i+'-effect" value="'+esc(a.effect||'')+'" placeholder="Ej: +3 a una tirada, empuja, ralentiza"></div>'+
-    '<div class="technique-use-wide"><label>Descripción</label><textarea id="tech-use-'+id+'-'+i+'-desc" placeholder="Qué hace este uso">'+esc(a.description||'')+'</textarea></div>'+
+    '<div class="technique-use-wide"><label>Descripción</label><textarea id="tech-use-'+id+'-'+i+'-desc" placeholder="Qué hace este uso" onkeydown="techniqueMultilineKeydown(event)">'+esc(a.description||'')+'</textarea></div>'+
     '<div class="technique-use-remove" style="grid-column:1/-1"><button type="button" class="secondary danger" onclick="removeTechniqueUseEditor(\''+id+'\','+i+')">Quitar</button></div>'+
     '</div></div>';
 }
@@ -1814,7 +2040,7 @@ function deleteCampaign(id){
 }
 renderCampaigns();
 const activeTab=localStorage.getItem('jjk-active-tab');
-if(activeTab==='characters')showTab('characters'); else if(activeTab==='campaigns')showTab('campaigns'); else if(activeTab==='account')showTab('account'); else if(activeTab==='combat')showTab('combat'); else if(activeTab==='info')showTab('info');
+if(activeTab==='characters')showTab('characters'); else if(activeTab==='campaigns')showTab('campaigns'); else if(activeTab==='shop')showTab('shop'); else if(activeTab==='account')showTab('account'); else if(activeTab==='combat')showTab('combat'); else if(activeTab==='info')showTab('info');
 
 function pick(c){const total=c.weights.reduce((a,b)=>a+b,0);let r=Math.random()*total;for(let i=0;i<c.values.length;i++){if(r<c.weights[i])return i;r-=c.weights[i]}return c.values.length-1}
 function angleCenter(c,idx){const total=c.weights.reduce((a,b)=>a+b,0);let before=0;for(let i=0;i<idx;i++)before+=c.weights[i];return ((before+c.weights[idx]/2)/total)*360}
@@ -1835,6 +2061,9 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
 let currentUser=null,currentProfile=null,isAdmin=false,allCharacters=[];
 let staffViewAsPlayer=false;
 let sharedZones=[],sharedMemberships=[];
+let characterProgressById={};
+let characterInventory=[];
+let shopListings=[];
 
 function hasStaffRole(){
   return ['admin','gm'].includes(currentProfile?.role);
@@ -1868,7 +2097,7 @@ function normalizeCharacter(r){
   return {
     id:r.id,owner_id:r.owner_id,sorcererName:r.sorcerer_name,userName:r.user_name||'—',
     initialStats:r.initial_stats||{},currentStats:r.current_stats||{},type:r.technique_type||null,
-    grade:r.grade||null,control:r.control_em==null?null:String(r.control_em),side:r.character_side||'hechicero',passives:r.passives||[],techniqueDescription:r.technique_description||'',techniqueActions:Array.isArray(r.technique_actions)?r.technique_actions:[],
+    grade:r.grade||null,control:r.control_em==null?null:String(r.control_em),side:normalizeCharacterSide(r.character_side),passives:r.passives||[],techniqueDescription:r.technique_description||'',techniqueActions:Array.isArray(r.technique_actions)?r.technique_actions:[],
     specialBars:Array.isArray(r.special_bars)?r.special_bars:[],
     photo_path:r.photo_path||null,photo:imageUrl(r.photo_path,r.updated_at||r.created_at),createdAt:r.created_at,updatedAt:r.updated_at
   };
@@ -1941,7 +2170,8 @@ async function getProfile(){
 async function loadSharedData(){
   if(!currentUser){
     allCharacters=[]; savedCharacters=[]; campaigns=[]; sharedZones=[]; sharedMemberships=[];
-    renderCharacters();renderCampaigns();return;
+    characterProgressById={};characterInventory=[];shopListings=[];
+    renderCharacters();renderCampaigns();if(typeof renderShop==='function')renderShop();return;
   }
 
   // Primero cargamos la estructura compartida. Para jugadores comunes evitamos
@@ -1984,7 +2214,22 @@ async function loadSharedData(){
       characterIds:sharedMemberships.filter(m=>m.campaign_id===c.id&&m.zone_id===z.id).map(m=>m.character_id)
     }));
   });
-  renderCharacters();renderCampaigns();if(selectedCombatCampaignId&&typeof renderCombat==='function')renderCombat();
+
+  try{
+    const [pr,inv,shop]=await Promise.all([
+      sb.from('character_progress').select('*'),
+      sb.from('character_inventory').select('*').order('created_at',{ascending:false}),
+      sb.from('shop_listings').select('*').order('created_at',{ascending:false})
+    ]);
+    characterProgressById=Object.fromEntries((pr.data||[]).map(x=>[x.character_id,x]));
+    characterInventory=inv.data||[];
+    shopListings=shop.data||[];
+  }catch(e){
+    console.error('No pude cargar progreso/inventario/tienda',e);
+    characterProgressById={};characterInventory=[];shopListings=[];
+  }
+
+  renderCharacters();renderCampaigns();if(typeof renderShop==='function')renderShop();if(selectedCombatCampaignId&&typeof renderCombat==='function')renderCombat();
 }
 
 function renderAuth(){
@@ -2356,7 +2601,7 @@ saveCharacterEdit=async function(id){
   const payload={
     sorcerer_name:document.getElementById('edit-'+id+'-name').value.trim()||'Hechicero sin nombre',
     user_name:'—',
-    character_side:document.getElementById('edit-'+id+'-side')?.value||'hechicero',
+    character_side:normalizeCharacterSide(document.getElementById('edit-'+id+'-side')?.value),
     technique_type:document.getElementById('edit-'+id+'-type').value||null,
     grade:document.getElementById('edit-'+id+'-grade').value||null,
     control_em:document.getElementById('edit-'+id+'-control').value?Number(document.getElementById('edit-'+id+'-control').value):null,
@@ -2878,7 +3123,7 @@ function canSeeCombatDetails(campaignId,ch){
   if(ch.owner_id===currentUser?.id)return true;
   return viewerCombatSides(campaignId).has(ch.side||'hechicero');
 }
-function sideLabel(ch){return (ch?.side||'hechicero')==='maldicion'?'Maldición':'Hechicero'}
+function sideLabel(ch){return sideDisplayName(normalizeCharacterSide(ch?.side))}
 function combatStatNumber(ch,name){
   const v=Number(ch?.currentStats?.[name]??ch?.initialStats?.[name]??0);
   return Number.isFinite(v)?v:0;
@@ -2970,7 +3215,7 @@ function combatCharacterHtml(campaignId,ch){
   const canRoll=canEditCombat;
   const canSeeDetails=canSeeCombatDetails(campaignId,ch);
   if(!canSeeDetails){
-    return '<article class="combat-char combat-enemy-hidden combat-side-'+(ch.side==='maldicion'?'maldicion':'hechicero')+' '+(!s.visible?'combat-hidden-card':'')+'" id="combat-char-'+ch.id+'">'+
+    return '<article class="combat-char combat-enemy-hidden combat-side-'+normalizeCharacterSide(ch.side)+' '+(!s.visible?'combat-hidden-card':'')+'" id="combat-char-'+ch.id+'">'+
       '<div class="combat-char-head">'+
         (ch.photo?'<img class="combat-avatar" src="'+ch.photo+'" alt="">':'<div class="combat-avatar">術</div>')+
         '<div class="combat-char-title"><h3>'+esc(ch.sorcererName)+'</h3><div class="muted">'+esc(sideLabel(ch))+' · Información oculta</div></div>'+
@@ -2990,7 +3235,7 @@ function combatCharacterHtml(campaignId,ch){
     const num=Number(v),rollable=canRoll&&Number.isFinite(num);
     return '<div class="combat-stat '+(rollable?'rollable':'')+'" '+(rollable?'onclick="event.stopPropagation();rollCombatStat(\''+campaignId+'\',\''+ch.id+'\',\''+esc(n)+'\','+num+')"':'')+'>'+esc(combatStatAbbr(n))+'<b>'+esc(String(v))+'</b>'+(rollable?'<small>d20+'+num+'</small>':'')+'</div>';
   }).join('');
-  return '<article class="combat-char combat-side-'+(ch.side==='maldicion'?'maldicion':'hechicero')+' '+(!s.visible?'combat-hidden-card':'')+'" id="combat-char-'+ch.id+'">'+
+  return '<article class="combat-char combat-side-'+normalizeCharacterSide(ch.side)+' '+(!s.visible?'combat-hidden-card':'')+'" id="combat-char-'+ch.id+'">'+
     '<div class="combat-char-head" onclick="toggleCombatQuickMenu(\''+ch.id+'\')">'+
       (ch.photo?'<img class="combat-avatar" src="'+ch.photo+'" alt="">':'<div class="combat-avatar">術</div>')+
       '<div class="combat-char-title"><h3>'+esc(ch.sorcererName)+'</h3><div class="muted">'+esc(ch.grade||'Sin grado')+' · '+esc(sideLabel(ch))+'</div></div>'+

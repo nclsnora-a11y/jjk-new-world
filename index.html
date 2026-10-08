@@ -1351,7 +1351,7 @@ function toggleEditor(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
   const el=document.getElementById('editor-'+id);
   if(!el.classList.contains('hidden')){delete pendingPassiveRemovals[id];el.classList.add('hidden');return}
-  const statsHtml=statNames.map(n=>`<div class="editor-stat"><small>${esc(n)} 🔒</small><input type="number" disabled id="edit-${id}-stat-${statNames.indexOf(n)}" value="${esc(ch.currentStats?.[n]??'')}" min="0" step="1"><div class="initial-note">Inicial: ${esc(ch.initialStats?.[n]??'—')}</div></div>`).join('')+
+  const statsHtml=statNames.map(n=>`<div class="editor-stat"><small>${esc(n)}</small><input type="number" id="edit-${id}-stat-${statNames.indexOf(n)}" value="${esc(ch.currentStats?.[n]??'')}" min="0" step="1"><div class="initial-note">Inicial: ${esc(ch.initialStats?.[n]??'—')}</div></div>`).join('')+
     `<div class="editor-stat"><small>Control de EM</small><input type="number" id="edit-${id}-control" value="${esc(ch.control??'')}" min="0" step="1"><div class="initial-note">Valor actual</div></div>`;
   pendingPassiveRemovals[id]=new Set();
   const passivesHtml=(ch.passives||[]).map((p,i)=>({p,i})).filter(x=>x.p.category!=='Despertar').map(({p,i})=>`<div class="passive-edit" id="pe-${id}-${i}"><div><b>${esc(p.category)} — ${esc(p.name)}</b><div class="muted">${esc(p.description||'')}</div></div><div class="character-actions" style="margin:0"><button type="button" class="secondary" onclick="editPassive('${id}',${i})">Editar</button><button type="button" class="secondary danger" id="pe-btn-${id}-${i}" onclick="togglePassiveRemoval('${id}',${i})">Quitar</button></div></div>`).join('')||'<div class="muted">Sin pasivas.</div>';
@@ -1365,7 +1365,7 @@ function toggleEditor(id){
       <div class="special-bars-toggle-cell"><label>Barras adicionales</label><button type="button" class="secondary" onclick="toggleSpecialBarsEditor('${id}')">• Adicionar barras especiales</button></div>
     </div>
     ${specialBarsEditorHtml(id,ch)}
-    <h4>Estadísticas actuales 🔒</h4><div class="muted">Valores definitivos bloqueados. Solo se aumentan mediante bonificaciones de grado.</div>
+    <h4>Estadísticas actuales</h4>
     ${gradeBonusEditorHtml(ch)}
     <div class="editor-stats">${statsHtml}</div>
     <div class="character-actions" style="margin-top:10px">
@@ -2034,7 +2034,7 @@ async function saveCharacterEdit(id){
   // El grado del personaje no es editable una vez creado.
   ch.control=document.getElementById('edit-'+id+'-control').value||null;
   ch.currentStats=ch.currentStats||{};
-  // Las estadísticas no pueden editarse manualmente.
+  statNames.forEach((n,i)=>{const v=document.getElementById("edit-"+id+"-stat-"+i).value;ch.currentStats[n]=normalizeStatValue(v)});
   ch.passives=collectCharacterPassives(id,ch);
   ch.specialBars=collectSpecialBars(id);
   delete pendingPassiveRemovals[id];
@@ -2746,7 +2746,7 @@ zoneHtmlFor=function(c,z){
 saveCharacterEdit=async function(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
   if(!currentUser){toast('Iniciá sesión para guardar cambios.');return}
-  const currentStats={...(ch.currentStats||{})};
+  const currentStats={};statNames.forEach((n,i)=>{const el=document.getElementById("edit-"+id+"-stat-"+i);currentStats[n]=normalizeStatValue(el.value)});
   const passives=collectCharacterPassives(id,ch);
   const specialBars=collectSpecialBars(id);
   let techniqueActions;
@@ -2784,6 +2784,7 @@ saveCharacterEdit=async function(id){
     // El tipo de técnica se conserva en la base sin permitir su edición.
     // El grado se conserva en la base; solo la XP puede ascenderlo.
     control_em:document.getElementById('edit-'+id+'-control').value?Number(document.getElementById('edit-'+id+'-control').value):null,
+    current_stats:currentStats,
     passives,
     technique_description:document.getElementById('tech-desc-'+id)?.value.trim()||'',
     technique_actions:techniqueActions,

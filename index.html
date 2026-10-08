@@ -4391,6 +4391,8 @@ async function createCombatMap(campaignId){
   if(!allZones&&!zoneIds.length){toast('Elegí al menos una zona o Toda la campaña.');return}
   const id=crypto.randomUUID();
   let path=null,created=false;
+  const button=document.querySelector('.combat-map-admin button[onclick^="createCombatMap"]');
+  if(button){button.disabled=true;button.textContent='Subiendo mapa...'}
   try{
     const blob=await resizeMapFile(file);
     path=currentUser.id+'/maps/'+id+'.jpg';
@@ -4407,13 +4409,18 @@ async function createCombatMap(campaignId){
     if(made&&selectedCombatZoneId&&mapAppliesToZone(made,selectedCombatZoneId)){
       selectedCombatMapId=id;localStorage.setItem('jjk-combat-map',id);
     }
-    refreshCombatMapSection(campaignId);
+    try{refreshCombatMapSection(campaignId)}catch(renderError){console.error('El mapa se guardó pero falló la vista',renderError)}
     toast('Mapa cargado.');
   }catch(e){
     console.error(e);
-    if(created)await sb.from('combat_maps').delete().eq('id',id);
-    if(path)await sb.storage.from('jjk-images').remove([path]);
-    toast('No pude cargar el mapa: '+e.message);
+    if(!created&&path){try{await sb.storage.from('jjk-images').remove([path])}catch(cleanupError){console.error(cleanupError)}}
+    if(created){toast('El mapa se guardó, pero falló la actualización. Recargá la página.')}else{
+      const msg=e?.message||String(e)||'Error desconocido';
+      toast('Error al subir el mapa: '+msg);
+      alert('No se pudo subir el mapa. Detalle: '+msg);
+    }
+  }finally{
+    if(button&&button.isConnected){button.disabled=false;button.textContent='Subir mapa'}
   }
 }
 async function selectCombatMap(campaignId,mapId){

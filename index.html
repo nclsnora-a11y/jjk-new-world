@@ -341,6 +341,14 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .gm-token-placed{margin-top:8px;border-top:1px solid #292936;padding-top:7px}.gm-token-placed>summary{cursor:pointer;font-size:11px;color:var(--muted)}
 .gm-token-row{grid-template-columns:34px minmax(0,1fr) 32px 32px 32px;padding:5px 6px}.gm-token-row img{width:34px;height:34px}.gm-token-row button{padding:5px}
 @media(max-width:760px){.gm-token-create.compact{grid-template-columns:1fr}.gm-token-library-head small{display:none}.gm-token-lib-card{flex-basis:72px}.gm-token-lib-card img{width:50px;height:50px}}
+
+/* Technique image / GIF support */
+.technique-media-preview{margin-top:6px;min-height:0}
+.technique-media-preview img{display:block;max-width:220px;max-height:130px;object-fit:cover;border-radius:9px;border:1px solid #343442;background:#0d0d14}
+.quick-tech-media{margin:7px 0}
+.quick-tech-media img{display:block;width:100%;max-width:220px;max-height:120px;object-fit:cover;border-radius:9px;border:1px solid #30303d;background:#0c0c12}
+.roll-tech-media{margin-top:8px;border-radius:10px;overflow:hidden;border:1px solid #30303d;background:#0b0b10;max-width:280px}
+.roll-tech-media img{display:block;width:100%;height:auto;max-height:220px;object-fit:contain;background:#09090d}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 </head>
@@ -1289,10 +1297,33 @@ function techniqueUseEditorHtml(id,a,i){
     '<div><label>Tirada con</label><select id="tech-use-'+id+'-'+i+'-stat">'+techniqueStatOptions(a.stat||'Control EM')+'</select></div>'+
     '<div><label>Coste EM</label><input type="number" min="0" id="tech-use-'+id+'-'+i+'-cost" value="'+esc(a.cost??0)+'" placeholder="0"></div>'+
     '<div><label>Daño (opcional)</label><input id="tech-use-'+id+'-'+i+'-damage" value="'+esc(a.damage||'')+'" placeholder="Ej: 1d20, 3d5, 2d6+3"></div>'+
+    '<div class="technique-use-wide"><label>Imagen / GIF (URL, opcional)</label><input id="tech-use-'+id+'-'+i+'-media" value="'+esc(a.mediaUrl||a.media_url||'')+'" placeholder="https://...gif o https://...jpg" oninput="previewTechniqueMedia(\''+id+'\','+i+')"><div class="technique-media-preview" id="tech-use-'+id+'-'+i+'-media-preview">'+techniqueMediaPreviewHtml(a.mediaUrl||a.media_url||'')+'</div></div>'+
     '<div class="technique-use-wide"><label>Efecto / modificador (opcional)</label><input id="tech-use-'+id+'-'+i+'-effect" value="'+esc(a.effect||'')+'" placeholder="Ej: +3 a una tirada, empuja, ralentiza"></div>'+
     '<div class="technique-use-wide"><label>Descripción</label><textarea id="tech-use-'+id+'-'+i+'-desc" placeholder="Qué hace este uso">'+esc(a.description||'')+'</textarea></div>'+
     '<div class="technique-use-remove" style="grid-column:1/-1"><button type="button" class="secondary danger" onclick="removeTechniqueUseEditor(\''+id+'\','+i+')">Quitar</button></div>'+
     '</div></div>';
+}
+function sanitizeTechniqueMediaUrl(url){
+  const raw=String(url||'').trim();
+  if(!raw)return '';
+  try{
+    const u=new URL(raw,location.href);
+    if(!['http:','https:'].includes(u.protocol))return '';
+    return u.href;
+  }catch(e){return ''}
+}
+function techniqueMediaPreviewHtml(url){
+  const safe=sanitizeTechniqueMediaUrl(url);
+  return safe?'<img src="'+esc(safe)+'" alt="Vista previa" loading="lazy">':'';
+}
+function previewTechniqueMedia(id,index){
+  const input=document.getElementById('tech-use-'+id+'-'+index+'-media');
+  const preview=document.getElementById('tech-use-'+id+'-'+index+'-media-preview');
+  if(preview)preview.innerHTML=techniqueMediaPreviewHtml(input?.value||'');
+}
+function rollMediaHtml(url){
+  const safe=sanitizeTechniqueMediaUrl(url);
+  return safe?'<div class="roll-tech-media"><img src="'+esc(safe)+'" alt="Imagen de la técnica" loading="lazy"></div>':'';
 }
 function collectTechniqueUses(id){
   const list=document.getElementById('tech-use-list-'+id);
@@ -1305,6 +1336,7 @@ function collectTechniqueUses(id){
       stat:document.getElementById('tech-use-'+id+'-'+i+'-stat')?.value||'',
       cost:Math.max(0,Number(document.getElementById('tech-use-'+id+'-'+i+'-cost')?.value||0)),
       damage:(document.getElementById('tech-use-'+id+'-'+i+'-damage')?.value||'').trim(),
+      mediaUrl:sanitizeTechniqueMediaUrl(document.getElementById('tech-use-'+id+'-'+i+'-media')?.value||''),
       effect:(document.getElementById('tech-use-'+id+'-'+i+'-effect')?.value||'').trim(),
       description:(document.getElementById('tech-use-'+id+'-'+i+'-desc')?.value||'').trim()
     };
@@ -1314,7 +1346,7 @@ function addTechniqueUseEditor(id){
   const list=document.getElementById('tech-use-list-'+id);if(!list)return;
   const count=list.querySelectorAll('.technique-use-item').length;
   if(!count)list.innerHTML='';
-  list.insertAdjacentHTML('beforeend',techniqueUseEditorHtml(id,{name:'',stat:'Control EM',cost:0,damage:'',effect:'',description:''},count));
+  list.insertAdjacentHTML('beforeend',techniqueUseEditorHtml(id,{name:'',stat:'Control EM',cost:0,damage:'',mediaUrl:'',effect:'',description:''},count));
 }
 function removeTechniqueUseEditor(id,index){
   const el=document.getElementById('tech-use-'+id+'-'+index);if(el)el.remove();
@@ -2789,6 +2821,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     return '<details class="quick-tech-item">'+
       '<summary>'+esc(a.name||'Uso de técnica')+'</summary>'+
       (note?'<div class="quick-tech-note">'+esc(note)+'</div>':'')+
+      ((a.mediaUrl||a.media_url)?'<div class="quick-tech-media">'+techniqueMediaPreviewHtml(a.mediaUrl||a.media_url)+'</div>':'')+
       '<div class="quick-tech-actions">'+
         '<button class="combat-technique-btn" '+(canRoll&&(validRoll||noRoll)?'onclick="event.preventDefault();event.stopPropagation();rollTechniqueAttack(\''+campaignId+'\',\''+ch.id+'\','+i+')"':'disabled')+'>'+(noRoll?'Usar':'Ataque'+(validRoll?' · d20+'+bonus:''))+(cost?' · '+cost+' EM':'')+'</button>'+
         (damageDice?'<button class="combat-technique-btn secondary" '+(canRoll?'onclick="event.preventDefault();event.stopPropagation();rollTechniqueDamage(\''+campaignId+'\',\''+ch.id+'\','+i+')"':'disabled')+'>Daño · '+esc(damageDice.expression)+'</button>':'')+
@@ -2851,7 +2884,8 @@ async function rollTechniqueAttack(campaignId,charId,index){
     const {error}=await sb.from('combat_rolls').insert({
       campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
       stat_name:'Uso · '+action.name+(cost?' · -'+cost+' EM':'')+' · Sin tirada',
-      die_result:0,stat_bonus:0,total:0
+      die_result:0,stat_bonus:0,total:0,
+      media_url:sanitizeTechniqueMediaUrl(action.mediaUrl||action.media_url||'')||null
     });
     if(error){toast(error.message);return}
     return;
@@ -2874,7 +2908,8 @@ async function rollTechniqueAttack(campaignId,charId,index){
   const {error}=await sb.from('combat_rolls').insert({
     campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
     stat_name:'Ataque · '+action.name+(cost?' · -'+cost+' EM':''),
-    die_result:die,stat_bonus:bonus,total
+    die_result:die,stat_bonus:bonus,total,
+    media_url:sanitizeTechniqueMediaUrl(action.mediaUrl||action.media_url||'')||null
   });
   if(error){toast(error.message);return}
   if(cost>0)updateCombatBarsFromState(charId);
@@ -2893,7 +2928,8 @@ async function rollTechniqueDamage(campaignId,charId,index){
     campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
     stat_name:'Daño · '+action.name,
     die_result:damageResults[0],stat_bonus:damageDice.modifier,total:damageTotal,
-    roll_expression:damageDice.expression,roll_results:damageResults
+    roll_expression:damageDice.expression,roll_results:damageResults,
+    media_url:sanitizeTechniqueMediaUrl(action.mediaUrl||action.media_url||'')||null
   });
   if(error){toast(error.message);return}
 }
@@ -2947,7 +2983,7 @@ function combatRollMessageHtml(r){
     const ch=r.character_id?allCharacters.find(c=>c.id===r.character_id):null;
     const title=r.stat_name&&r.stat_name!=='Dados'?((ch?.sorcererName?ch.sorcererName+' · ':'')+r.stat_name):((ch?.sorcererName?ch.sorcererName+' · ':'')+'Tirada libre');
     const avatar=ch?.photo?'<img class="roll-msg-mini-avatar" src="'+ch.photo+'" alt="">':'<div class="roll-msg-mini-avatar">術</div>';
-    return '<div class="roll-msg free-dice-roll"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(title)+'</b> · '+esc(r.roll_expression)+'</span><span>'+esc(time)+'</span></div><div class="free-dice-main"><span class="free-dice-results">['+esc(shown)+']</span>'+(Number(r.stat_bonus)?'<span class="roll-op">'+(Number(r.stat_bonus)>0?'+':'')+r.stat_bonus+'</span>':'')+'<span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div></div></div></div>';
+    return '<div class="roll-msg free-dice-roll"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(title)+'</b> · '+esc(r.roll_expression)+'</span><span>'+esc(time)+'</span></div><div class="free-dice-main"><span class="free-dice-results">['+esc(shown)+']</span>'+(Number(r.stat_bonus)?'<span class="roll-op">'+(Number(r.stat_bonus)>0?'+':'')+r.stat_bonus+'</span>':'')+'<span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div>'+rollMediaHtml(r.media_url)+'</div></div></div>';
   }
   const ch=allCharacters.find(c=>c.id===r.character_id);
   const name=ch?.sorcererName||'Personaje';
@@ -2955,12 +2991,12 @@ function combatRollMessageHtml(r){
   const avatar=ch?.photo?'<img class="roll-msg-mini-avatar" src="'+ch.photo+'" alt="">':'<div class="roll-msg-mini-avatar">術</div>';
   const canSee=!ch||canSeeCombatDetails(r.campaign_id,ch);
   if(String(r.stat_name||'').startsWith('Uso · ')){
-    return '<div class="roll-msg"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · '+esc(r.stat_name)+'</span><span>'+esc(time)+'</span></div><div class="muted" style="font-size:11px">Técnica utilizada sin tirada de dados.</div></div></div></div>';
+    return '<div class="roll-msg"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · '+esc(r.stat_name)+'</span><span>'+esc(time)+'</span></div><div class="muted" style="font-size:11px">Técnica utilizada sin tirada de dados.</div>'+rollMediaHtml(r.media_url)+'</div></div></div>';
   }
   if(!canSee){
     return '<div class="roll-msg roll-msg-hidden"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · Tirada</span><span>'+esc(time)+'</span></div><div class="roll-msg-main enemy-roll-total-only"><span class="roll-hidden-text">Total:</span><span class="roll-total">'+r.total+'</span></div></div></div></div>';
   }
-  return '<div class="roll-msg"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · '+esc(r.stat_name)+'</span><span>'+esc(time)+'</span></div><div class="roll-msg-main"><span class="roll-d20">'+r.die_result+'</span><span class="roll-op">+'+r.stat_bonus+'</span><span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div></div></div></div>';
+  return '<div class="roll-msg"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · '+esc(r.stat_name)+'</span><span>'+esc(time)+'</span></div><div class="roll-msg-main"><span class="roll-d20">'+r.die_result+'</span><span class="roll-op">+'+r.stat_bonus+'</span><span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div>'+rollMediaHtml(r.media_url)+'</div></div></div>';
 }
 function parseDiceExpressionFlexible(expression){
   const raw=String(expression||'').trim().toUpperCase().replace(/\s+/g,'');

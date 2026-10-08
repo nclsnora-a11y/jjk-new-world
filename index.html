@@ -3222,6 +3222,11 @@ async function renderCombatCampaign(campaignId){
   root.innerHTML='<div class="empty-characters">Cargando combate de <b>'+esc(camp.name)+'</b>...</div>';
   try{
     await loadCombatViewState(campaignId);
+    if(!selectedCombatZoneId&&zones.length){
+      selectedCombatZoneId=zones[0].id;
+      localStorage.setItem('jjk-combat-zone-'+campaignId,selectedCombatZoneId);
+      if(isAdmin)await saveCombatViewState(campaignId,selectedCombatZoneId,null);
+    }
     await ensureCombatStates(campaignId);
     await loadCombatRolls(campaignId);
     await loadCombatMessages(campaignId);
@@ -4408,6 +4413,7 @@ async function createCombatMap(campaignId){
     const made=combatMaps.find(m=>m.id===id);
     if(made&&selectedCombatZoneId&&mapAppliesToZone(made,selectedCombatZoneId)){
       selectedCombatMapId=id;localStorage.setItem('jjk-combat-map',id);
+      await saveCombatViewState(campaignId,selectedCombatZoneId,id);
     }
     try{refreshCombatMapSection(campaignId)}catch(renderError){console.error('El mapa se guardó pero falló la vista',renderError)}
     toast('Mapa cargado.');

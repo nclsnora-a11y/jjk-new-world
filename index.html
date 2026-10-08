@@ -381,7 +381,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 /* Progresion de grado */
 .rank-progress{margin:15px 0 18px;padding:18px;border:1px solid #55417c;border-radius:16px;background:linear-gradient(145deg,#211834,#11111b);box-shadow:inset 0 1px rgba(255,255,255,.04)}
 .rank-progress-head{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.rank-progress-now{font-size:17px;font-weight:800;color:#ede9fe}.rank-progress-next{font-size:12px;color:#c4b5fd}.rank-progress-message{margin:13px 0;color:#f5d0fe;font-weight:700;font-size:13px}.rank-progress-track{height:19px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:3px;border-radius:999px;background:#090811;border:1px solid #55417c;overflow:hidden}
-.rank-quarter{position:relative;overflow:hidden;border-radius:5px;background:#30283c}.rank-quarter-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#c084fc,#f9a8d4);transition:width .35s}.rank-progress-numbers{display:flex;justify-content:space-between;color:#b9a9d1;font-size:11px;margin-top:9px}.rank-progress-milestones{display:flex;justify-content:space-between;color:#86749d;font-size:9px;padding:6px 0 0}.rank-progress-complete{border-color:#b89534;background:linear-gradient(135deg,#382911,#16131b)}.rank-progress-complete .rank-progress-now{color:#ffe08d}
+.rank-quarter{position:relative;overflow:hidden;border-radius:5px;background:#30283c}.rank-quarter-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#c084fc,#f9a8d4);transition:width .35s}.rank-progress-numbers{display:flex;justify-content:space-between;color:#b9a9d1;font-size:11px;margin-top:9px}.rank-progress-milestones{display:flex;justify-content:space-between;color:#86749d;font-size:9px;padding:6px 0 0}.rank-progress:has(.rank-progress-message){} .rank-progress-complete{border-color:#b89534;background:linear-gradient(135deg,#382911,#16131b)}.rank-progress-complete .rank-progress-now{color:#ffe08d}
 .rank-up-notice{position:fixed;z-index:99999;top:20%;left:50%;transform:translateX(-50%);width:min(92vw,450px);padding:25px;text-align:center;border:2px solid #edc968;border-radius:18px;background:linear-gradient(135deg,#322411,#21172c);box-shadow:0 20px 65px #000c;color:#ffdf80}.rank-up-notice b{font-size:21px}.rank-up-notice p{color:#f9ecd0}.rank-up-notice button{margin-top:8px}
 
 /* Inventory & experience */
@@ -1401,12 +1401,12 @@ function gradeProgressHtml(ch,xpValue){
  const needed=Math.max(1,next.xp-current.xp);
  const earned=Math.max(0,Math.min(needed,xp-current.xp));
  const pct=Math.min(100,Math.max(0,earned/needed*100));
- const msg=pct>=75?'¡Ya falta poco para alcanzar '+next.name+'!':pct>=50?'¡Estás a la mitad del camino hacia '+next.name+'!':pct>=25?'¡Buen avance! Sigue hacia '+next.name+'.':'Es tu primer paso para subir a '+next.name+'.';
+ const msg=pct>=100?'Menciona a un admin para realizar tu prueba para subir de rango.':pct>=75?'¡Ya falta poco para alcanzar '+next.name+'!':pct>=50?'¡Estás a la mitad del camino hacia '+next.name+'!':pct>=25?'¡Buen avance! Sigue hacia '+next.name+'.':'Es tu primer paso para subir a '+next.name+'.';
  return '<section class="rank-progress"><div class="rank-progress-head"><div class="rank-progress-now">🔒 Actualmente eres '+esc(current.name)+'</div><div class="rank-progress-next">Siguiente rango: '+esc(next.name)+'</div></div>'+
  '<div class="rank-progress-message">'+esc(msg)+'</div>'+
  '<div class="rank-progress-track">'+[0,1,2,3].map(i=>'<div class="rank-quarter"><div class="rank-quarter-fill" style="width:'+Math.max(0,Math.min(100,(pct-i*25)*4))+'%"></div></div>').join('')+'</div>'+
  '<div class="rank-progress-milestones"><span>Inicio</span><span>25%</span><span>50%</span><span>75%</span><span>Meta</span></div>'+
- '<div class="rank-progress-numbers"><span>'+xp+' / '+next.xp+' XP</span><span>Te faltan '+Math.max(0,next.xp-xp)+' XP</span></div></section>';
+ '<div class="rank-progress-numbers"><span>'+xp+' XP acumulada · Meta: '+next.xp+' XP</span><span>'+(xp>=next.xp?'🔒 Ascenso pendiente de prueba · '+(xp-next.xp)+' XP excedente':'Te faltan '+(next.xp-xp)+' XP')+'</span></div></section>';
 }
 function showGradeAscension(characterName,newGrade){
  const old=document.querySelector('.rank-up-notice');if(old)old.remove();
@@ -1551,7 +1551,8 @@ function combatProgressAdminHtml(campaignId){
     '<div class="shop-admin-grid"><div><label>Personaje</label><select id="combat-progress-character"><option value="">Elegir personaje...</option>'+options+'</select></div>'+
     '<div><label>Experiencia a sumar o restar</label><input type="number" step="1" id="combat-progress-xp" value="0"></div>'+
     '<div><label>Puntos a sumar o restar</label><input type="number" step="1" id="combat-progress-points" value="0"></div>'+
-    '<button type="button" onclick="adminAdjustCombatProgress(\''+campaignId+'\')">Aplicar cambios</button></div>'+
+    '<button type="button" onclick="adminAdjustCombatProgress(\''+campaignId+'\')">Aplicar cambios</button>'+ 
+    '<button type="button" class="secondary" onclick="adminApproveCombatGrade(\''+campaignId+'\')">Aprobar prueba y subir un rango</button></div>'+
     '</div></details>';
 }
 async function adminAdjustCombatProgress(campaignId){
@@ -1565,15 +1566,28 @@ async function adminAdjustCombatProgress(campaignId){
   const btn=document.querySelector('.combat-progress-admin button');
   if(btn)btn.disabled=true;
   try{
-    const previousGrade=allCharacters.find(c=>c.id===characterId)?.grade;
     const {error}=await sb.rpc('admin_adjust_character_progress',{p_character_id:characterId,p_experience_delta:rawXp,p_points_delta:rawPoints});
     if(error)throw error;
     await loadSharedData();
-    const updated=allCharacters.find(c=>c.id===characterId);
-    if(updated&&previousGrade!==updated.grade&&gradeLadder.findIndex(g=>g.name===updated.grade)>gradeLadder.findIndex(g=>g.name===previousGrade))showGradeAscension(updated.sorcererName,updated.grade);
-    else toast('Experiencia y puntos actualizados.');
+    toast('Experiencia y puntos guardados. El ascenso requiere una prueba.');
   }catch(e){toast(e.message||'No se pudo actualizar el progreso.')}
   finally{if(btn&&btn.isConnected)btn.disabled=false}
+}
+async function adminApproveCombatGrade(campaignId){
+  if(!isAdmin||!currentUser||selectedCombatCampaignId!==campaignId)return;
+  const characterId=document.getElementById('combat-progress-character')?.value;
+  if(!characterId||!campaignCharacterIds(campaignId).includes(characterId)){toast('Elegí un personaje de esta campaña.');return}
+  const ch=allCharacters.find(c=>c.id===characterId);
+  if(!ch)return;
+  const ix=gradeLadder.findIndex(g=>g.name===ch.grade);
+  if(ix<0||ix>=gradeLadder.length-1){toast('Este personaje no tiene un rango superior disponible.');return}
+  const xp=Number(progressForCharacter(characterId).experience||0);
+  if(xp<gradeLadder[ix+1].xp){toast('Todavía no alcanzó la experiencia necesaria.');return}
+  if(!confirm('¿Confirmás que '+ch.sorcererName+' aprobó su prueba para ascender a '+gradeLadder[ix+1].name+'?'))return;
+  const {data,error}=await sb.rpc('admin_approve_grade',{p_character_id:characterId});
+  if(error){toast(error.message);return}
+  await loadSharedData();
+  showGradeAscension(ch.sorcererName,data||gradeLadder[ix+1].name);
 }
 async function adminCreateShopListing(){
   if(!isAdmin)return;

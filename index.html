@@ -339,7 +339,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .gm-token-lib-remove:hover{color:#fff;border-color:#a44}
 .gm-token-library-empty,.gm-token-zone-empty{color:var(--muted);font-size:11px;padding:8px}
 .gm-token-placed{margin-top:8px;border-top:1px solid #292936;padding-top:7px}.gm-token-placed>summary{cursor:pointer;font-size:11px;color:var(--muted)}
-.gm-token-row{grid-template-columns:34px minmax(0,1fr) 32px 32px 32px;padding:5px 6px}.gm-token-row img{width:34px;height:34px}.gm-token-row button{padding:5px}
+ .gm-token-placed-visible{padding:12px;border:1px solid #474057;border-radius:12px;background:#171521;margin:12px 0} .gm-token-placed-title{display:flex;justify-content:space-between;font-weight:700;font-size:13px;color:#e9ddff;margin-bottom:10px}.gm-token-placed-title span{color:#c4b5fd} .gm-token-row{grid-template-columns:34px minmax(0,1fr) auto auto auto;padding:8px 6px;gap:8px} .gm-token-row img{width:34px;height:34px}.gm-token-row button{padding:5px}
 @media(max-width:760px){.gm-token-create.compact{grid-template-columns:1fr}.gm-token-library-head small{display:none}.gm-token-lib-card{flex-basis:72px}.gm-token-lib-card img{width:50px;height:50px}}
 
 /* Technique image / GIF support */
@@ -4574,7 +4574,7 @@ function gmTokenPanelBodyHtml(map){
       '<div class="gm-token-row-main"><b>'+esc(t.name||'Token')+'</b><small><span id="gm-token-size-label-'+t.id+'">'+Number(t.size_pct).toFixed(1)+'</span>%</small></div>'+
       '<button class="secondary" type="button" title="Achicar" onclick="resizeCustomToken(\''+t.id+'\',0.85)">−</button>'+
       '<button class="secondary" type="button" title="Agrandar" onclick="resizeCustomToken(\''+t.id+'\',1.18)">+</button>'+
-      '<button class="secondary danger" type="button" title="Quitar solo de este mapa" onclick="deleteCustomToken(\''+t.id+'\')">×</button>'+
+      '<button class="secondary danger" type="button" title="Quitar solo de este mapa" onclick="deleteCustomToken(\''+t.id+'\')">Eliminar</button>'+
     '</div>'
   ).join(''):'<div class="gm-token-zone-empty">No hay tokens colocados en esta zona.</div>';
   return '<div class="gm-token-create compact">'+
@@ -4583,8 +4583,8 @@ function gmTokenPanelBodyHtml(map){
       '<div><label>Tamaño</label><input id="gm-token-size" type="number" min="1" max="40" step=".5" value="6"></div>'+
       '<button type="button" onclick="createCustomToken(\''+map.id+'\')">Guardar y usar</button>'+
     '</div>'+
-    gmTokenLibraryShelfHtml(map)+
-    '<details class="gm-token-placed"><summary>En este mapa · '+combatCustomTokens.length+'</summary><div class="gm-token-list">'+placed+'</div></details>';
+    '<div class="gm-token-placed gm-token-placed-visible"><div class="gm-token-placed-title">🎯 Tokens colocados en este mapa <span>'+combatCustomTokens.length+'</span></div><div class="gm-token-list">'+placed+'</div></div>'+
+    gmTokenLibraryShelfHtml(map);
 }
 function gmTokenPanelHtml(map){
   if(!isAdmin)return '';

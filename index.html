@@ -1341,7 +1341,7 @@ function toggleEditor(id){
       <div><label>Foto del personaje</label>${ch.photo?'<img class="photo-preview" src="'+ch.photo+'" alt="Vista previa">':'<div class="photo-preview character-avatar placeholder">術</div>'}<input id="edit-${id}-photo" type="file" accept="image/*" onchange="openCharacterCropper('${id}',this)"><div class="photo-note">Elegí la foto y ajustá el encuadre antes de guardarla.</div>${ch.photo?'<button class="secondary danger" style="margin-top:7px" onclick="removePhoto(\''+id+'\')">Quitar foto</button>':''}</div>
       <div><label>Nombre del personaje</label><input id="edit-${id}-name" value="${esc(ch.sorcererName)}"></div>
       <div><label>Bando</label><select id="edit-${id}-side"><option value="hechicero" ${ch.side==='hechicero'?'selected':''}>Hechicero</option><option value="maldicion" ${ch.side==='maldicion'?'selected':''}>Maldición</option><option value="brujo" ${ch.side==='brujo'?'selected':''}>Brujo</option></select></div>
-      <div><label>Tipo de técnica</label><select id="edit-${id}-type"><option value="">—</option>${optionList(configs.type.values,ch.type)}</select></div>
+      <div><label>Tipo de técnica · bloqueado</label><div class="muted" style="border:1px solid #343443;padding:10px;border-radius:8px">🔒 ${esc(ch.type||"—")} · Resultado de la ruleta</div></div>
       <div><label>Grado · bloqueado</label><div class="muted" style="border:1px solid #343443;padding:10px;border-radius:8px">🔒 ${esc(ch.grade||"—")} · Se actualiza con XP</div></div>
       <div class="special-bars-toggle-cell"><label>Barras adicionales</label><button type="button" class="secondary" onclick="toggleSpecialBarsEditor('${id}')">• Adicionar barras especiales</button></div>
     </div>
@@ -2010,7 +2010,7 @@ async function saveCharacterEdit(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
   ch.sorcererName=document.getElementById('edit-'+id+'-name').value.trim()||'Hechicero sin nombre';
   ch.userName=document.getElementById('edit-'+id+'-user').value.trim()||'—';
-  ch.type=document.getElementById('edit-'+id+'-type').value||null;
+  // El tipo de técnica obtenido en la ruleta permanece bloqueado.
   // El grado del personaje no es editable una vez creado.
   ch.control=document.getElementById('edit-'+id+'-control').value||null;
   ch.currentStats=ch.currentStats||{};
@@ -2758,7 +2758,7 @@ saveCharacterEdit=async function(id){
     sorcerer_name:document.getElementById('edit-'+id+'-name').value.trim()||'Hechicero sin nombre',
     user_name:'—',
     character_side:normalizeCharacterSide(document.getElementById('edit-'+id+'-side')?.value),
-    technique_type:document.getElementById('edit-'+id+'-type').value||null,
+    // El tipo de técnica se conserva en la base sin permitir su edición.
     // El grado se conserva en la base; solo la XP puede ascenderlo.
     control_em:document.getElementById('edit-'+id+'-control').value?Number(document.getElementById('edit-'+id+'-control').value):null,
     current_stats:currentStats,

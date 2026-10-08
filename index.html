@@ -501,16 +501,6 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 <h3>Historial</h3><div class="chips" id="history-technique"></div>
 </section>
 
-<section class="card" id="card-side">
-<h2>Ruleta de Bando</h2>
-<p class="muted">Define si el personaje es Hechicero, Maldición o Brujo. Los tres resultados tienen la misma probabilidad.</p>
-<div class="wheel"><div class="pointer"></div><canvas id="canvas-side" width="700" height="700"></canvas></div>
-<div class="actions"><button id="spin-side">Girar ruleta</button><button class="secondary" id="clear-side">Limpiar</button></div>
-<div class="result" id="result-side">Resultado: —</div>
-<div class="legend"><span>Hechicero</span><span>33,33%</span><span>Maldición</span><span>33,33%</span><span>Brujo</span><span>33,33%</span></div>
-<h3>Historial</h3><div class="chips" id="history-side"></div>
-</section>
-
 <section class="card" id="card-grade">
 <h2>Grado Inicial</h2>
 <p class="muted">El grado otorga bonificaciones iniciales a estadísticas. Las estadísticas beneficiadas las elegís vos.</p>
@@ -699,13 +689,12 @@ const passiveData=[["Fuerza","Cuerpo Entrenado","+1 Fuerza. El daño recibido po
 const colors=['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#22c55e','#14b8a6','#3b82f6','#6366f1','#a855f7'];
 const configs={
 stats:{values:['1','2','3','4','5'],weights:[20,20,20,20,20],canvas:'canvas-stats',spin:'spin-stats',clear:'clear-stats',result:'result-stats',history:'history-stats'},
-side:{values:['Hechicero','Maldición','Brujo'],weights:[1,1,1],canvas:'canvas-side',spin:'spin-side',clear:'clear-side',result:'result-side',history:'history-side'},
 type:{values:['Potenciación','Invocación','Creación','Control','Soporte','Marca','Técnica Existente','Restricción Celestial','Extraordinaria'],weights:[94/7,94/7,94/7,94/7,94/7,94/7,94/7,3,3],canvas:'canvas-type',spin:'spin-type',clear:'clear-type',result:'result-type',history:'history-type'},
 technique:{values:["Ilimitado","Santuario","Copia","Diez Sombras","Transfiguración Ociosa","Manipulación de Espíritus Malditos","Furia Estelar","Extinción de Técnicas","Construcción","Apuesta Mortal Ociosa","Sentencia Mortal","Manipulación del Cielo","Formación de Hielo","Manipulación de Sangre","Hechicería de Proyección","Habla Maldita","Cambio de Posición","Llamas del Desastre","Mareas del Desastre","Manipulación de Cuervos","Manipulación de Marionetas","Recreación Contractual","Sistema Antigravedad","Ámbar Bestial Mítico","Bastón de Guerra G","Descarga de Energía Maldita","Encuentro Amoroso","Invocación de Bestias Auspiciosas","Área Prohibida Individual","Canción de Oración","Técnica de Proporción","Técnica de Muñeca de Paja","Plantas del Desastre","Técnica de Putrefacción","Técnica de Séance / Sesión Espiritual","Inversión","Técnica de Clonación","Captura del Corazón","Manipulación de Herramientas","Milagros","Valor Ardiente"],weights:[0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545],canvas:'canvas-technique',spin:'spin-technique',clear:'clear-technique',result:'result-technique',history:'history-technique'},
 grade:{values:['Grado 4','Semigrado 3','Grado 3','Semigrado 2','Grado 2','Semigrado 1','Grado 1','Grado Especial'],weights:[32,22,16,11,8,5,4,2],canvas:'canvas-grade',spin:'spin-grade',clear:'clear-grade',result:'result-grade',history:'history-grade'},
 passives:{values:Array.from({length:140},(_,i)=>String(i+1)),weights:Array(140).fill(1),canvas:'canvas-passives',spin:'spin-passives',clear:'clear-passives',result:'result-passives',history:'history-passives'}
 };
-const states={stats:{rot:0,busy:false,h:[]},side:{rot:0,busy:false,h:[]},type:{rot:0,busy:false,h:[]},technique:{rot:0,busy:false,h:[]},grade:{rot:0,busy:false,h:[]},passives:{rot:0,busy:false,h:[]}};
+const states={stats:{rot:0,busy:false,h:[]},type:{rot:0,busy:false,h:[]},technique:{rot:0,busy:false,h:[]},grade:{rot:0,busy:false,h:[]},passives:{rot:0,busy:false,h:[]}};
 const statNames=['Fuerza','Agilidad','Velocidad','Resistencia','Durabilidad','Inteligencia','Energía Maldita','Barreras'];
 const resourceStatNames=['Resistencia','Durabilidad','Energía Maldita'];
 const rollableStatNames=statNames.filter(n=>!resourceStatNames.includes(n));
@@ -1434,21 +1423,11 @@ function shopListingHtml(listing){
 }
 function shopAdminPanelHtml(){
   if(!isAdmin)return '';
-  const opts=allCharacters.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+' · '+esc(sideDisplayName(ch.side))+'</option>').join('');
   return '<details class="shop-admin-panel"><summary>Administración de economía e inventario</summary><div class="shop-admin-body">'+
-    '<div class="shop-admin-grid"><div><label>Personaje</label><select id="shop-admin-character"><option value="">Elegir...</option>'+opts+'</select></div>'+
-    '<div><label>XP a sumar/restar</label><input type="number" id="shop-admin-xp" value="0"></div>'+
-    '<div><label>Puntos a sumar/restar</label><input type="number" id="shop-admin-points" value="0"></div>'+
-    '<button onclick="adminAdjustProgress()">Aplicar progreso</button></div>'+
-    '<div class="shop-admin-divider"></div>'+
-    '<div class="shop-admin-grid item"><div><label>Dar objeto · nombre</label><input id="shop-grant-name" placeholder="Ej: Katana"></div>'+
-    '<div><label>Descripción</label><input id="shop-grant-desc" placeholder="Descripción opcional"></div>'+
-    '<div><label>Imagen URL</label><input id="shop-grant-image" placeholder="https://..."></div>'+
-    '<button onclick="adminGrantInventoryItem()">Dar objeto</button></div>'+
-    '<div class="shop-admin-divider"></div>'+
     '<div class="shop-admin-grid official"><div><label>Publicar en tienda · nombre</label><input id="shop-listing-name" placeholder="Objeto"></div>'+
     '<div><label>Descripción</label><input id="shop-listing-desc" placeholder="Descripción"></div>'+
     '<div><label>Imagen URL</label><input id="shop-listing-image" placeholder="https://..."></div>'+
+    '<div><label>O subir imagen desde archivo</label><input id="shop-listing-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div>'+
     '<div><label>Precio</label><input type="number" min="0" id="shop-listing-price" value="10"></div>'+
     '<div><label>Stock</label><input type="number" min="1" id="shop-listing-stock" value="1"></div>'+
     '<button onclick="adminCreateShopListing()">Publicar</button></div>'+
@@ -1465,26 +1444,36 @@ function renderShop(){
     '<div class="shop-wallets">'+(wallet||'<span class="muted">No tenés personajes propios para comprar.</span>')+'</div>'+
     '<div class="shop-grid">'+(active.length?active.map(shopListingHtml).join(''):'<div class="shop-empty">No hay publicaciones activas.</div>')+'</div>';
 }
-async function adminAdjustProgress(){
-  if(!isAdmin)return;
-  const characterId=document.getElementById('shop-admin-character')?.value;
-  if(!characterId){toast('Elegí un personaje.');return}
-  const xp=Math.trunc(Number(document.getElementById('shop-admin-xp')?.value||0));
-  const points=Math.trunc(Number(document.getElementById('shop-admin-points')?.value||0));
-  const {error}=await sb.rpc('admin_adjust_character_progress',{p_character_id:characterId,p_experience_delta:xp,p_points_delta:points});
-  if(error){toast(error.message);return}
-  await loadSharedData();toast('Progreso actualizado.');
+function combatProgressAdminHtml(campaignId){
+  if(!isAdmin)return '';
+  const ids=campaignCharacterIds(campaignId);
+  const options=ids.map(id=>allCharacters.find(ch=>ch.id===id)).filter(Boolean)
+    .map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+' · '+esc(sideDisplayName(ch.side))+'</option>').join('');
+  return '<details class="shop-admin-panel combat-progress-admin"><summary>Dar experiencia o puntos</summary><div class="shop-admin-body">'+
+    '<p class="muted">Solo personajes de esta campaña. Usá valores positivos para sumar y negativos para restar.</p>'+
+    '<div class="shop-admin-grid"><div><label>Personaje</label><select id="combat-progress-character"><option value="">Elegir personaje...</option>'+options+'</select></div>'+
+    '<div><label>Experiencia a sumar o restar</label><input type="number" step="1" id="combat-progress-xp" value="0"></div>'+
+    '<div><label>Puntos a sumar o restar</label><input type="number" step="1" id="combat-progress-points" value="0"></div>'+
+    '<button type="button" onclick="adminAdjustCombatProgress(\''+campaignId+'\')">Aplicar cambios</button></div>'+
+    '</div></details>';
 }
-async function adminGrantInventoryItem(){
-  if(!isAdmin)return;
-  const characterId=document.getElementById('shop-admin-character')?.value;
-  const name=(document.getElementById('shop-grant-name')?.value||'').trim();
-  if(!characterId||!name){toast('Elegí personaje y escribí el nombre del objeto.');return}
-  const description=(document.getElementById('shop-grant-desc')?.value||'').trim();
-  const image=sanitizeTechniqueMediaUrl(document.getElementById('shop-grant-image')?.value||'')||null;
-  const {error}=await sb.from('character_inventory').insert({character_id:characterId,name,description,image_url:image,created_by:currentUser.id});
-  if(error){toast(error.message);return}
-  await loadSharedData();toast('Objeto agregado al inventario.');
+async function adminAdjustCombatProgress(campaignId){
+  if(!isAdmin||!currentUser||selectedCombatCampaignId!==campaignId)return;
+  const characterId=document.getElementById('combat-progress-character')?.value;
+  if(!characterId||!campaignCharacterIds(campaignId).includes(characterId)){toast('Elegí un personaje de esta campaña.');return}
+  const rawXp=Number(document.getElementById('combat-progress-xp')?.value||0);
+  const rawPoints=Number(document.getElementById('combat-progress-points')?.value||0);
+  if(!Number.isSafeInteger(rawXp)||!Number.isSafeInteger(rawPoints)){toast('Ingresá cantidades enteras válidas.');return}
+  if(!rawXp&&!rawPoints){toast('Indicá experiencia o puntos para modificar.');return}
+  const btn=document.querySelector('.combat-progress-admin button');
+  if(btn)btn.disabled=true;
+  try{
+    const {error}=await sb.rpc('admin_adjust_character_progress',{p_character_id:characterId,p_experience_delta:rawXp,p_points_delta:rawPoints});
+    if(error)throw error;
+    await loadSharedData();
+    toast('Experiencia y puntos actualizados.');
+  }catch(e){toast(e.message||'No se pudo actualizar el progreso.')}
+  finally{if(btn&&btn.isConnected)btn.disabled=false}
 }
 async function adminCreateShopListing(){
   if(!isAdmin)return;
@@ -1493,7 +1482,17 @@ async function adminCreateShopListing(){
   const stock=Math.max(1,Math.trunc(Number(document.getElementById('shop-listing-stock')?.value||1)));
   if(!name){toast('Escribí el nombre del objeto.');return}
   const description=(document.getElementById('shop-listing-desc')?.value||'').trim();
-  const image=sanitizeTechniqueMediaUrl(document.getElementById('shop-listing-image')?.value||'')||null;
+  let image=sanitizeTechniqueMediaUrl(document.getElementById('shop-listing-image')?.value||'')||null;
+  const file=document.getElementById('shop-listing-file')?.files?.[0];
+  if(file){
+    try{
+      if(!['image/png','image/jpeg','image/webp','image/gif'].includes(file.type))throw new Error('Solo imágenes PNG, JPG, WEBP o GIF.');
+      if(file.size>8*1024*1024)throw new Error('La imagen no puede superar 8 MB.');
+      const path='shop/'+currentUser.id+'/'+crypto.randomUUID()+'.'+techniqueMediaExtension(file);
+      await uploadTechniqueMediaFile(file,path);
+      image=imageUrl(path);
+    }catch(e){toast(e.message||'No se pudo subir la imagen.');return}
+  }
   const {error}=await sb.from('shop_listings').insert({item_name:name,description,image_url:image,price_points:price,stock,is_active:true,created_by:currentUser.id});
   if(error){toast(error.message);return}
   await loadSharedData();toast('Objeto publicado en la tienda.');
@@ -3076,7 +3075,7 @@ async function renderCombatCampaign(campaignId){
   const initiativeButton=isAdmin&&selectedCombatZoneId?'<button class="initiative-btn" id="roll-initiative-'+campaignId+'" onclick="rollCombatInitiative(\''+campaignId+'\')">🎲 Tirar iniciativa</button>':'';
   root.innerHTML='<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">'+esc(camp.name)+'</h3><div class="muted">'+esc(zoneName)+' · '+chars.length+' personaje(s)'+(isAdmin?' · controles de GM activos':'')+'</div></div><div class="combat-top-actions">'+initiativeButton+zoneSelector+'</div></div>'+
     '<div class="combat-layout"><div>'+roster+'</div>'+combatRollChatHtml(campaignId)+'</div>'+
-    combatMapSectionHtml(campaignId);
+    combatMapSectionHtml(campaignId)+combatProgressAdminHtml(campaignId);
 
   chars.forEach(ch=>updateCombatBars(ch.id));
   scrollRollChat();

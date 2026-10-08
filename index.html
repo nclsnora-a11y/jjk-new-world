@@ -377,6 +377,13 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .quick-tech-desc,.quick-tech-note,.passive-edit .muted{white-space:pre-wrap}
 #characters-section textarea[id^="tech-desc-"],#characters-section textarea[id*="-desc"]{white-space:pre-wrap;line-height:1.45}
 
+
+/* Progresion de grado */
+.rank-progress{margin:15px 0 18px;padding:18px;border:1px solid #55417c;border-radius:16px;background:linear-gradient(145deg,#211834,#11111b);box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.rank-progress-head{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.rank-progress-now{font-size:17px;font-weight:800;color:#ede9fe}.rank-progress-next{font-size:12px;color:#c4b5fd}.rank-progress-message{margin:13px 0;color:#f5d0fe;font-weight:700;font-size:13px}.rank-progress-track{height:19px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:3px;border-radius:999px;background:#090811;border:1px solid #55417c;overflow:hidden}
+.rank-quarter{position:relative;overflow:hidden;border-radius:5px;background:#30283c}.rank-quarter-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#c084fc,#f9a8d4);transition:width .35s}.rank-progress-numbers{display:flex;justify-content:space-between;color:#b9a9d1;font-size:11px;margin-top:9px}.rank-progress-milestones{display:flex;justify-content:space-between;color:#86749d;font-size:9px;padding:6px 0 0}.rank-progress-complete{border-color:#b89534;background:linear-gradient(135deg,#382911,#16131b)}.rank-progress-complete .rank-progress-now{color:#ffe08d}
+.rank-up-notice{position:fixed;z-index:99999;top:20%;left:50%;transform:translateX(-50%);width:min(92vw,450px);padding:25px;text-align:center;border:2px solid #edc968;border-radius:18px;background:linear-gradient(135deg,#322411,#21172c);box-shadow:0 20px 65px #000c;color:#ffdf80}.rank-up-notice b{font-size:21px}.rank-up-notice p{color:#f9ecd0}.rank-up-notice button{margin-top:8px}
+
 /* Inventory & experience */
 .inventory-experience-panel{margin-top:10px;padding:12px;border:1px solid #343443;border-radius:12px;background:#0e0e15}
 .inventory-exp-head,.inventory-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -1333,7 +1340,7 @@ function toggleEditor(id){
       <div><label>Nombre del personaje</label><input id="edit-${id}-name" value="${esc(ch.sorcererName)}"></div>
       <div><label>Bando</label><select id="edit-${id}-side"><option value="hechicero" ${ch.side==='hechicero'?'selected':''}>Hechicero</option><option value="maldicion" ${ch.side==='maldicion'?'selected':''}>Maldición</option><option value="brujo" ${ch.side==='brujo'?'selected':''}>Brujo</option></select></div>
       <div><label>Tipo de técnica</label><select id="edit-${id}-type"><option value="">—</option>${optionList(configs.type.values,ch.type)}</select></div>
-      <div><label>Grado</label><select id="edit-${id}-grade"><option value="">—</option>${optionList(configs.grade.values,ch.grade)}</select></div>
+      <div><label>Grado · bloqueado</label><div class="muted" style="border:1px solid #343443;padding:10px;border-radius:8px">🔒 ${esc(ch.grade||"—")} · Se actualiza con XP</div></div>
       <div class="special-bars-toggle-cell"><label>Barras adicionales</label><button type="button" class="secondary" onclick="toggleSpecialBarsEditor('${id}')">• Adicionar barras especiales</button></div>
     </div>
     ${specialBarsEditorHtml(id,ch)}
@@ -1378,6 +1385,36 @@ function techniqueMultilineKeydown(event){
   el.dispatchEvent(new Event('input',{bubbles:true}));
 }
 
+
+const gradeLadder=[
+ {name:'Grado 4',xp:0},{name:'Semigrado 3',xp:320},{name:'Grado 3',xp:450},
+ {name:'Semigrado 2',xp:640},{name:'Grado 2',xp:1280},{name:'Semigrado 1',xp:2560},
+ {name:'Grado 1',xp:4500},{name:'Grado Especial',xp:6000}
+];
+function gradeProgressHtml(ch,xpValue){
+ const xp=Math.max(0,Math.floor(Number(xpValue)||0));
+ const savedIndex=gradeLadder.findIndex(g=>g.name===ch.grade);
+ const ix=Math.max(0,savedIndex);
+ const current=gradeLadder[ix];
+ const next=gradeLadder[ix+1];
+ if(!next)return '<section class="rank-progress rank-progress-complete"><div class="rank-progress-head"><div class="rank-progress-now">👑 Actualmente eres '+esc(current.name)+'</div></div><div class="rank-progress-message">¡Has alcanzado el rango máximo!</div><div class="rank-progress-numbers"><span>'+xp+' XP acumulada</span><span>Rango máximo desbloqueado</span></div></section>';
+ const needed=Math.max(1,next.xp-current.xp);
+ const earned=Math.max(0,Math.min(needed,xp-current.xp));
+ const pct=Math.min(100,Math.max(0,earned/needed*100));
+ const msg=pct>=75?'¡Ya falta poco para alcanzar '+next.name+'!':pct>=50?'¡Estás a la mitad del camino hacia '+next.name+'!':pct>=25?'¡Buen avance! Sigue hacia '+next.name+'.':'Es tu primer paso para subir a '+next.name+'.';
+ return '<section class="rank-progress"><div class="rank-progress-head"><div class="rank-progress-now">🔒 Actualmente eres '+esc(current.name)+'</div><div class="rank-progress-next">Siguiente rango: '+esc(next.name)+'</div></div>'+
+ '<div class="rank-progress-message">'+esc(msg)+'</div>'+
+ '<div class="rank-progress-track">'+[0,1,2,3].map(i=>'<div class="rank-quarter"><div class="rank-quarter-fill" style="width:'+Math.max(0,Math.min(100,(pct-i*25)*4))+'%"></div></div>').join('')+'</div>'+
+ '<div class="rank-progress-milestones"><span>Inicio</span><span>25%</span><span>50%</span><span>75%</span><span>Meta</span></div>'+
+ '<div class="rank-progress-numbers"><span>'+xp+' / '+next.xp+' XP</span><span>Te faltan '+Math.max(0,next.xp-xp)+' XP</span></div></section>';
+}
+function showGradeAscension(characterName,newGrade){
+ const old=document.querySelector('.rank-up-notice');if(old)old.remove();
+ const el=document.createElement('div');el.className='rank-up-notice';el.setAttribute('role','alertdialog');
+ el.innerHTML='<div style="font-size:38px">👑 ✨</div><b>¡Felicidades, has aumentado tu rango!</b><p>'+esc(characterName)+' ha alcanzado <strong>'+esc(newGrade)+'</strong>.</p><button type="button">Continuar</button>';
+ el.querySelector('button').addEventListener('click',()=>el.remove());document.body.appendChild(el);
+}
+
 function progressForCharacter(id){
   return characterProgressById[id]||{character_id:id,experience:0,points:0};
 }
@@ -1400,7 +1437,7 @@ function toggleInventoryExperience(characterId){
   panel.innerHTML='<div class="inventory-exp-head"><div><b>Inventario y experiencia</b><small>'+esc(ch.sorcererName)+'</small></div><button class="secondary" onclick="toggleInventoryExperience(\''+characterId+'\')">Cerrar</button></div>'+
     '<div class="progress-cards"><div><span>Experiencia</span><b>'+Number(p.experience||0)+'</b><small>La experiencia solo puede ser otorgada por GM/ADMIN.</small></div>'+
     '<div><span>Puntos</span><b>'+Number(p.points||0)+'</b><small>Se usan para comprar en la Tienda.</small></div></div>'+
-    '<div class="xp-rule-pending">Requisitos de ascenso por grado: pendiente de la regla de experiencia.</div>'+
+    gradeProgressHtml(ch,p.experience)+
     '<div class="inventory-title"><b>Inventario</b><span>'+items.length+' objeto(s)</span></div>'+
     '<div class="inventory-list">'+(items.length?items.map(inventoryItemHtml).join(''):'<div class="inventory-empty">Todavía no hay objetos en este inventario.</div>')+'</div>';
   panel.classList.remove('hidden');
@@ -1528,10 +1565,13 @@ async function adminAdjustCombatProgress(campaignId){
   const btn=document.querySelector('.combat-progress-admin button');
   if(btn)btn.disabled=true;
   try{
+    const previousGrade=allCharacters.find(c=>c.id===characterId)?.grade;
     const {error}=await sb.rpc('admin_adjust_character_progress',{p_character_id:characterId,p_experience_delta:rawXp,p_points_delta:rawPoints});
     if(error)throw error;
     await loadSharedData();
-    toast('Experiencia y puntos actualizados.');
+    const updated=allCharacters.find(c=>c.id===characterId);
+    if(updated&&previousGrade!==updated.grade&&gradeLadder.findIndex(g=>g.name===updated.grade)>gradeLadder.findIndex(g=>g.name===previousGrade))showGradeAscension(updated.sorcererName,updated.grade);
+    else toast('Experiencia y puntos actualizados.');
   }catch(e){toast(e.message||'No se pudo actualizar el progreso.')}
   finally{if(btn&&btn.isConnected)btn.disabled=false}
 }
@@ -1915,7 +1955,7 @@ async function saveCharacterEdit(id){
   ch.sorcererName=document.getElementById('edit-'+id+'-name').value.trim()||'Hechicero sin nombre';
   ch.userName=document.getElementById('edit-'+id+'-user').value.trim()||'—';
   ch.type=document.getElementById('edit-'+id+'-type').value||null;
-  ch.grade=document.getElementById('edit-'+id+'-grade').value||null;
+  // El grado del personaje no es editable una vez creado.
   ch.control=document.getElementById('edit-'+id+'-control').value||null;
   ch.currentStats=ch.currentStats||{};
   statNames.forEach((n,i)=>{const v=document.getElementById('edit-'+id+'-stat-'+i).value;ch.currentStats[n]=normalizeStatValue(v)});
@@ -2663,7 +2703,7 @@ saveCharacterEdit=async function(id){
     user_name:'—',
     character_side:normalizeCharacterSide(document.getElementById('edit-'+id+'-side')?.value),
     technique_type:document.getElementById('edit-'+id+'-type').value||null,
-    grade:document.getElementById('edit-'+id+'-grade').value||null,
+    // El grado se conserva en la base; solo la XP puede ascenderlo.
     control_em:document.getElementById('edit-'+id+'-control').value?Number(document.getElementById('edit-'+id+'-control').value):null,
     current_stats:currentStats,
     passives,

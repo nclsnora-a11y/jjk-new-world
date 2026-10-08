@@ -1312,7 +1312,7 @@ function techniqueUseEditorHtml(id,a,i){
     '<div><label>Daño (opcional)</label><input id="tech-use-'+id+'-'+i+'-damage" value="'+esc(a.damage||'')+'" placeholder="Ej: 1d20, 3d5, 2d6+3"></div>'+
     '<div class="technique-use-wide"><label>Imagen / GIF (opcional)</label>'+
       '<div class="technique-media-editor">'+
-        '<input id="tech-use-'+id+'-'+i+'-media" value="'+esc(a.mediaUrl||a.media_url||'')+'" placeholder="Pegá el código Embed de Tenor o un link .gif" oninput="previewTechniqueMedia(\''+id+'\','+i+')">'+
+        '<input id="tech-use-'+id+'-'+i+'-media" value="'+esc(techniqueMediaEditorValue(a.mediaUrl||a.media_url||''))+'" placeholder="Pegá el código Embed de Tenor o un link .gif" oninput="previewTechniqueMedia(\''+id+'\','+i+')">'+
         '<input id="tech-use-'+id+'-'+i+'-media-file" type="file" accept="image/*,.gif" onchange="previewTechniqueMediaFile(\''+id+'\','+i+',this)">'+
         '<button type="button" class="secondary" onclick="clearTechniqueMedia(\''+id+'\','+i+')">Quitar</button>'+
       '</div>'+
@@ -1327,6 +1327,8 @@ function techniqueUseEditorHtml(id,a,i){
 function normalizeTechniqueMediaInput(value){
   let raw=String(value||'').trim();
   if(!raw)return '';
+  if(/^tenor:\d+:[0-9.]+$/i.test(raw))return raw;
+  if(/^tenorurl:.+/i.test(raw))return raw;
   raw=raw.replace(/https\\:\/\//gi,'https://').replace(/http\\:\/\//gi,'http://');
 
   const postMatch=raw.match(/data-postid\s*=\s*["']?(\d+)/i);
@@ -1419,6 +1421,11 @@ function scheduleTenorEmbedRefresh(){
     s.async=true;
     document.body.appendChild(s);
   },40);
+}
+function techniqueMediaEditorValue(value){
+  const raw=String(value||'');
+  const source=tenorUrlFromDescriptor(raw);
+  return source||raw;
 }
 function techniqueMediaPreviewHtml(value){
   const normalized=normalizeTechniqueMediaInput(value);

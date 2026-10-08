@@ -3001,9 +3001,9 @@ function parseCompoundDiceExpression(expression){
     if(Math.abs(modifier)>100000)return null;
   }
   if(!dice.length)return null;
-  const expression=dice.map((d,i)=>(i?'+':'')+(d.count===1?'D'+d.sides:d.count+'D'+d.sides)).join('')+
+  const canonicalExpression=dice.map((d,i)=>(i?'+':'')+(d.count===1?'D'+d.sides:d.count+'D'+d.sides)).join('')+
     (modifier?(modifier>0?'+':'')+modifier:'');
-  return {dice,modifier,expression};
+  return {dice,modifier,expression:canonicalExpression};
 }
 function rollCompoundDice(parsed){
   const rolled=[];
@@ -3867,9 +3867,14 @@ function renderCustomMapTokens(map){
 }
 async function loadGmTokenLibrary(){
   if(!isAdmin){combatTokenLibrary=[];return combatTokenLibrary}
-  const {data,error}=await sb.from('gm_token_library').select('*').order('created_at',{ascending:true});
-  if(error)throw error;
-  combatTokenLibrary=(data||[]).map(t=>({...t,image:customTokenImageUrl(t.image_path)}));
+  try{
+    const {data,error}=await sb.from('gm_token_library').select('*').order('created_at',{ascending:true});
+    if(error)throw error;
+    combatTokenLibrary=(data||[]).map(t=>({...t,image:customTokenImageUrl(t.image_path)}));
+  }catch(e){
+    console.error('No pude cargar la biblioteca de tokens',e);
+    combatTokenLibrary=[];
+  }
   return combatTokenLibrary;
 }
 function gmTokenLibraryShelfHtml(map){
@@ -4600,8 +4605,14 @@ function subscribeCombatMap(map){
       }
       if(el&&!el.classList.contains('dragging')){el.style.left=Number(row.x_pct)+'%';el.style.top=Number(row.y_pct)+'%';el.style.width=Number(row.size_pct)+'%'}
     })
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'combat_map_tokens',filter:'map_id=eq.'+map.id},async()=>{await loadCombatMapTokens(map.id);renderActiveCombatMap(map.campaign_id)})
-    .on('postgres_changes',{event:'DELETE',schema:'public',table:'combat_map_tokens',filter:'map_id=eq.'+map.id},async()=>{await loadCombatMapTokens(map.id);renderActiveCombatMap(map.campaign_id)})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'combat_map_tokens',filter:'map_id=eq.'+map.id},async payload=>{
+      const row=payload.new;if(row?.zone_id&&row.zone_id!==selectedCombatZoneId)return;
+      await refreshCombatMapVisibility(map.campaign_id);
+    })
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'combat_map_tokens',filter:'map_id=eq.'+map.id},async payload=>{
+      const row=payload.old;if(row?.zone_id&&row.zone_id!==selectedCombatZoneId)return;
+      await refreshCombatMapVisibility(map.campaign_id);
+    })
     .subscribe();
 }
 

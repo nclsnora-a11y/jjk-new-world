@@ -2994,7 +2994,7 @@ function combatRollMessageHtml(r){
     return '<div class="roll-msg"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · '+esc(r.stat_name)+'</span><span>'+esc(time)+'</span></div><div class="muted" style="font-size:11px">Técnica utilizada sin tirada de dados.</div>'+rollMediaHtml(r.media_url)+'</div></div></div>';
   }
   if(!canSee){
-    return '<div class="roll-msg roll-msg-hidden"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · Tirada</span><span>'+esc(time)+'</span></div><div class="roll-msg-main enemy-roll-total-only"><span class="roll-hidden-text">Total:</span><span class="roll-total">'+r.total+'</span></div></div></div></div>';
+    return '<div class="roll-msg roll-msg-hidden"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · Tirada</span><span>'+esc(time)+'</span></div><div class="roll-msg-main enemy-roll-total-only"><span class="roll-hidden-text">Total:</span><span class="roll-total">'+r.total+'</span></div>'+rollMediaHtml(r.media_url)+'</div></div></div>';
   }
   return '<div class="roll-msg"><div class="roll-msg-with-avatar">'+avatar+'<div class="roll-msg-content"><div class="roll-msg-top"><span><b>'+esc(name)+'</b> · '+esc(r.stat_name)+'</span><span>'+esc(time)+'</span></div><div class="roll-msg-main"><span class="roll-d20">'+r.die_result+'</span><span class="roll-op">+'+r.stat_bonus+'</span><span class="roll-op">=</span><span class="roll-total">'+r.total+'</span></div>'+rollMediaHtml(r.media_url)+'</div></div></div>';
 }

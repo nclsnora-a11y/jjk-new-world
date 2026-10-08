@@ -363,10 +363,15 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .tenor-url-placeholder{display:grid;place-items:center;min-height:70px;padding:10px;border:1px dashed #3a3a49;border-radius:9px;color:var(--muted);font-size:11px;text-align:center}
 .tenor-resolve-failed a{color:#b78cff;text-decoration:none}
 
-/* Brujos */
-.character-card.character-side-brujo{border:2px solid #f59e0b!important;box-shadow:0 0 0 1px rgba(245,158,11,.12),0 8px 24px rgba(245,158,11,.08)}
-.combat-char.combat-side-brujo{border:2px solid #f59e0b!important;box-shadow:0 0 0 1px rgba(245,158,11,.11)}
-.combat-enemy-hidden.combat-side-brujo{border-color:#f59e0b!important}
+/* Brujos: rosa oscuro, distinguible del rojo de las maldiciones */
+.character-card.character-side-brujo{border:2px solid #be4a84!important;box-shadow:0 0 0 1px rgba(190,74,132,.12),0 8px 24px rgba(190,74,132,.08)}
+.combat-char.combat-side-brujo{border:2px solid #be4a84!important;box-shadow:0 0 0 1px rgba(190,74,132,.11)}
+.combat-enemy-hidden.combat-side-brujo{border-color:#be4a84!important}
+.ranking-heading{padding:18px 0}.ranking-heading h2{margin:0 0 7px}.ranking-heading p{color:var(--muted);margin:0}
+.ranking-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 20px}.ranking-tabs button{border:1px solid #393747;background:#1b1a28;border-radius:999px;color:#ddd;padding:10px 17px;cursor:pointer}.ranking-tabs button.active{background:#633ab0;color:#fff;border-color:#a78bfa}
+.ranking-list{display:grid;gap:11px}.ranking-entry{display:flex;align-items:center;gap:13px;padding:15px;border:1px solid #343442;border-left:4px solid var(--side,#777);border-radius:16px;background:linear-gradient(110deg,#1c1b28,#101017)}.ranking-entry.ranking-first{border-color:#eabf46;background:linear-gradient(110deg,rgba(234,191,70,.18),#1b1920);box-shadow:0 0 22px rgba(234,191,70,.12)}.ranking-number{font-size:19px;font-weight:800;min-width:39px;text-align:center;color:#ddd}.ranking-first .ranking-number{color:#ffd65e}.ranking-avatar{width:54px;height:54px;object-fit:cover;border-radius:13px;background:#292638}.ranking-info{min-width:0;flex:1}.ranking-name{font-weight:800;font-size:17px;overflow-wrap:anywhere}.ranking-side{display:inline-block;font-size:11px;font-weight:700;margin-top:6px;color:var(--side,#ccc)}.ranking-score{text-align:right;white-space:nowrap;font-weight:800;font-size:21px;color:#f5f3ff}.ranking-score small{display:block;color:#a5a2b7;font-weight:400;font-size:11px}.ranking-entry.ranking-first .ranking-score{color:#ffdc71}.ranking-admin{display:flex;gap:5px;flex-wrap:wrap;align-items:center}.ranking-admin input{width:94px;padding:8px;border-radius:8px;border:1px solid #535060;background:#101018;color:white}.ranking-admin button{padding:8px;font-size:12px}.ranking-empty{padding:30px;text-align:center;color:var(--muted);background:#191921;border-radius:14px}
+@media(max-width:600px){.ranking-entry{flex-wrap:wrap;gap:10px}.ranking-admin{width:100%;justify-content:flex-end}.ranking-score{margin-left:auto}.ranking-avatar{width:43px;height:43px}}
+
 
 /* Technique multiline formatting */
 .quick-tech-desc,.quick-tech-note,.passive-edit .muted{white-space:pre-wrap}
@@ -410,6 +415,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
   <button id="nav-campaigns">Campañas</button>
   <button id="nav-shop">Tienda</button>
   <button id="nav-combat">Combate</button>
+  <button id="nav-ranking">Ranking</button>
 </div>
 <main>
 <section id="roulette-section">
@@ -578,6 +584,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
   </div>
   <div id="shop-root"></div>
 </section>
+<section id="ranking-section" class="hidden"><div class="ranking-heading"><h2>🏆 Ranking de personajes</h2><p>Clasificación por suma de estadísticas. Los administradores pueden establecer una puntuación manual.</p></div><div class="ranking-tabs"><button class="active" data-ranking-filter="global" onclick="setRankingFilter('global')">Global</button><button data-ranking-filter="hechicero" onclick="setRankingFilter('hechicero')">Hechiceros</button><button data-ranking-filter="brujo" onclick="setRankingFilter('brujo')">Brujos</button><button data-ranking-filter="maldicion" onclick="setRankingFilter('maldicion')">Maldiciones</button></div><div id="ranking-root"></div></section>
 <section id="combat-section" class="hidden">
   <div class="combat-toolbar">
     <div>
@@ -849,12 +856,13 @@ window.addEventListener('pagehide',freezeBrowserScrollPosition);
 window.addEventListener('pageshow',()=>restoreBrowserScrollPosition());
 
 function showTab(tab){
-  const roulette=tab==='roulette',characters=tab==='characters',campaigns=tab==='campaigns',shop=tab==='shop',account=tab==='account',combat=tab==='combat',info=tab==='info';
+  const roulette=tab==='roulette',characters=tab==='characters',campaigns=tab==='campaigns',shop=tab==='shop',account=tab==='account',combat=tab==='combat',info=tab==='info',ranking=tab==='ranking';
   document.getElementById('roulette-section').classList.toggle('hidden',!roulette);
   document.getElementById('characters-section').classList.toggle('hidden',!characters);
   document.getElementById('campaigns-section').classList.toggle('hidden',!campaigns);
   document.getElementById('shop-section').classList.toggle('hidden',!shop);
   document.getElementById('combat-section').classList.toggle('hidden',!combat);
+  document.getElementById('ranking-section').classList.toggle('hidden',!ranking);
   document.getElementById('account-section').classList.toggle('hidden',!account);
   document.getElementById('info-section').classList.toggle('hidden',!info);
   document.getElementById('nav-roulette').classList.toggle('active',roulette);
@@ -862,12 +870,14 @@ function showTab(tab){
   document.getElementById('nav-campaigns').classList.toggle('active',campaigns);
   document.getElementById('nav-shop').classList.toggle('active',shop);
   document.getElementById('nav-combat').classList.toggle('active',combat);
+  document.getElementById('nav-ranking').classList.toggle('active',ranking);
   document.getElementById('nav-account').classList.toggle('active',account);
   document.getElementById('nav-info').classList.toggle('active',info);
   if(characters)renderCharacters();
   if(campaigns)renderCampaigns();
   if(shop&&typeof renderShop==='function')renderShop();
   if(combat&&typeof renderCombat==='function')renderCombat();
+  if(ranking&&typeof loadRanking==='function')loadRanking();
   if(account&&typeof renderAuth==='function')renderAuth();
   if(info&&typeof renderInformation==='function')renderInformation();
   localStorage.setItem('jjk-active-tab',tab);
@@ -878,6 +888,7 @@ document.getElementById('nav-campaigns').addEventListener('click',()=>showTab('c
 document.getElementById('nav-shop').addEventListener('click',()=>showTab('shop'));
 document.getElementById('nav-account').addEventListener('click',()=>showTab('account'));
 document.getElementById('nav-combat').addEventListener('click',()=>showTab('combat'));
+document.getElementById('nav-ranking').addEventListener('click',()=>showTab('ranking'));
 document.getElementById('nav-info').addEventListener('click',()=>showTab('info'));
 
 
@@ -1433,6 +1444,55 @@ function shopAdminPanelHtml(){
     '<button onclick="adminCreateShopListing()">Publicar</button></div>'+
   '</div></details>';
 }
+
+let rankingEntries=[],rankingFilter='global';
+const rankingSideColors={hechicero:'#60a5fa',brujo:'#be4a84',maldicion:'#ef6b79'};
+function setRankingFilter(filter){
+  if(!['global','hechicero','brujo','maldicion'].includes(filter))return;
+  rankingFilter=filter;document.querySelectorAll('[data-ranking-filter]').forEach(b=>b.classList.toggle('active',b.dataset.rankingFilter===filter));renderRanking();
+}
+async function loadRanking(){
+  const root=document.getElementById('ranking-root');if(!root)return;
+  if(!currentUser){root.innerHTML='<div class="ranking-empty">Iniciá sesión para ver el ranking.</div>';return}
+  root.innerHTML='<div class="ranking-empty">Cargando clasificaciones...</div>';
+  const {data,error}=await sb.rpc('get_character_ranking');
+  if(error){root.innerHTML='<div class="ranking-empty">No se pudo cargar el ranking: '+esc(error.message)+'</div>';return}
+  rankingEntries=data||[];
+  renderRanking();
+}
+function renderRanking(){
+  const root=document.getElementById('ranking-root');if(!root)return;
+  const rows=rankingEntries.filter(ch=>rankingFilter==='global'||normalizeCharacterSide(ch.character_side)===rankingFilter)
+    .sort((a,b)=>Number(b.score_override??b.stat_total??0)-Number(a.score_override??a.stat_total??0)||String(a.sorcerer_name).localeCompare(String(b.sorcerer_name),'es'));
+  if(!rows.length){root.innerHTML='<div class="ranking-empty">No hay personajes en esta clasificación.</div>';return}
+  root.innerHTML='<div class="ranking-list">'+rows.map((ch,i)=>{
+    const side=normalizeCharacterSide(ch.character_side),color=rankingSideColors[side];
+    const score=Number(ch.score_override??ch.stat_total??0);
+    const avatar=ch.photo_path?imageUrl(ch.photo_path):null;
+    return '<article class="ranking-entry '+(i===0?'ranking-first':'')+'" style="--side:'+color+'">'+
+      '<div class="ranking-number">'+(i===0?'👑':(i+1)+'°')+'</div>'+
+      (avatar?'<img class="ranking-avatar" src="'+esc(avatar)+'" alt="">':'<div class="ranking-avatar" style="display:grid;place-items:center;font-size:23px">呪</div>')+
+      '<div class="ranking-info"><div class="ranking-name">'+esc(ch.sorcerer_name||'Sin nombre')+'</div><span class="ranking-side">'+esc(sideDisplayName(side))+'</span></div>'+
+      '<div class="ranking-score">'+score+'<small>'+(ch.score_override!=null?'Puntaje del administrador':'Suma de estadísticas')+'</small></div>'+
+      (isAdmin?'<div class="ranking-admin"><input type="number" min="0" max="1000000" step="1" id="ranking-value-'+ch.id+'" value="'+(ch.score_override??'')+'" placeholder="Auto" title="Puntaje manual"><button type="button" onclick="saveRankingOverride(\''+ch.id+'\')">Guardar</button>'+(ch.score_override!=null?'<button class="secondary" type="button" onclick="resetRankingOverride(\''+ch.id+'\')">Auto</button>':'')+'</div>':'')+
+      '</article>';
+  }).join('')+'</div>';
+}
+async function saveRankingOverride(id){
+  if(!isAdmin||!currentUser||!rankingEntries.some(ch=>ch.id===id))return;
+  const value=document.getElementById('ranking-value-'+id)?.value;
+  if(value===''||!Number.isSafeInteger(Number(value))||Number(value)<0||Number(value)>1000000){toast('Ingresá un puntaje entero entre 0 y 1.000.000.');return}
+  const {error}=await sb.from('ranking_overrides').upsert({character_id:id,score_override:Number(value),updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'character_id'});
+  if(error){toast(error.message);return}
+  toast('Ranking actualizado.');await loadRanking();
+}
+async function resetRankingOverride(id){
+  if(!isAdmin)return;
+  const {error}=await sb.from('ranking_overrides').delete().eq('character_id',id);
+  if(error){toast(error.message);return}
+  toast('Puntaje automático restaurado.');await loadRanking();
+}
+
 function renderShop(){
   const root=document.getElementById('shop-root');if(!root)return;
   if(typeof currentUser==='undefined')return;

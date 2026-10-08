@@ -386,6 +386,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 
 .shop-consumable-tag{display:inline-flex;padding:5px 10px;border-radius:999px;background:#263a36;color:#85e4c7;font-size:11px;font-weight:bold;margin:6px 0}
 .shop-edit-box{margin:12px;padding:15px;border:1px solid #56506d;border-radius:13px;background:#171522}.shop-edit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px}.shop-edit-grid label{display:grid;gap:5px;color:#c4b5fd;font-size:12px}.shop-edit-grid input,.shop-edit-grid textarea,.shop-edit-grid select{width:100%;padding:10px;border-radius:8px;border:1px solid #494258;background:#111019;color:#fff}
+.grade-bonus-editor{border:1px solid #a78bfa;border-radius:13px;padding:14px;margin:12px 0;background:linear-gradient(135deg,#211936,#13121c)}.grade-bonus-editor h4{color:#e9d5ff;margin:0 0 7px}.grade-bonus-editor p{font-size:12px;color:#ded4ef}.grade-bonus-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:7px;margin:13px 0}.grade-bonus-options label{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid #55456b;border-radius:8px;cursor:pointer}.grade-bonus-options span{margin-left:auto;color:#d8b4fe;font-weight:bold}
 /* Inventory & experience */
 .inventory-experience-panel{margin-top:10px;padding:12px;border:1px solid #343443;border-radius:12px;background:#0e0e15}
 .inventory-exp-head,.inventory-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -1328,11 +1329,29 @@ function collectSpecialBars(id){
     return {id:row.dataset.specialBarId||('bar-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)),name:name||'Barra especial',color,max};
   });
 }
+
+function gradeBonusEditorHtml(ch){
+ const bonus=pendingGradeBonuses[ch.id];if(!bonus)return '';
+ return '<section class="grade-bonus-editor"><h4>✨ Bonificación de '+esc(bonus.grade)+'</h4>'+
+ '<p>Elegí exactamente <b>'+bonus.stat_count+' estadísticas diferentes</b>. Cada una recibirá <b>+'+bonus.bonus_amount+'</b>. Una vez guardadas, quedarán bloqueadas.</p>'+
+ '<div class="grade-bonus-options">'+statNames.map(n=>'<label><input type="checkbox" name="grade-bonus-'+ch.id+'" value="'+esc(n)+'">'+esc(n)+' <span>+'+bonus.bonus_amount+'</span></label>').join('')+'</div>'+
+ '<button type="button" onclick="saveGradeBonus(\''+ch.id+'\')">Guardar bonificación y bloquear</button></section>';
+}
+async function saveGradeBonus(id){
+ const bonus=pendingGradeBonuses[id];if(!bonus||!currentUser)return;
+ const selected=[...document.querySelectorAll('input[name="grade-bonus-'+id+'"]:checked')].map(x=>x.value);
+ if(selected.length!==bonus.stat_count){toast('Seleccioná exactamente '+bonus.stat_count+' estadísticas.');return}
+ if(!confirm('¿Confirmás estas bonificaciones? Luego no podrás cambiarlas.'))return;
+ const {error}=await sb.rpc('assign_grade_bonus',{p_character_id:id,p_stats:selected});
+ if(error){toast(error.message||'No se pudo guardar la bonificación.');return}
+ await loadSharedData();toast('Bonificación aplicada. Estadísticas bloqueadas.');
+}
+
 function toggleEditor(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
   const el=document.getElementById('editor-'+id);
   if(!el.classList.contains('hidden')){delete pendingPassiveRemovals[id];el.classList.add('hidden');return}
-  const statsHtml=statNames.map(n=>`<div class="editor-stat"><small>${esc(n)}</small><input type="number" id="edit-${id}-stat-${statNames.indexOf(n)}" value="${esc(ch.currentStats?.[n]??'')}" min="0" step="1"><div class="initial-note">Inicial: ${esc(ch.initialStats?.[n]??'—')}</div></div>`).join('')+
+  const statsHtml=statNames.map(n=>`<div class="editor-stat"><small>${esc(n)} 🔒</small><input type="number" disabled id="edit-${id}-stat-${statNames.indexOf(n)}" value="${esc(ch.currentStats?.[n]??'')}" min="0" step="1"><div class="initial-note">Inicial: ${esc(ch.initialStats?.[n]??'—')}</div></div>`).join('')+
     `<div class="editor-stat"><small>Control de EM</small><input type="number" id="edit-${id}-control" value="${esc(ch.control??'')}" min="0" step="1"><div class="initial-note">Valor actual</div></div>`;
   pendingPassiveRemovals[id]=new Set();
   const passivesHtml=(ch.passives||[]).map((p,i)=>({p,i})).filter(x=>x.p.category!=='Despertar').map(({p,i})=>`<div class="passive-edit" id="pe-${id}-${i}"><div><b>${esc(p.category)} — ${esc(p.name)}</b><div class="muted">${esc(p.description||'')}</div></div><div class="character-actions" style="margin:0"><button type="button" class="secondary" onclick="editPassive('${id}',${i})">Editar</button><button type="button" class="secondary danger" id="pe-btn-${id}-${i}" onclick="togglePassiveRemoval('${id}',${i})">Quitar</button></div></div>`).join('')||'<div class="muted">Sin pasivas.</div>';
@@ -1346,7 +1365,8 @@ function toggleEditor(id){
       <div class="special-bars-toggle-cell"><label>Barras adicionales</label><button type="button" class="secondary" onclick="toggleSpecialBarsEditor('${id}')">• Adicionar barras especiales</button></div>
     </div>
     ${specialBarsEditorHtml(id,ch)}
-    <h4>Estadísticas actuales</h4>
+    <h4>Estadísticas actuales 🔒</h4><div class="muted">Valores definitivos bloqueados. Solo se aumentan mediante bonificaciones de grado.</div>
+    ${gradeBonusEditorHtml(ch)}
     <div class="editor-stats">${statsHtml}</div>
     <div class="character-actions" style="margin-top:10px">
       <button type="button" class="secondary" onclick="toggleAwakeningPanel('${id}')">⚡ Despertares</button>
@@ -2014,7 +2034,7 @@ async function saveCharacterEdit(id){
   // El grado del personaje no es editable una vez creado.
   ch.control=document.getElementById('edit-'+id+'-control').value||null;
   ch.currentStats=ch.currentStats||{};
-  statNames.forEach((n,i)=>{const v=document.getElementById('edit-'+id+'-stat-'+i).value;ch.currentStats[n]=normalizeStatValue(v)});
+  // Las estadísticas no pueden editarse manualmente.
   ch.passives=collectCharacterPassives(id,ch);
   ch.specialBars=collectSpecialBars(id);
   delete pendingPassiveRemovals[id];
@@ -2218,6 +2238,7 @@ let currentUser=null,currentProfile=null,isAdmin=false,allCharacters=[];
 let staffViewAsPlayer=false;
 let sharedZones=[],sharedMemberships=[];
 let characterProgressById={};
+let pendingGradeBonuses={};
 let characterInventory=[];
 let shopListings=[];
 
@@ -2326,7 +2347,7 @@ async function getProfile(){
 async function loadSharedData(){
   if(!currentUser){
     allCharacters=[]; savedCharacters=[]; campaigns=[]; sharedZones=[]; sharedMemberships=[];
-    characterProgressById={};characterInventory=[];shopListings=[];
+    characterProgressById={};characterInventory=[];shopListings=[];pendingGradeBonuses={};
     renderCharacters();renderCampaigns();if(typeof renderShop==='function')renderShop();return;
   }
 
@@ -2372,14 +2393,16 @@ async function loadSharedData(){
   });
 
   try{
-    const [pr,inv,shop]=await Promise.all([
+    const [pr,inv,shop,bonuses]=await Promise.all([
       sb.from('character_progress').select('*'),
       sb.from('character_inventory').select('*').order('created_at',{ascending:false}),
-      sb.from('shop_listings').select('*').order('created_at',{ascending:false})
+      sb.from('shop_listings').select('*').order('created_at',{ascending:false}),
+      sb.from('character_grade_bonuses').select('*')
     ]);
     characterProgressById=Object.fromEntries((pr.data||[]).map(x=>[x.character_id,x]));
     characterInventory=inv.data||[];
     shopListings=shop.data||[];
+    pendingGradeBonuses=Object.fromEntries((bonuses.data||[]).map(b=>[b.character_id,b]));
   }catch(e){
     console.error('No pude cargar progreso/inventario/tienda',e);
     characterProgressById={};characterInventory=[];shopListings=[];
@@ -2723,7 +2746,7 @@ zoneHtmlFor=function(c,z){
 saveCharacterEdit=async function(id){
   const ch=savedCharacters.find(c=>c.id===id);if(!ch)return;
   if(!currentUser){toast('Iniciá sesión para guardar cambios.');return}
-  const currentStats={};statNames.forEach((n,i)=>{const el=document.getElementById('edit-'+id+'-stat-'+i);currentStats[n]=normalizeStatValue(el.value)});
+  const currentStats={...(ch.currentStats||{})};
   const passives=collectCharacterPassives(id,ch);
   const specialBars=collectSpecialBars(id);
   let techniqueActions;
@@ -2761,7 +2784,6 @@ saveCharacterEdit=async function(id){
     // El tipo de técnica se conserva en la base sin permitir su edición.
     // El grado se conserva en la base; solo la XP puede ascenderlo.
     control_em:document.getElementById('edit-'+id+'-control').value?Number(document.getElementById('edit-'+id+'-control').value):null,
-    current_stats:currentStats,
     passives,
     technique_description:document.getElementById('tech-desc-'+id)?.value.trim()||'',
     technique_actions:techniqueActions,

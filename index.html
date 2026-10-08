@@ -1488,7 +1488,7 @@ async function adminCreateShopListing(){
     try{
       if(!['image/png','image/jpeg','image/webp','image/gif'].includes(file.type))throw new Error('Solo imágenes PNG, JPG, WEBP o GIF.');
       if(file.size>8*1024*1024)throw new Error('La imagen no puede superar 8 MB.');
-      const path='shop/'+currentUser.id+'/'+crypto.randomUUID()+'.'+techniqueMediaExtension(file);
+      const path=currentUser.id+'/shop/'+crypto.randomUUID()+'.'+techniqueMediaExtension(file);
       await uploadTechniqueMediaFile(file,path);
       image=imageUrl(path);
     }catch(e){toast(e.message||'No se pudo subir la imagen.');return}

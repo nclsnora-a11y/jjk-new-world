@@ -354,6 +354,11 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .technique-media-editor input[type=file]{font-size:11px}
 .technique-media-editor button{white-space:nowrap}
 @media(max-width:760px){.technique-media-editor{grid-template-columns:1fr}.technique-media-editor button{width:100%}}
+
+.technique-tenor-embed,.tenor-roll-media .tenor-gif-embed{max-width:280px;margin:0!important}
+.technique-media-preview .tenor-gif-embed{max-width:240px}
+.roll-tech-media.tenor-roll-media{padding:0;overflow:hidden}
+.roll-tech-media.tenor-roll-media iframe{display:block;max-width:100%;border:0}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 </head>
@@ -1304,11 +1309,11 @@ function techniqueUseEditorHtml(id,a,i){
     '<div><label>Daño (opcional)</label><input id="tech-use-'+id+'-'+i+'-damage" value="'+esc(a.damage||'')+'" placeholder="Ej: 1d20, 3d5, 2d6+3"></div>'+
     '<div class="technique-use-wide"><label>Imagen / GIF (opcional)</label>'+
       '<div class="technique-media-editor">'+
-        '<input id="tech-use-'+id+'-'+i+'-media" value="'+esc(a.mediaUrl||a.media_url||'')+'" placeholder="Pegá una URL directa o subí un archivo" oninput="previewTechniqueMedia(\''+id+'\','+i+')">'+
+        '<input id="tech-use-'+id+'-'+i+'-media" value="'+esc(a.mediaUrl||a.media_url||'')+'" placeholder="Pegá el código Embed de Tenor o un link .gif" oninput="previewTechniqueMedia(\''+id+'\','+i+')">'+
         '<input id="tech-use-'+id+'-'+i+'-media-file" type="file" accept="image/*,.gif" onchange="previewTechniqueMediaFile(\''+id+'\','+i+',this)">'+
         '<button type="button" class="secondary" onclick="clearTechniqueMedia(\''+id+'\','+i+')">Quitar</button>'+
       '</div>'+
-      '<small class="muted">Podés subir JPG, PNG, WEBP o GIF. El GIF conserva la animación.</small>'+
+      '<small class="muted">Acepta el código completo “Copy embed” de Tenor, links de Tenor y enlaces directos .gif. Subir archivo queda como alternativa.</small>'+
       '<div class="technique-media-preview" id="tech-use-'+id+'-'+i+'-media-preview">'+techniqueMediaPreviewHtml(a.mediaUrl||a.media_url||'')+'</div>'+
     '</div>'+
     '<div class="technique-use-wide"><label>Efecto / modificador (opcional)</label><input id="tech-use-'+id+'-'+i+'-effect" value="'+esc(a.effect||'')+'" placeholder="Ej: +3 a una tirada, empuja, ralentiza"></div>'+
@@ -1316,23 +1321,73 @@ function techniqueUseEditorHtml(id,a,i){
     '<div class="technique-use-remove" style="grid-column:1/-1"><button type="button" class="secondary danger" onclick="removeTechniqueUseEditor(\''+id+'\','+i+')">Quitar</button></div>'+
     '</div></div>';
 }
-function sanitizeTechniqueMediaUrl(url){
-  const raw=String(url||'').trim();
+function normalizeTechniqueMediaInput(value){
+  let raw=String(value||'').trim();
   if(!raw)return '';
+  raw=raw.replace(/https\\:\/\//gi,'https://').replace(/http\\:\/\//gi,'http://');
+
+  const postMatch=raw.match(/data-postid\s*=\s*["']?(\d+)/i);
+  if(postMatch){
+    const aspectMatch=raw.match(/data-aspect-ratio\s*=\s*["']?([0-9.]+)/i);
+    const aspect=Math.max(.2,Math.min(3,Number(aspectMatch?.[1]||1)));
+    return 'tenor:'+postMatch[1]+':'+aspect;
+  }
+
+  const markdown=raw.match(/\]\((https?:\/\/[^)\s]+)\)/i);
+  if(markdown)raw=markdown[1];
+
+  const href=raw.match(/href\s*=\s*["'](https?:\/\/[^"']+)["']/i);
+  if(href)raw=href[1];
+
+  const urlMatch=raw.match(/https?:\/\/[^\s<>"']+/i);
+  if(urlMatch&&raw!==urlMatch[0])raw=urlMatch[0];
+
   try{
     const u=new URL(raw,location.href);
     if(!['http:','https:'].includes(u.protocol))return '';
+    if(/(^|\.)tenor\.com$/i.test(u.hostname)){
+      const idMatch=u.pathname.match(/(?:gif-|view\/[^/]*-)(\d{6,})\/?$/i);
+      if(idMatch)return 'tenor:'+idMatch[1]+':1';
+    }
     return u.href;
   }catch(e){return ''}
 }
-function techniqueMediaPreviewHtml(url){
-  const safe=sanitizeTechniqueMediaUrl(url);
-  return safe?'<img src="'+esc(safe)+'" alt="Vista previa" loading="lazy">':'';
+function sanitizeTechniqueMediaUrl(value){
+  return normalizeTechniqueMediaInput(value);
+}
+function tenorMediaParts(value){
+  const m=String(value||'').match(/^tenor:(\d+):([0-9.]+)$/);
+  return m?{postid:m[1],aspect:Math.max(.2,Math.min(3,Number(m[2]||1)))}:null;
+}
+let tenorEmbedRefreshTimer=null;
+function scheduleTenorEmbedRefresh(){
+  clearTimeout(tenorEmbedRefreshTimer);
+  tenorEmbedRefreshTimer=setTimeout(()=>{
+    if(!document.querySelector('.tenor-gif-embed'))return;
+    document.getElementById('jjk-tenor-embed-loader')?.remove();
+    const s=document.createElement('script');
+    s.id='jjk-tenor-embed-loader';
+    s.src='https://tenor.com/embed.js';
+    s.async=true;
+    document.body.appendChild(s);
+  },40);
+}
+function techniqueMediaPreviewHtml(value){
+  const normalized=normalizeTechniqueMediaInput(value);
+  const tenor=tenorMediaParts(normalized);
+  if(tenor){
+    setTimeout(scheduleTenorEmbedRefresh,0);
+    return '<div class="tenor-gif-embed technique-tenor-embed" data-postid="'+esc(tenor.postid)+'" data-share-method="host" data-aspect-ratio="'+tenor.aspect+'" data-width="100%"></div>';
+  }
+  return normalized?'<img src="'+esc(normalized)+'" alt="Vista previa" loading="lazy">':'';
 }
 function previewTechniqueMedia(id,index){
   const input=document.getElementById('tech-use-'+id+'-'+index+'-media');
   const preview=document.getElementById('tech-use-'+id+'-'+index+'-media-preview');
-  if(preview)preview.innerHTML=techniqueMediaPreviewHtml(input?.value||'');
+  if(preview){
+    preview.innerHTML=techniqueMediaPreviewHtml(input?.value||'');
+    scheduleTenorEmbedRefresh();
+  }
 }
 function previewTechniqueMediaFile(id,index,fileInput){
   const file=fileInput?.files?.[0];
@@ -1354,9 +1409,14 @@ function clearTechniqueMedia(id,index){
   if(file)file.value='';
   if(preview)preview.innerHTML='';
 }
-function rollMediaHtml(url){
-  const safe=sanitizeTechniqueMediaUrl(url);
-  return safe?'<div class="roll-tech-media"><img src="'+esc(safe)+'" alt="Imagen de la técnica" loading="lazy"></div>':'';
+function rollMediaHtml(value){
+  const normalized=normalizeTechniqueMediaInput(value);
+  const tenor=tenorMediaParts(normalized);
+  if(tenor){
+    setTimeout(scheduleTenorEmbedRefresh,0);
+    return '<div class="roll-tech-media tenor-roll-media"><div class="tenor-gif-embed" data-postid="'+esc(tenor.postid)+'" data-share-method="host" data-aspect-ratio="'+tenor.aspect+'" data-width="100%"></div></div>';
+  }
+  return normalized?'<div class="roll-tech-media"><img src="'+esc(normalized)+'" alt="Imagen de la técnica" loading="lazy"></div>':'';
 }
 function collectTechniqueUses(id){
   const list=document.getElementById('tech-use-list-'+id);
@@ -3039,6 +3099,7 @@ function renderCombatRollList(){
   const list=document.getElementById('roll-chat-list');if(!list)return;
   list.innerHTML=combatRolls.length?combatRolls.map(r=>combatRollMessageHtml(r)).join(''):'<div class="roll-empty">Todavía no hay tiradas.</div>';
   scrollRollChat();
+  scheduleTenorEmbedRefresh();
 }
 async function clearCombatRolls(campaignId){
   if(!isAdmin)return;
@@ -3354,6 +3415,7 @@ function subscribeCombatRolls(campaignId){
         if(list.querySelector('.roll-empty'))list.innerHTML='';
         list.insertAdjacentHTML('beforeend',combatRollMessageHtml(row));
         scrollRollChat();
+        scheduleTenorEmbedRefresh();
       }
     })
     .on('postgres_changes',{event:'DELETE',schema:'public',table:'combat_rolls'},async()=>{

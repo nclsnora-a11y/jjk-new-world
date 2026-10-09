@@ -638,7 +638,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
         <button class="secondary" id="auth-register">Crear cuenta</button>
       </div>
       <div class="account-help">Si ya te registraste, usá “Iniciar sesión”. Si es tu primera vez, usá “Crear cuenta”.</div>
-      <div style="margin-top:8px"><button type="button" class="secondary" id="auth-forgot-password">Olvidé mi contraseña</button></div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="secondary" id="auth-forgot-password">Olvidé mi contraseña</button><button type="button" class="secondary" id="auth-resend-confirmation">Reenviar confirmación de correo</button></div><div id="auth-login-feedback" class="account-help" role="status" style="margin-top:8px;min-height:18px"></div>
       <div id="auth-register-cooldown" class="account-help" style="margin-top:6px;min-height:18px"></div>
     </div>
     <div id="account-user-box" class="hidden" style="margin-top:16px">
@@ -2561,8 +2561,32 @@ document.getElementById('toggle-password').onclick=()=>{
 document.getElementById('auth-login').onclick=async()=>{
   const email=document.getElementById('auth-email').value.trim(),password=document.getElementById('auth-password').value;
   if(!email||!password){toast('Completá email y contraseña.');return}
+  const feedback=document.getElementById('auth-login-feedback');
+  if(feedback)feedback.textContent='Comprobando datos...';
   const {error}=await sb.auth.signInWithPassword({email,password});
-  if(error)toast(error.message);else toast('Sesión iniciada.');
+  if(error){
+    const msg=/email not confirmed/i.test(error.message)?'Tu correo todavía no está confirmado. Tocá «Reenviar confirmación de correo», abrí el enlace más reciente y luego iniciá sesión.':error.message;
+    if(feedback)feedback.textContent=msg;
+    toast(msg);
+  }else{
+    if(feedback)feedback.textContent='';
+    toast('Sesión iniciada.');
+  }
+};
+
+document.getElementById('auth-resend-confirmation').onclick=async()=>{
+  const email=document.getElementById('auth-email').value.trim();
+  const feedback=document.getElementById('auth-login-feedback');
+  if(!email){if(feedback)feedback.textContent='Escribí tu correo electrónico primero.';return}
+  const btn=document.getElementById('auth-resend-confirmation');
+  btn.disabled=true;btn.textContent='Enviando...';
+  try{
+    const {error}=await sb.auth.resend({type:'signup',email,options:{emailRedirectTo:'https://jjknewworld.uk/'}});
+    if(error)throw error;
+    if(feedback)feedback.textContent='Si la cuenta está pendiente, recibirás otro correo. Abrí solamente el enlace más reciente, esperá a volver a la web y después iniciá sesión.';
+  }catch(e){
+    if(feedback)feedback.textContent='No se pudo reenviar el correo: '+(e?.message||'Error desconocido');
+  }finally{btn.disabled=false;btn.textContent='Reenviar confirmación de correo'}
 };
 
 document.getElementById('auth-forgot-password').onclick=async()=>{

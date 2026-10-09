@@ -5229,13 +5229,27 @@ function bindCombatMapInteractions(map){
         const y=Math.max(0,Math.min(100,topPct));
         const id=el.dataset.tokenId;
         const tok=combatMapTokens.find(t=>t.id===id);
-        if(tok){tok.x_pct=x;tok.y_pct=y}
-
-        const {error}=await sb.from('combat_map_tokens')
-          .update({x_pct:x,y_pct:y,updated_at:new Date().toISOString()})
-          .eq('id',id);
-        if(error)toast(error.message);
-
+        if(tok){
+          const {data:spent,error}=await sb.rpc('move_token_spending_resistance',{
+            p_token_id:id,p_x:x,p_y:y,p_image_width:img.naturalWidth||img.clientWidth
+          });
+          if(error){
+            el.style.left=Number(tok.x_pct||0)+'%';
+            el.style.top=Number(tok.y_pct||0)+'%';
+            toast(error.message);
+          }else{
+            tok.x_pct=x;tok.y_pct=y;
+            const state=combatStates.find(st=>st.character_id===tok.character_id);
+            if(state)state.durability_current=Math.max(0,Number(state.durability_current||0)-Number(spent||0));
+            const current=document.getElementById('du-current-'+tok.character_id);
+            if(current)current.value=state?.durability_current??current.value;
+            const label=document.getElementById('du-text-'+tok.character_id);
+            if(label&&state)label.textContent=state.durability_current+' / '+state.durability_max;
+            const bar=document.getElementById('du-bar-'+tok.character_id);
+            if(bar&&state)bar.style.width=Math.max(0,100*state.durability_current/Math.max(1,state.durability_max))+'%';
+            toast(Number(spent).toFixed(2)+' de Resistencia consumida.');
+          }
+        }
         hideMeasureLater(line,label);
       };
 

@@ -1498,7 +1498,7 @@ function shopListingHtml(listing){
     '</div>'+(ownSeller||isAdmin?'<div id="shop-edit-'+listing.id+'" class="shop-edit-box hidden"></div>':'')+'</div></article>';
 }
 
-function shopBonusSelect(id,value){return '<select id="'+id+'"><option value="">Sin bonificador</option>'+statNames.map(n=>'<option value="'+esc(n)+'" '+(n===value?'selected':'')+'>'+esc(n)+'</option>').join('')+'</select>'}
+function shopBonusSelect(id,value){return '<select id="'+id+'"><option value="">Sin bonificador</option><option value="Versátil" '+(value==='Versátil'?'selected':'')+'>Versátil +2 (elección libre)</option>'+statNames.map(n=>'<option value="'+esc(n)+'" '+(n===value?'selected':'')+'>'+esc(n)+'</option>').join('')+'</select>'}
 function toggleShopListingEditor(id){
  const listing=shopListings.find(x=>x.id===id),panel=document.getElementById('shop-edit-'+id);
  if(!listing||!panel||!(isAdmin||listing.seller_user_id===currentUser?.id))return;
@@ -1532,7 +1532,7 @@ async function saveShopListingEdit(id){
  }
  const {error}=await sb.rpc('edit_shop_listing',{p_listing_id:id,p_name:name,p_description:description,p_image_url:image,p_price:price,p_stock:stock,p_consumable:get('shop-edit-consumable-')?.value==='true'});
  if(error){toast(error.message);return}
- if(isAdmin){const stat=get('shop-edit-bonus-stat-')?.value||null;const amount=stat?Number(get('shop-edit-bonus-amount-')?.value||0):0;const result=await sb.rpc('set_listing_bonus',{p_id:id,p_stat:stat,p_amount:amount});if(result.error){toast(result.error.message);return}}
+ if(isAdmin){const stat=get('shop-edit-bonus-stat-')?.value||null;const amount=stat==='Versátil'?2:(stat?Number(get('shop-edit-bonus-amount-')?.value||0):0);const result=await sb.rpc('set_listing_bonus',{p_id:id,p_stat:stat,p_amount:amount});if(result.error){toast(result.error.message);return}}
  await loadSharedData();toast('Publicación actualizada.');
 }
 
@@ -1675,7 +1675,7 @@ async function adminCreateShopListing(){
     }catch(e){toast(e.message||'No se pudo subir la imagen.');return}
   }
   const bonusStat=document.getElementById('shop-listing-bonus-stat')?.value||null;
-  const bonusAmount=bonusStat?Number(document.getElementById('shop-listing-bonus-amount')?.value||0):0;
+  const bonusAmount=bonusStat==='Versátil'?2:(bonusStat?Number(document.getElementById('shop-listing-bonus-amount')?.value||0):0);
   const {error}=await sb.from('shop_listings').insert({item_name:name,description,image_url:image,price_points:price,stock,is_active:true,is_consumable:document.getElementById('shop-listing-consumable')?.value==='true',bonus_stat:bonusStat,bonus_amount:bonusAmount,created_by:currentUser.id});
   if(error){toast(error.message);return}
   await loadSharedData();toast('Objeto publicado en la tienda.');

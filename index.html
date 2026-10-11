@@ -491,7 +491,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .rp-sub-active{outline:2px solid #aa8afa}
 .rp-subroom-create{display:flex;gap:8px;flex-wrap:wrap}
 .rp-subroom-create input{flex:1 1 160px;min-width:0}
-</style></head>
+</style><style>.rp-tenor-frame{display:block;width:min(100%,360px);height:280px;border:0;border-radius:9px;background:rgba(0,0,0,.2)}.rp-gif-container{max-width:100%}.rp-gif-link{display:block;font-size:12px;color:#d3b8ff;margin:5px 0;overflow-wrap:anywhere}</style></head>
 <body>
 <header><div class="brand"><img class="brand-logo" src="assets/jjk-logo.svg" alt="Logo JJK New World"><div class="brand-copy"><h1>JJK New World</h1><div class="muted">Sistema de rol</div></div></div></header>
 <div class="top-nav">
@@ -5479,8 +5479,25 @@ function subscribeCombatMap(map){
 let rpRooms=[],rpMembers=[],rpActive=null,rpMessages=[],rpChannel=null;
 let rpSubroom=null,rpSubChannel=null;
 function rpSubDisconnect(){if(rpSubChannel){sb.removeChannel(rpSubChannel);rpSubChannel=null}}
-function rpFormatBody(body){return String(body||'').split(/(https?:\/\/[^\s<>"']+\.gif(?:\?[^\s<>"']*)?)/gi).map(p=>/^https?:\/\//i.test(p)&&/\.gif(?:\?|$)/i.test(p)?'<img class="rp-gif" src="'+esc(p)+'" alt="GIF enviado" loading="lazy">':esc(p)).join('')}
-
+function rpFormatBody(body){
+ const input=String(body||'').trim();
+ // El código de inserción de Tenor se representa como contenido, nunca se ejecuta.
+ const embedded=input.match(/data-postid\s*=\s*["'](\d{5,25})["']/i);
+ const tenorLink=input.match(/https?:\/\/(?:www\.)?tenor\.com\/(?:view\/[^\s"'<>]*?-gif-|embed\/)(\d{5,25})/i);
+ const id=embedded?.[1]||tenorLink?.[1];
+ if(id){
+   return '<iframe class="rp-tenor-frame" src="https://tenor.com/embed/'+id+'" title="GIF de Tenor" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="no-referrer" allowfullscreen></iframe>'+
+   '<a class="rp-gif-link" target="_blank" rel="noopener noreferrer" href="https://tenor.com/embed/'+id+'">Abrir GIF en Tenor</a>';
+ }
+ const parts=input.split(/(https?:\/\/[^\s<>"']+\.gif(?:\?[^\s<>"']*)?)/gi);
+ return parts.map(part=>{
+   if(/^https?:\/\//i.test(part)&&/\.gif(?:\?|$)/i.test(part)){
+     const url=esc(part);
+     return '<div class="rp-gif-container"><img class="rp-gif" src="'+url+'" alt="GIF enviado" loading="lazy" onerror="this.style.display=\'none\'"><a class="rp-gif-link" href="'+url+'" target="_blank" rel="noopener noreferrer">Abrir GIF</a></div>';
+   }
+   return esc(part);
+ }).join('');
+}
 function rpDisconnect(){rpSubDisconnect();if(rpChannel){sb.removeChannel(rpChannel);rpChannel=null}}
 function rpSubscribe(id){rpDisconnect();rpChannel=sb.channel('rp-chat-'+id+'-'+currentUser.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'roleplay_messages',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpRefresh(true)}).on('postgres_changes',{event:'*',schema:'public',table:'roleplay_members',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpLoadRoster()}).on('postgres_changes',{event:'*',schema:'public',table:'roleplay_subrooms',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpListSubrooms()}).on('postgres_changes',{event:'*',schema:'public',table:'roleplay_subroom_members'},()=>{if(rpActive===id)rpListSubrooms()}).subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Roleplay realtime:',status)})}
 function rpImage(path){return path?sb.storage.from('jjk-images').getPublicUrl(path).data.publicUrl:null}

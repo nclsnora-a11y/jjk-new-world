@@ -460,7 +460,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .rp-room-layout .rp-composer textarea{min-height:62px;max-height:110px;resize:vertical}
 .rp-room-layout .rp-members{gap:8px}
 @media(max-width:650px){.rp-room-layout .rp-chat{min-height:480px;height:70vh}.rp-room-layout .rp-messages{padding:12px}.rp-room-layout .rp-msg{max-width:97%}}
-</style></head>
+</style><style>.gm-character-creator{margin-bottom:20px}.gm-character-creator summary{cursor:pointer;font-weight:700}.gm-character-fields,.gm-character-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin:15px 0}.gm-character-creator label{display:flex;flex-direction:column;gap:5px}.gm-character-creator input,.gm-character-creator select{width:100%;min-width:0}</style></head>
 <body>
 <header><div class="brand"><img class="brand-logo" src="assets/jjk-logo.svg" alt="Logo JJK New World"><div class="brand-copy"><h1>JJK New World</h1><div class="muted">Sistema de rol</div></div></div></header>
 <div class="top-nav">
@@ -1284,8 +1284,9 @@ function characterCard(ch){
 }
 function renderCharacters(){
   const root=document.getElementById('characters-list');
-  if(!savedCharacters.length){root.innerHTML='<div class="empty-characters"><b>No hay personajes guardados todavía.</b><br><br>Creá uno en Ruletas y tocá <b>Guardar personaje</b>.</div>';return}
-  root.innerHTML='<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>';
+  const gmForm=isAdmin?gmCharacterCreationHtml():'';
+  if(!savedCharacters.length){root.innerHTML=gmForm+'<div class="empty-characters"><b>No hay personajes guardados todavía.</b><br><br>Creá uno en Ruletas o, si sos GM, utilizá el formulario de creación manual.</div>';return}
+  root.innerHTML=gmForm+'<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>';
 }
 function optionList(values,current){
   return values.map(v=>'<option '+(v===current?'selected':'')+'>'+esc(v)+'</option>').join('');
@@ -2782,6 +2783,27 @@ renderCharacters=function(){
   if(!savedCharacters.length){root.innerHTML='<div class="empty-characters"><b>No hay personajes guardados todavía.</b><br><br>Creá uno en Ruletas y tocá <b>Guardar personaje</b>.</div>';return}
   root.innerHTML='<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>';
 };
+
+function gmCharacterCreationHtml(){
+ return '<details class="sheet-card gm-character-creator"><summary>⚙️ Crear personaje manualmente (GM)</summary><p class="muted">Solo GM y administradores. Podés asignar estadísticas y grado sin usar la ruleta.</p>'+
+ '<div class="gm-character-fields"><label>Nombre<input id="gm-char-name" maxlength="100" placeholder="Nombre del personaje"></label>'+
+ '<label>Bando<select id="gm-char-side"><option value="hechicero">Hechicero</option><option value="brujo">Brujo</option><option value="maldicion">Maldición</option></select></label>'+
+ '<label>Grado<select id="gm-char-grade">'+gradeLadder.map(g=>'<option value="'+esc(g.name)+'">'+esc(g.name)+'</option>').join('')+'</select></label>'+
+ '<label>Tipo de técnica<input id="gm-char-technique" placeholder="Ej: Innata" value="Innato"></label>'+
+ '<label>Control de EM<input id="gm-char-control" type="number" min="0" value="0"></label></div>'+
+ '<div class="gm-character-stats">'+statNames.map((n,i)=>'<label>'+esc(n)+'<input id="gm-char-stat-'+i+'" type="number" min="0" step="1" value="0"></label>').join('')+'</div>'+
+ '<button type="button" onclick="gmCreateCharacter()">Guardar personaje GM</button></details>';
+}
+async function gmCreateCharacter(){
+ if(!isAdmin||!currentUser)return;
+ const name=document.getElementById('gm-char-name')?.value.trim(),side=document.getElementById('gm-char-side')?.value,grade=document.getElementById('gm-char-grade')?.value,technique=document.getElementById('gm-char-technique')?.value.trim();
+ const stats={};for(let i=0;i<statNames.length;i++){const value=Number(document.getElementById('gm-char-stat-'+i)?.value);if(!Number.isSafeInteger(value)||value<0||value>10000){toast('Revisá la estadística '+statNames[i]);return}stats[statNames[i]]=value}
+ const control=Number(document.getElementById('gm-char-control')?.value);
+ if(!name||!technique||!Number.isSafeInteger(control)||control<0){toast('Completá nombre, tipo de técnica y control de EM.');return}
+ const {error}=await sb.rpc('gm_create_character',{p_name:name,p_side:side,p_grade:grade,p_technique:technique,p_control:control,p_stats:stats});
+ if(error){toast(error.message);return}
+ await loadSharedData();toast('Personaje GM creado. Ya podés editar sus estadísticas desde Mis personajes.');
+}
 
 // Shared campaign helpers
 campaignCharacters=function(c){
@@ -5467,10 +5489,10 @@ async function rpLeave(){
 async function rpBack(){rpActive=null;rpDisconnect();await roleplayRender()}
 async function rpOpen(id){
  const room=rpRooms.find(r=>r.id===id),root=document.getElementById('roleplay-root');if(!root||!room)return;
- if(!rpMembers.some(m=>m.room_id===id&&m.user_id===currentUser.id)){rpActive=null;return roleplayRender()}
+ if(!isAdmin&&!rpMembers.some(m=>m.room_id===id&&m.user_id===currentUser.id)){rpActive=null;return roleplayRender()}
  const {data:ownRows,error:ownError}=await sb.from('characters').select('id,sorcerer_name,character_side').eq('owner_id',currentUser.id).order('created_at',{ascending:false});
  if(ownError){root.textContent='No se pudieron cargar tus personajes: '+ownError.message;return}
- const chars=(ownRows||[]).filter(c=>room.allowed_side==='todos'||c.character_side===room.allowed_side);
+ const chars=(ownRows||[]).filter(c=>isAdmin||room.allowed_side==='todos'||c.character_side===room.allowed_side);
  const members=rpMembers.filter(m=>m.room_id===id);
  root.innerHTML='<div class="rp-room-layout"><div class="rp-room-heading"><button class="secondary" onclick="rpBack()">← Todas las salas</button><h3>'+esc(room.name)+'</h3><p class="muted">'+esc(room.description||'')+' · '+rpAllowedLabel(room.allowed_side)+'</p></div>'+
  '<div class="rp-chat" '+(room.image_path?'style="--rp-wallpaper:url(\''+esc(rpImage(room.image_path))+'\')"':'')+'><div id="rp-messages" class="rp-messages"></div><div class="rp-composer"><label>Hablar como personaje<select id="rp-character"><option value="">Seleccioná un personaje...</option>'+chars.map(c=>'<option value="'+c.id+'">'+esc(c.sorcerer_name)+'</option>').join('')+'</select></label>'+(!chars.length?'<p class="muted">No tenés personajes disponibles para el bando de esta sala.</p>':'')+'<textarea id="rp-body" maxlength="2000" placeholder="Escribí tu mensaje de roleplay..."></textarea><div class="rp-actions"><button onclick="rpSend()" '+(!chars.length?'disabled':'')+'>Enviar mensaje</button><button class="secondary danger" onclick="rpLeave()">Salir de la sala</button></div></div>'+

@@ -1447,7 +1447,7 @@ function inventoryItemHtml(item){
   return '<div class="inventory-item">'+
     (item.image_url?'<img src="'+esc(item.image_url)+'" alt="">':'<div class="inventory-item-placeholder">◆</div>')+
     '<div class="inventory-item-copy"><b>'+esc(item.name)+'</b>'+(item.description?'<span>'+esc(item.description)+'</span>':'')+'</div>'+
-    (item.bonus_stat?'<span>✨ +'+Number(item.bonus_amount)+' '+esc(item.bonus_stat)+'</span><button type="button" onclick="applyInventoryBonus(\''+item.id+'\')">Aplicar bonificador</button>':'')+
+    (item.bonus_stat?'<span>✨ '+(item.bonus_stat==='Versátil'?'Versátil +2 (elegí la estadística)':'+'+Number(item.bonus_amount)+' '+esc(item.bonus_stat))+'</span>'+(item.bonus_stat==='Versátil'?'<label>Aplicar a '+shopBonusSelect('bonus-target-'+item.id,null).replace('<option value="Versátil"','<option disabled value="Versátil"')+'</label>':'')+'<button type="button" onclick="applyInventoryBonus(\''+item.id+'\')">Aplicar bonificador</button>':'')+
     '<button class="secondary" type="button" onclick="sellInventoryItem(\''+item.id+'\')">Vender</button>'+
   '</div>';
 }
@@ -1490,7 +1490,7 @@ function shopListingHtml(listing){
     '<div class="shop-item-body"><div class="shop-item-source">'+esc(sellerLabel)+'</div><h3>'+esc(listing.item_name)+'</h3>'+
     (listing.description?'<p>'+esc(listing.description)+'</p>':'')+
     (listing.is_consumable?'<div class="shop-consumable-tag">🧪 Consumible</div>':'')+
-    (listing.bonus_stat?'<div class="shop-consumable-tag">✨ Bonificador: +'+Number(listing.bonus_amount)+' '+esc(listing.bonus_stat)+'</div>':'')+
+    (listing.bonus_stat?'<div class="shop-consumable-tag">✨ '+(listing.bonus_stat==='Versátil'?'Versátil +2 · Elegís la estadística en el inventario':'Bonificador: +'+Number(listing.bonus_amount)+' '+esc(listing.bonus_stat))+'</div>':'')+
     '<div class="shop-item-bottom"><b>'+Number(listing.price_points||0)+' pts</b><span>Stock '+Number(listing.stock||0)+'</span></div>'+
     '<div class="shop-item-actions">'+
       (!ownSeller?'<button onclick="buyShopListing(\''+listing.id+'\')">Comprar</button>':'')+

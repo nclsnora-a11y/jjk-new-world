@@ -443,7 +443,24 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .rp-member{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px;border:1px solid #3c3550;border-radius:8px}
 .rp-member input{max-width:220px}
 </style>
-</head>
+<style>
+/* Roleplay: chat vertical, contenido legible sobre la portada */
+.rp-room-layout{max-width:660px;margin:10px auto 0;display:flex;flex-direction:column;gap:16px}
+.rp-room-heading{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.rp-room-heading h3{margin:5px 0 0}
+.rp-room-heading p{margin:0}
+.rp-room-layout .rp-chat{width:100%;max-width:590px;margin:auto;min-height:570px;height:min(77vh,760px);border:1px solid #504269;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;gap:0;background:linear-gradient(180deg,rgba(13,11,24,.74),rgba(13,11,24,.85)),var(--rp-wallpaper,#171525);background-position:center;background-size:cover;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+.rp-room-layout .rp-messages{flex:1;min-height:0;max-height:none;overflow-y:auto;padding:18px 15px;gap:12px;border:0;border-radius:0;background:transparent}
+.rp-room-layout .rp-msg{max-width:92%;width:fit-content;background:rgba(23,20,37,.91);backdrop-filter:blur(4px);border:1px solid rgba(190,161,241,.20)}
+.rp-room-layout .rp-msg.mine{margin-left:auto;background:rgba(64,39,108,.90)}
+.rp-room-layout .rp-composer{padding:12px;border-top:1px solid #665479;background:rgba(15,13,27,.96);gap:8px}
+.rp-room-layout .rp-composer label{display:flex;flex-direction:column;gap:5px;font-size:13px}
+.rp-room-layout .rp-composer select{display:block!important;width:100%;min-width:0;max-width:100%;color:#f8f6ff;background:#292338;border:1px solid #645279;padding:9px;border-radius:8px}
+.rp-room-layout .rp-composer select option{color:#fff;background:#292338}
+.rp-room-layout .rp-composer textarea{min-height:62px;max-height:110px;resize:vertical}
+.rp-room-layout .rp-members{gap:8px}
+@media(max-width:650px){.rp-room-layout .rp-chat{min-height:480px;height:70vh}.rp-room-layout .rp-messages{padding:12px}.rp-room-layout .rp-msg{max-width:97%}}
+</style></head>
 <body>
 <header><div class="brand"><img class="brand-logo" src="assets/jjk-logo.svg" alt="Logo JJK New World"><div class="brand-copy"><h1>JJK New World</h1><div class="muted">Sistema de rol</div></div></div></header>
 <div class="top-nav">
@@ -5406,7 +5423,9 @@ function subscribeCombatMap(map){
 
 
 
-let rpRooms=[],rpMembers=[],rpActive=null,rpMessages=[],rpPoll=null;
+let rpRooms=[],rpMembers=[],rpActive=null,rpMessages=[],rpChannel=null;
+function rpDisconnect(){if(rpChannel){sb.removeChannel(rpChannel);rpChannel=null}}
+function rpSubscribe(id){rpDisconnect();rpChannel=sb.channel('rp-chat-'+id+'-'+currentUser.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'roleplay_messages',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpRefresh(true)}).subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Roleplay realtime:',status)})}
 function rpImage(path){return path?sb.storage.from('jjk-images').getPublicUrl(path).data.publicUrl:null}
 function rpAllowedLabel(side){return ({todos:'Todos',hechicero:'Hechiceros',brujo:'Brujos',maldicion:'Maldiciones'})[side]||side}
 async function roleplayRender(){
@@ -5443,23 +5462,24 @@ async function rpEnter(id){
 async function rpLeave(){
  const id=rpActive;
  const {error}=await sb.rpc('roleplay_leave',{p_room:id});if(error){toast(error.message);return}
- rpActive=null;clearInterval(rpPoll);rpPoll=null;await roleplayRender();
+ rpActive=null;rpDisconnect();await roleplayRender();
 }
-async function rpBack(){rpActive=null;if(rpPoll)clearInterval(rpPoll);rpPoll=null;await roleplayRender()}
+async function rpBack(){rpActive=null;rpDisconnect();await roleplayRender()}
 async function rpOpen(id){
  const room=rpRooms.find(r=>r.id===id),root=document.getElementById('roleplay-root');if(!root||!room)return;
  if(!rpMembers.some(m=>m.room_id===id&&m.user_id===currentUser.id)){rpActive=null;return roleplayRender()}
- const chars=savedCharacters.filter(c=>room.allowed_side==='todos'||c.side===room.allowed_side);
+ const {data:ownRows,error:ownError}=await sb.from('characters').select('id,sorcerer_name,character_side').eq('owner_id',currentUser.id).order('created_at',{ascending:false});
+ if(ownError){root.textContent='No se pudieron cargar tus personajes: '+ownError.message;return}
+ const chars=(ownRows||[]).filter(c=>room.allowed_side==='todos'||c.character_side===room.allowed_side);
  const members=rpMembers.filter(m=>m.room_id===id);
- root.innerHTML='<button class="secondary" onclick="rpBack()">← Todas las salas</button><h3>'+esc(room.name)+'</h3><p class="muted">'+esc(room.description||'')+' · '+rpAllowedLabel(room.allowed_side)+'</p>'+
- '<div class="rp-chat"><div id="rp-messages" class="rp-messages"></div><div class="rp-composer"><label>Hablar como personaje<select id="rp-character">'+chars.map(c=>'<option value="'+c.id+'">'+esc(c.sorcererName)+'</option>').join('')+'</select></label><textarea id="rp-body" maxlength="2000" placeholder="Escribí tu mensaje de roleplay..."></textarea><div class="rp-actions"><button onclick="rpSend()" '+(!chars.length?'disabled':'')+'>Enviar mensaje</button><button class="secondary" onclick="rpRefresh()">Actualizar chat</button><button class="secondary danger" onclick="rpLeave()">Salir de la sala</button></div></div>'+
+ root.innerHTML='<div class="rp-room-layout"><div class="rp-room-heading"><button class="secondary" onclick="rpBack()">← Todas las salas</button><h3>'+esc(room.name)+'</h3><p class="muted">'+esc(room.description||'')+' · '+rpAllowedLabel(room.allowed_side)+'</p></div>'+
+ '<div class="rp-chat" '+(room.image_path?'style="--rp-wallpaper:url(\''+esc(rpImage(room.image_path))+'\')"':'')+'><div id="rp-messages" class="rp-messages"></div><div class="rp-composer"><label>Hablar como personaje<select id="rp-character"><option value="">Seleccioná un personaje...</option>'+chars.map(c=>'<option value="'+c.id+'">'+esc(c.sorcerer_name)+'</option>').join('')+'</select></label>'+(!chars.length?'<p class="muted">No tenés personajes disponibles para el bando de esta sala.</p>':'')+'<textarea id="rp-body" maxlength="2000" placeholder="Escribí tu mensaje de roleplay..."></textarea><div class="rp-actions"><button onclick="rpSend()" '+(!chars.length?'disabled':'')+'>Enviar mensaje</button><button class="secondary danger" onclick="rpLeave()">Salir de la sala</button></div></div>'+
  '<h4>Participantes ('+members.length+')</h4><div class="rp-members">'+members.map(m=>{
  const p=allCharacters.find(c=>c.owner_id===m.user_id),label=m.user_id===currentUser.id?'Vos':(p?.userName&&p.userName!=='—'?p.userName:'Jugador');
  return '<div class="rp-member"><span>'+esc(label)+(m.title?' · <span class="rp-title">'+esc(m.title)+'</span>':'')+'</span>'+(isAdmin?'<span><input id="rp-title-'+m.user_id+'" placeholder="Ej: Jefe de clan" maxlength="80" value="'+esc(m.title||'')+'"> <button onclick="rpTitle(\''+m.user_id+'\')">Asignar título</button></span>':'')+'</div>'
- }).join('')+'</div></div>';
+ }).join('')+'</div></div></div>';
  await rpRefresh();
- if(rpPoll)clearInterval(rpPoll);
- rpPoll=setInterval(()=>{if(rpActive===id&&!document.getElementById('roleplay-section').classList.contains('hidden'))rpRefresh(true)},3500);
+ rpSubscribe(id);
 }
 async function rpRefresh(quiet=false){
  if(!rpActive)return;
@@ -5472,7 +5492,8 @@ async function rpRefresh(quiet=false){
 }
 async function rpSend(){
  const character=document.getElementById('rp-character')?.value,field=document.getElementById('rp-body'),body=field?.value.trim();
- if(!character||!body)return;
+ if(!character){toast('Elegí un personaje para hablar.');return}
+ if(!body)return;
  const {error}=await sb.rpc('roleplay_send',{p_room:rpActive,p_character:character,p_body:body});
  if(error){toast(error.message);return}
  field.value='';await rpRefresh();

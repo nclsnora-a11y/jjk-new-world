@@ -414,7 +414,14 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 @media(max-width:560px){.shop-admin-grid,.shop-admin-grid.item,.shop-admin-grid.official{grid-template-columns:1fr}.inventory-item{grid-template-columns:42px minmax(0,1fr)}.inventory-item button{grid-column:2}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
-</head>
+<style>
+.inventory-item-aligned{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.inventory-item-aligned .inventory-item-copy{flex:1 1 180px;min-width:130px}
+.inventory-item-aligned .inventory-bonus-note{flex:1 1 100%;padding:10px 12px;border:1px solid #5b4680;border-radius:9px;background:rgba(124,58,237,.1);font-weight:700}
+.inventory-item-aligned .inventory-bonus-selector{flex:1 1 100%;display:flex;flex-direction:column;gap:6px;min-width:0}
+.inventory-item-aligned .inventory-bonus-selector select{width:100%;max-width:100%;min-width:0}
+.inventory-item-aligned button{white-space:normal}
+</style></head>
 <body>
 <header><div class="brand"><img class="brand-logo" src="assets/jjk-logo.svg" alt="Logo JJK New World"><div class="brand-copy"><h1>JJK New World</h1><div class="muted">Sistema de rol</div></div></div></header>
 <div class="top-nav">
@@ -425,6 +432,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
   <button id="nav-campaigns">Campañas</button>
   <button id="nav-shop">Tienda</button>
   <button id="nav-combat">Combate</button>
+  <button id="nav-roleplay">Roleplay</button>
   <button id="nav-ranking">Ranking</button>
 </div>
 <main>
@@ -605,6 +613,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
   </div>
   <div id="combat-root"></div>
 </section>
+<section id="roleplay-section" class="hidden"><div class="sheet-card"><h2>Roleplay</h2><p class="muted">Próximamente: el espacio de roleplay de JJK New World.</p></div></section>
 <section id="info-section" class="hidden">
   <div class="info-head">
     <div>
@@ -866,12 +875,13 @@ window.addEventListener('pagehide',freezeBrowserScrollPosition);
 window.addEventListener('pageshow',()=>restoreBrowserScrollPosition());
 
 function showTab(tab){
-  const roulette=tab==='roulette',characters=tab==='characters',campaigns=tab==='campaigns',shop=tab==='shop',account=tab==='account',combat=tab==='combat',info=tab==='info',ranking=tab==='ranking';
+  const roulette=tab==='roulette',characters=tab==='characters',campaigns=tab==='campaigns',shop=tab==='shop',account=tab==='account',combat=tab==='combat',roleplay=tab==='roleplay',info=tab==='info',ranking=tab==='ranking';
   document.getElementById('roulette-section').classList.toggle('hidden',!roulette);
   document.getElementById('characters-section').classList.toggle('hidden',!characters);
   document.getElementById('campaigns-section').classList.toggle('hidden',!campaigns);
   document.getElementById('shop-section').classList.toggle('hidden',!shop);
   document.getElementById('combat-section').classList.toggle('hidden',!combat);
+  document.getElementById('roleplay-section').classList.toggle('hidden',!roleplay);
   document.getElementById('ranking-section').classList.toggle('hidden',!ranking);
   document.getElementById('account-section').classList.toggle('hidden',!account);
   document.getElementById('info-section').classList.toggle('hidden',!info);
@@ -880,6 +890,7 @@ function showTab(tab){
   document.getElementById('nav-campaigns').classList.toggle('active',campaigns);
   document.getElementById('nav-shop').classList.toggle('active',shop);
   document.getElementById('nav-combat').classList.toggle('active',combat);
+  document.getElementById('nav-roleplay').classList.toggle('active',roleplay);
   document.getElementById('nav-ranking').classList.toggle('active',ranking);
   document.getElementById('nav-account').classList.toggle('active',account);
   document.getElementById('nav-info').classList.toggle('active',info);
@@ -898,6 +909,7 @@ document.getElementById('nav-campaigns').addEventListener('click',()=>showTab('c
 document.getElementById('nav-shop').addEventListener('click',()=>showTab('shop'));
 document.getElementById('nav-account').addEventListener('click',()=>showTab('account'));
 document.getElementById('nav-combat').addEventListener('click',()=>showTab('combat'));
+document.getElementById('nav-roleplay').addEventListener('click',()=>showTab('roleplay'));
 document.getElementById('nav-ranking').addEventListener('click',()=>showTab('ranking'));
 document.getElementById('nav-info').addEventListener('click',()=>showTab('info'));
 
@@ -1444,10 +1456,10 @@ function inventoryForCharacter(id){
   return characterInventory.filter(x=>x.character_id===id);
 }
 function inventoryItemHtml(item){
-  return '<div class="inventory-item">'+
+  return '<div class="inventory-item inventory-item-aligned">'+
     (item.image_url?'<img src="'+esc(item.image_url)+'" alt="">':'<div class="inventory-item-placeholder">◆</div>')+
     '<div class="inventory-item-copy"><b>'+esc(item.name)+'</b>'+(item.description?'<span>'+esc(item.description)+'</span>':'')+'</div>'+
-    (item.bonus_stat?'<span>✨ '+(item.bonus_stat==='Versátil'?'Versátil +2 (elegí la estadística)':'+'+Number(item.bonus_amount)+' '+esc(item.bonus_stat))+'</span>'+(item.bonus_stat==='Versátil'?'<label>Aplicar a '+shopBonusSelect('bonus-target-'+item.id,null).replace('<option value="Versátil"','<option disabled value="Versátil"')+'</label>':'')+'<button type="button" onclick="applyInventoryBonus(\''+item.id+'\')">Aplicar bonificador</button>':'')+
+    (item.bonus_stat?'<div class="inventory-bonus-note">✨ '+(item.bonus_stat==='Versátil'?'Versátil +2 (elegí la estadística)':'+'+Number(item.bonus_amount)+' '+esc(item.bonus_stat))+'</div>'+(item.bonus_stat==='Versátil'?'<label class="inventory-bonus-selector">Aplicar a '+shopBonusSelect('bonus-target-'+item.id,null).replace('<option value="Versátil"','<option disabled value="Versátil"')+'</label>':'')+'<button type="button" onclick="applyInventoryBonus(\''+item.id+'\')">Aplicar bonificador</button>':'')+
     '<button class="secondary" type="button" onclick="sellInventoryItem(\''+item.id+'\')">Vender</button>'+
     '<button class="secondary danger" type="button" onclick="discardInventoryItem(\''+item.id+'\')">Borrar</button>'+
   '</div>';

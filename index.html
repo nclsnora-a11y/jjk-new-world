@@ -421,7 +421,29 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 .inventory-item-aligned .inventory-bonus-selector{flex:1 1 100%;display:flex;flex-direction:column;gap:6px;min-width:0}
 .inventory-item-aligned .inventory-bonus-selector select{width:100%;max-width:100%;min-width:0}
 .inventory-item-aligned button{white-space:normal}
-</style></head>
+</style>
+<style>
+.rp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin:16px 0}
+.rp-card{background:#1b1a27;border:1px solid #38314f;border-radius:12px;overflow:hidden}
+.rp-card img{width:100%;height:145px;object-fit:cover}
+.rp-card-content{padding:14px;display:flex;flex-direction:column;gap:9px}
+.rp-card h3{margin:0}.rp-actions{display:flex;flex-wrap:wrap;gap:8px}
+.rp-create{padding:15px;border:1px solid #3c3550;border-radius:12px;display:grid;gap:9px}
+.rp-create input,.rp-create select,.rp-create textarea{width:100%;box-sizing:border-box}
+.rp-chat{display:flex;flex-direction:column;gap:12px}
+.rp-messages{min-height:220px;max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;background:#100f1a;border:1px solid #353047}
+.rp-msg{padding:10px;border-radius:10px;background:#212031;overflow-wrap:anywhere}
+.rp-msg.mine{background:#292040}
+.rp-msg b{color:#d6b5ff}.rp-msg small{color:#a5a0b5;margin-left:9px}
+.rp-title{color:#f5cc74;font-weight:600}
+.rp-msg-text{white-space:pre-wrap;margin-top:5px}
+.rp-composer{display:flex;flex-direction:column;gap:8px}
+.rp-composer textarea{width:100%;min-height:72px}
+.rp-members{display:flex;flex-direction:column;gap:9px}
+.rp-member{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px;border:1px solid #3c3550;border-radius:8px}
+.rp-member input{max-width:220px}
+</style>
+</head>
 <body>
 <header><div class="brand"><img class="brand-logo" src="assets/jjk-logo.svg" alt="Logo JJK New World"><div class="brand-copy"><h1>JJK New World</h1><div class="muted">Sistema de rol</div></div></div></header>
 <div class="top-nav">
@@ -613,7 +635,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
   </div>
   <div id="combat-root"></div>
 </section>
-<section id="roleplay-section" class="hidden"><div class="sheet-card"><h2>Roleplay</h2><p class="muted">Próximamente: el espacio de roleplay de JJK New World.</p></div></section>
+<section id="roleplay-section" class="hidden"><div class="sheet-card"><h2>Roleplay</h2><p class="muted">Salas de roleplay, personajes y conversaciones en vivo.</p><div id="roleplay-root">Cargando salas...</div></div></section>
 <section id="info-section" class="hidden">
   <div class="info-head">
     <div>
@@ -898,6 +920,7 @@ function showTab(tab){
   if(campaigns)renderCampaigns();
   if(shop&&typeof renderShop==='function')renderShop();
   if(combat&&typeof renderCombat==='function')renderCombat();
+  if(roleplay&&typeof roleplayRender==='function')roleplayRender();
   if(ranking&&typeof loadRanking==='function')loadRanking();
   if(account&&typeof renderAuth==='function')renderAuth();
   if(info&&typeof renderInformation==='function')renderInformation();
@@ -5381,6 +5404,85 @@ function subscribeCombatMap(map){
     .subscribe();
 }
 
+
+
+let rpRooms=[],rpMembers=[],rpActive=null,rpMessages=[],rpPoll=null;
+function rpImage(path){return path?sb.storage.from('jjk-images').getPublicUrl(path).data.publicUrl:null}
+function rpAllowedLabel(side){return ({todos:'Todos',hechicero:'Hechiceros',brujo:'Brujos',maldicion:'Maldiciones'})[side]||side}
+async function roleplayRender(){
+ const root=document.getElementById('roleplay-root');if(!root)return;
+ if(!currentUser){root.innerHTML='<p>Iniciá sesión para participar en Roleplay.</p>';return}
+ root.innerHTML='<p class="muted">Cargando salas de Roleplay...</p>';
+ const [rooms,members]=await Promise.all([sb.from('roleplay_rooms').select('*').order('created_at',{ascending:false}),sb.from('roleplay_members').select('*')]);
+ if(rooms.error||members.error){root.textContent='Error al cargar Roleplay: '+(rooms.error||members.error).message;return}
+ rpRooms=rooms.data||[];rpMembers=members.data||[];
+ if(rpActive&&rpRooms.some(r=>r.id===rpActive)){await rpOpen(rpActive);return}
+ root.innerHTML=(isAdmin?'<details class="rp-create"><summary>➕ Crear sala de Roleplay</summary><label>Nombre<input id="rp-name" maxlength="100"></label><label>Descripción<textarea id="rp-desc" maxlength="1000"></textarea></label><label>Acceso<select id="rp-side"><option value="todos">Todos</option><option value="hechicero">Solo hechiceros</option><option value="brujo">Solo brujos</option><option value="maldicion">Solo maldiciones</option></select></label><label>Imagen<input id="rp-image" type="file" accept="image/*"></label><button onclick="rpCreate()">Crear sala</button></details>':'')+
+ '<div class="rp-grid">'+(rpRooms.length?rpRooms.map(r=>{
+ const joined=rpMembers.some(m=>m.room_id===r.id&&m.user_id===currentUser.id);
+ const allowed=r.allowed_side==='todos'||isAdmin||savedCharacters.some(c=>c.side===r.allowed_side);
+ return '<article class="rp-card">'+(r.image_path?'<img src="'+esc(rpImage(r.image_path))+'" alt="">':'')+'<div class="rp-card-content"><h3>'+esc(r.name)+'</h3><div class="muted">'+esc(r.description||'')+'</div><small>Acceso: '+rpAllowedLabel(r.allowed_side)+'</small><div class="rp-actions"><button '+(!joined&&!allowed?'disabled':'')+' onclick="rpEnter(\''+r.id+'\')">'+(joined?'Entrar al chat':allowed?'Unirme':'No disponible')+'</button></div></div></article>'
+ }).join(''):'<p>No hay salas de Roleplay todavía.</p>')+'</div>';
+}
+async function rpCreate(){
+ const name=document.getElementById('rp-name')?.value.trim(),description=document.getElementById('rp-desc')?.value||'',side=document.getElementById('rp-side')?.value,file=document.getElementById('rp-image')?.files?.[0];
+ if(!name){toast('Escribí un nombre');return}
+ let path=null;
+ try{
+  if(file){if(!file.type.startsWith('image/')||file.size>8*1024*1024)throw Error('Elegí una imagen de hasta 8 MB');path=currentUser.id+'/roleplay/'+crypto.randomUUID()+'.jpg';await uploadInputFile(file,path)}
+  const {data,error}=await sb.rpc('roleplay_create',{p_name:name,p_description:description,p_side:side,p_image:path});
+  if(error)throw error;toast('Sala creada');rpActive=data;await roleplayRender();
+ }catch(e){toast(e.message)}
+}
+async function rpEnter(id){
+ if(!rpMembers.some(m=>m.room_id===id&&m.user_id===currentUser.id)){
+  const {error}=await sb.rpc('roleplay_join',{p_room:id});if(error){toast(error.message);return}
+ }
+ rpActive=id;await roleplayRender();
+}
+async function rpLeave(){
+ const id=rpActive;
+ const {error}=await sb.rpc('roleplay_leave',{p_room:id});if(error){toast(error.message);return}
+ rpActive=null;clearInterval(rpPoll);rpPoll=null;await roleplayRender();
+}
+async function rpBack(){rpActive=null;if(rpPoll)clearInterval(rpPoll);rpPoll=null;await roleplayRender()}
+async function rpOpen(id){
+ const room=rpRooms.find(r=>r.id===id),root=document.getElementById('roleplay-root');if(!root||!room)return;
+ if(!rpMembers.some(m=>m.room_id===id&&m.user_id===currentUser.id)){rpActive=null;return roleplayRender()}
+ const chars=savedCharacters.filter(c=>room.allowed_side==='todos'||c.side===room.allowed_side);
+ const members=rpMembers.filter(m=>m.room_id===id);
+ root.innerHTML='<button class="secondary" onclick="rpBack()">← Todas las salas</button><h3>'+esc(room.name)+'</h3><p class="muted">'+esc(room.description||'')+' · '+rpAllowedLabel(room.allowed_side)+'</p>'+
+ '<div class="rp-chat"><div id="rp-messages" class="rp-messages"></div><div class="rp-composer"><label>Hablar como personaje<select id="rp-character">'+chars.map(c=>'<option value="'+c.id+'">'+esc(c.sorcererName)+'</option>').join('')+'</select></label><textarea id="rp-body" maxlength="2000" placeholder="Escribí tu mensaje de roleplay..."></textarea><div class="rp-actions"><button onclick="rpSend()" '+(!chars.length?'disabled':'')+'>Enviar mensaje</button><button class="secondary" onclick="rpRefresh()">Actualizar chat</button><button class="secondary danger" onclick="rpLeave()">Salir de la sala</button></div></div>'+
+ '<h4>Participantes ('+members.length+')</h4><div class="rp-members">'+members.map(m=>{
+ const p=allCharacters.find(c=>c.owner_id===m.user_id),label=m.user_id===currentUser.id?'Vos':(p?.userName&&p.userName!=='—'?p.userName:'Jugador');
+ return '<div class="rp-member"><span>'+esc(label)+(m.title?' · <span class="rp-title">'+esc(m.title)+'</span>':'')+'</span>'+(isAdmin?'<span><input id="rp-title-'+m.user_id+'" placeholder="Ej: Jefe de clan" maxlength="80" value="'+esc(m.title||'')+'"> <button onclick="rpTitle(\''+m.user_id+'\')">Asignar título</button></span>':'')+'</div>'
+ }).join('')+'</div></div>';
+ await rpRefresh();
+ if(rpPoll)clearInterval(rpPoll);
+ rpPoll=setInterval(()=>{if(rpActive===id&&!document.getElementById('roleplay-section').classList.contains('hidden'))rpRefresh(true)},3500);
+}
+async function rpRefresh(quiet=false){
+ if(!rpActive)return;
+ const {data,error}=await sb.from('roleplay_messages').select('*').eq('room_id',rpActive).order('created_at',{ascending:false}).limit(150);
+ if(error){if(!quiet)toast(error.message);return}
+ const rows=(data||[]).reverse(),el=document.getElementById('rp-messages');if(!el)return;
+ const bottom=el.scrollHeight-el.scrollTop-el.clientHeight<65;
+ el.innerHTML=rows.map(m=>'<div class="rp-msg '+(m.user_id===currentUser.id?'mine':'')+'"><b>'+esc(m.character_name)+'</b>'+(m.display_title?' <span class="rp-title">['+esc(m.display_title)+']</span>':'')+'<small>'+new Date(m.created_at).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+'</small><div class="rp-msg-text">'+esc(m.body)+'</div></div>').join('')||'<p class="muted">Todavía no hay mensajes. ¡Empezá el roleplay!</p>';
+ if(bottom)el.scrollTop=el.scrollHeight;
+}
+async function rpSend(){
+ const character=document.getElementById('rp-character')?.value,field=document.getElementById('rp-body'),body=field?.value.trim();
+ if(!character||!body)return;
+ const {error}=await sb.rpc('roleplay_send',{p_room:rpActive,p_character:character,p_body:body});
+ if(error){toast(error.message);return}
+ field.value='';await rpRefresh();
+}
+async function rpTitle(userId){
+ const title=document.getElementById('rp-title-'+userId)?.value||'';
+ const {error}=await sb.rpc('roleplay_set_title',{p_room:rpActive,p_user:userId,p_title:title});
+ if(error){toast(error.message);return}
+ await roleplayRender();toast('Título actualizado');
+}
 
 initAuth();
 </script>

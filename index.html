@@ -5470,7 +5470,7 @@ function subscribeCombatMap(map){
 
 let rpRooms=[],rpMembers=[],rpActive=null,rpMessages=[],rpChannel=null;
 function rpDisconnect(){if(rpChannel){sb.removeChannel(rpChannel);rpChannel=null}}
-function rpSubscribe(id){rpDisconnect();rpChannel=sb.channel('rp-chat-'+id+'-'+currentUser.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'roleplay_messages',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpRefresh(true)}).subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Roleplay realtime:',status)})}
+function rpSubscribe(id){rpDisconnect();rpChannel=sb.channel('rp-chat-'+id+'-'+currentUser.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'roleplay_messages',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpRefresh(true)}).on('postgres_changes',{event:'*',schema:'public',table:'roleplay_members',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpLoadRoster()}).subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Roleplay realtime:',status)})}
 function rpImage(path){return path?sb.storage.from('jjk-images').getPublicUrl(path).data.publicUrl:null}
 function rpAllowedLabel(side){return ({todos:'Todos',hechicero:'Hechiceros',brujo:'Brujos',maldicion:'Maldiciones'})[side]||side}
 async function roleplayRender(){

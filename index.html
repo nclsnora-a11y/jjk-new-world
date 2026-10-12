@@ -3741,7 +3741,8 @@ async function rollTechniqueAttack(campaignId,charId,index){
   const actionStat=action.stat||'';
   const noRoll=actionStat==='Sin tirada';
   if(!noRoll&&actionStat!=='Control EM'&&!rollableStatNames.includes(actionStat)){toast('Este uso necesita una estadística de tirada válida. Editalo en Mis personajes.');return}
-  const cost=Math.max(0,Number(action.cost||0));
+  const reduction=ch.peculiarityId===23?0.20:ch.peculiarityId===8?0.10:0;
+  const cost=Math.max(0,Math.ceil(Number(action.cost||0)*(1-reduction)));
   const state=combatStates.find(s=>s.character_id===charId);
   if(cost>0){
     if(!state){toast('No hay estado de combate cargado para este personaje.');return}

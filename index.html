@@ -3660,20 +3660,25 @@ async function resetCombatReactions(campaignId){
  await renderCombatCampaign(campaignId);
  toast('Nueva ronda: reacciones recuperadas.');
 }
-async function rollPhysicalDamage(campaignId,charId,stat){
+async function rollPhysicalDamage(campaignId,charId,stat,reinforced=false){
  const ch=allCharacters.find(c=>c.id===charId);
  if(!ch||!currentUser||!(isAdmin||ch.owner_id===currentUser.id))return;
  const value=Number(ch.currentStats?.[stat]??ch.initialStats?.[stat]??0);
- const expression=physicalDamageTable[value-1];
- if(!expression){toast('Tabla de daño físico definida para estadísticas de 1 a 12.');return}
+ const base=physicalDamageTable[value-1];
+ if(!base){toast('Tabla de daño físico definida para estadísticas de 1 a 12.');return}
+ const kind=reinforced?'fisico_reforzado':'fisico';
+ const {data:bonus,error:bonusError}=await sb.rpc('claim_peculiarity_damage',{p_campaign:campaignId,p_character:charId,p_kind:kind});
+ if(bonusError){toast(bonusError.message);return}
+ const expression=base+(bonus?' + '+bonus:'');
  const parsed=parseCompoundDiceExpression(expression);
- if(!parsed){toast('Formato de dados no válido.');return}
+ if(!parsed){toast('Dados de daño inválidos.');return}
  const result=rollCompoundDice(parsed);
- await animateCompoundDice(result.rolled,ch.sorcererName+' · Daño físico ('+stat+') · '+parsed.expression);
+ await animateCompoundDice(result.rolled,ch.sorcererName+' · Daño físico'+(bonus?' + Peculiaridad':'')+' · '+parsed.expression);
  const {error}=await sb.from('combat_rolls').insert({
-   campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
-   stat_name:'Daño físico · '+stat,die_result:result.rolled[0]?.value||0,
-   stat_bonus:0,total:result.total,roll_expression:parsed.expression,roll_results:result.rolled
+  campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
+  stat_name:'Daño físico · '+stat+(bonus?' · peculiaridad':''),
+  die_result:result.rolled[0]?.value||0,stat_bonus:parsed.modifier,
+  total:result.total,roll_expression:parsed.expression,roll_results:result.rolled
  });
  if(error)toast(error.message);
 }
@@ -3719,7 +3724,8 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     const remaining=Math.max(0,def.charges-spent);
     return '<div class="quick-passive-item"><button class="combat-technique-btn" type="button" '+(!canRoll||!remaining?'disabled':'onclick="event.stopPropagation();useCombatAwakening(\''+campaignId+'\',\''+ch.id+'\',\''+def.key+'\')"')+'>⚡ '+esc(def.name)+' ('+remaining+'/'+def.charges+')'+(def.cost?' · '+def.cost+' EM':' · Gratis')+'</button><div style="margin-top:6px;font-size:12px;line-height:1.5">'+esc(def.effect)+'</div></div>';
   }).join(''):'<span class="muted">No hay despertares equipados.</span>';
-  const physicalDamageActions=canRoll?'<div class="quick-tech-actions"><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\')">🎲 Daño físico · Fuerza</button></div>':'';
+  const canReinforceDamage=[16,20,45].includes(Number(ch.peculiarityId));
+  const physicalDamageActions=canRoll?'<div class="quick-tech-actions"><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\')">🎲 Daño físico · Fuerza</button>'+(canReinforceDamage?'<button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\',true)">⚡ Daño físico reforzado</button>':'')+'</div>':'';
   return '<div class="combat-quick-menu hidden" id="quick-menu-'+ch.id+'" onclick="event.stopPropagation()">'+
     '<div class="combat-quick-nav">'+
       '<button class="combat-quick-tab active" id="quick-tab-tech-'+ch.id+'" onclick="showCombatQuickTab(\''+ch.id+'\',\'tech\')"><span class="qicon">✦</span><span>Técnica</span></button>'+
@@ -3807,22 +3813,26 @@ async function rollTechniqueAttack(campaignId,charId,index){
 }
 
 async function rollTechniqueDamage(campaignId,charId,index){
-  const ch=allCharacters.find(c=>c.id===charId);if(!ch)return;
-  if(!isAdmin&&ch.owner_id!==currentUser?.id){toast('Solo podés usar técnicas de tus personajes.');return}
-  const action=(ch.techniqueActions||[])[index];if(!action)return;
-  const damageDice=parseDiceExpressionFlexible(action.damage||'');
-  if(!damageDice){toast('Este uso no tiene un daño válido configurado.');return}
-  const damageResults=Array.from({length:damageDice.count},()=>Math.floor(Math.random()*damageDice.sides)+1);
-  const damageTotal=damageResults.reduce((a,b)=>a+b,0)+damageDice.modifier;
-  await animateDiceGroup(damageResults,damageDice.sides,ch.sorcererName+' · '+action.name+' · Daño '+damageDice.expression,damageDice.modifier);
-  const {error}=await sb.from('combat_rolls').insert({
-    campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
-    stat_name:'Daño · '+action.name,
-    die_result:damageResults[0],stat_bonus:damageDice.modifier,total:damageTotal,
-    roll_expression:damageDice.expression,roll_results:damageResults,
-    media_url:sanitizeTechniqueMediaUrl(action.mediaUrl||action.media_url||'')||null
-  });
-  if(error){toast(error.message);return}
+ const ch=allCharacters.find(c=>c.id===charId);if(!ch)return;
+ if(!isAdmin&&ch.owner_id!==currentUser?.id){toast('Solo podés usar técnicas de tus personajes.');return}
+ const action=(ch.techniqueActions||[])[index];if(!action)return;
+ const damageDice=parseDiceExpressionFlexible(action.damage||'');
+ if(!damageDice){toast('Este uso no tiene daño válido configurado.');return}
+ const {data:bonus,error:bonusError}=await sb.rpc('claim_peculiarity_damage',{p_campaign:campaignId,p_character:charId,p_kind:'tecnica'});
+ if(bonusError){toast(bonusError.message);return}
+ const expression=damageDice.expression+(bonus?' + '+bonus:'');
+ const parsed=parseCompoundDiceExpression(expression);
+ if(!parsed){toast('Expresión de daño no válida.');return}
+ const result=rollCompoundDice(parsed);
+ await animateCompoundDice(result.rolled,ch.sorcererName+' · '+action.name+' · Daño '+parsed.expression,parsed.modifier);
+ const {error}=await sb.from('combat_rolls').insert({
+  campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
+  stat_name:'Daño · '+action.name+(bonus?' · peculiaridad':''),
+  die_result:result.rolled[0]?.value||0,stat_bonus:parsed.modifier,total:result.total,
+  roll_expression:parsed.expression,roll_results:result.rolled,
+  media_url:sanitizeTechniqueMediaUrl(action.mediaUrl||action.media_url||'')||null
+ });
+ if(error)toast(error.message);
 }
 async function loadCombatRolls(campaignId){
   const {data,error}=await sb.from('combat_rolls').select('*').eq('campaign_id',campaignId).order('created_at',{ascending:true}).limit(100);

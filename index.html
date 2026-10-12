@@ -1112,8 +1112,8 @@ function renderInformation(){
         '</details>'+
 
         '<details class="info-rule-item"><summary>7. Ataques físicos</summary>'+
-          '<p>Para intentar impactar físicamente, el atacante puede usar <b>1d20 + Fuerza</b> o <b>1d20 + Agilidad</b>, según el tipo de golpe, maniobra o estilo.</p>'+
-          '<p>La estadística utilizada para hacer el daño determina los dados según la tabla de daño físico.</p>'+
+          '<p>Para intentar impactar físicamente, el atacante puede usar <b>1d20 + Fuerza</b>. La Agilidad no se utiliza para atacar físicamente.</p>'+
+          '<p>El valor de Fuerza determina los dados según la tabla de daño físico.</p>'+
         '</details>'+
 
         '<details class="info-rule-item"><summary>8. Defensas contra ataques físicos</summary>'+
@@ -1159,7 +1159,7 @@ function renderInformation(){
         '</details>'+
 
         '<details class="info-rule-item"><summary>17. Principio general del combate</summary>'+
-          '<p>El sistema busca un combate dinámico de ida y vuelta. Fuerza sirve para impactar o generar daño; Agilidad para ataques físicos ágiles, esquivas y uso del entorno; Velocidad para desplazamiento y salida de rangos; Inteligencia para iniciativa y lectura táctica; Control de EM para ejecución ofensiva de técnicas.</p>'+
+          '<p>El sistema busca un combate dinámico de ida y vuelta. Fuerza sirve para impactar o generar daño; Agilidad para esquivas, movimiento complejo y uso del entorno; Velocidad para desplazamiento y salida de rangos; Inteligencia para iniciativa y lectura táctica; Control de EM para ejecución ofensiva de técnicas.</p>'+
           '<p>El escenario debe permitir soluciones defensivas y ofensivas distintas a una simple comparación de estadísticas.</p>'+
         '</details>'+
 
@@ -3643,7 +3643,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     const remaining=Math.max(0,def.charges-spent);
     return '<button class="combat-technique-btn" type="button" '+(!canRoll||!remaining?'disabled':'onclick="event.stopPropagation();useCombatAwakening(\''+campaignId+'\',\''+ch.id+'\',\''+def.key+'\')"')+'>⚡ '+esc(def.name)+' ('+remaining+'/'+def.charges+')'+(def.cost?' · '+def.cost+' EM':' · Gratis')+'</button>';
   }).join(''):'<span class="muted">No hay despertares equipados.</span>';
-  const physicalDamageActions=canRoll?'<div class="quick-tech-actions"><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\')">🎲 Daño físico · Fuerza</button><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Agilidad\')">🎲 Daño físico · Agilidad</button></div>':'';
+  const physicalDamageActions=canRoll?'<div class="quick-tech-actions"><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\')">🎲 Daño físico · Fuerza</button></div>':'';
   return '<div class="combat-quick-menu hidden" id="quick-menu-'+ch.id+'" onclick="event.stopPropagation()">'+
     '<div class="combat-quick-nav">'+
       '<button class="combat-quick-tab active" id="quick-tab-tech-'+ch.id+'" onclick="showCombatQuickTab(\''+ch.id+'\',\'tech\')"><span class="qicon">✦</span><span>Técnica</span></button>'+

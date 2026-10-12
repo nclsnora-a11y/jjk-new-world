@@ -1064,6 +1064,18 @@ function renderInformation(){
     '</details>'+
 
     '<details class="info-section-card">'+
+      '<summary><span>Peculiaridades</span><small>'+peculiaritiesCatalog.length+' disponibles · rarezas y efectos</small></summary>'+
+      '<div class="info-section-body info-rules">'+
+        '<p>Una peculiaridad por personaje. Rarezas: Común 50%, Poco común 28%, Rara 15%, Épica 6% y Legendaria 1%. Cada resultado de una misma rareza tiene igual probabilidad.</p>'+
+        (peculiaritiesCatalog.length?['comun','poco','rara','epica','legendaria'].map(r=>{
+          const items=peculiaritiesCatalog.filter(p=>p.rareza===r);
+          const label={comun:'Comunes',poco:'Poco comunes',rara:'Raras',epica:'Épicas',legendaria:'Legendarias'}[r];
+          return '<details class="info-rule-item"><summary>'+label+' ('+items.length+')</summary><div class="info-table">'+items.map(p=>'<div><b>'+esc(p.nombre)+'</b><span>'+esc(p.efecto)+'</span></div>').join('')+'</div></details>';
+        }).join(''):'<p>Cargando catálogo...</p>')+
+      '</div>'+
+    '</details>'+
+
+    '<details class="info-section-card">'+
       '<summary><span>Despertares</span><small>Se desbloquean con 7 puntos</small></summary>'+
       '<div class="info-section-body info-rules">'+
         infoAwakeningsHtml()+

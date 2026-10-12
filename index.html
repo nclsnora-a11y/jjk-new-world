@@ -1292,7 +1292,7 @@ function characterCard(ch){
   return `<article class="character-card character-side-${normalizeCharacterSide(ch.side)}" id="card-${esc(ch.id)}">
     <div class="character-top">
       ${ch.photo?'<img class="character-avatar" src="'+ch.photo+'" alt="Foto de '+esc(ch.sorcererName)+'">':'<div class="character-avatar placeholder">術</div>'}
-      <div><h3>${esc(ch.sorcererName)}</h3><div class="character-meta">Creado: ${new Date(ch.createdAt).toLocaleDateString('es-AR')}</div></div>
+      <div><h3>${esc(ch.sorcererName)} ${ch.isNpc?'<small>NPC</small>':''}</h3><div class="character-meta">Creado: ${new Date(ch.createdAt).toLocaleDateString('es-AR')}</div></div>
     </div>
     <div class="character-summary">
       <span>Tipo de técnica</span><strong>${esc(ch.type||'—')}</strong>
@@ -1661,7 +1661,7 @@ async function loadRanking(){
 }
 function renderRanking(){
   const root=document.getElementById('ranking-root');if(!root)return;
-  const rows=rankingEntries.filter(ch=>rankingFilter==='global'||normalizeCharacterSide(ch.character_side)===rankingFilter)
+  const rows=rankingEntries.filter(ch=>!npcCharacters.some(n=>n.id===ch.id)&&(rankingFilter==='global'||normalizeCharacterSide(ch.character_side)===rankingFilter))
     .sort((a,b)=>Number(b.score_override??b.stat_total??0)-Number(a.score_override??a.stat_total??0)||String(a.sorcerer_name).localeCompare(String(b.sorcerer_name),'es'));
   if(!rows.length){root.innerHTML='<div class="ranking-empty">No hay personajes en esta clasificación.</div>';return}
   root.innerHTML='<div class="ranking-list">'+rows.map((ch,i)=>{
@@ -2337,6 +2337,7 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
 let currentUser=null,currentProfile=null,isAdmin=false,allCharacters=[];
+let npcCharacters=[];
 let staffViewAsPlayer=false;
 let sharedZones=[],sharedMemberships=[];
 let characterProgressById={};
@@ -2377,7 +2378,7 @@ function normalizeCharacter(r){
     id:r.id,owner_id:r.owner_id,sorcererName:r.sorcerer_name,userName:r.user_name||'—',
     initialStats:r.initial_stats||{},currentStats:r.current_stats||{},type:r.technique_type||null,
     grade:r.grade||null,control:r.control_em==null?null:String(r.control_em),side:normalizeCharacterSide(r.character_side),passives:r.passives||[],techniqueDescription:r.technique_description||'',techniqueActions:Array.isArray(r.technique_actions)?r.technique_actions:[],
-    specialBars:Array.isArray(r.special_bars)?r.special_bars:[],
+    specialBars:Array.isArray(r.special_bars)?r.special_bars:[],isNpc:r.is_npc===true,
     photo_path:r.photo_path||null,photo:imageUrl(r.photo_path,r.updated_at||r.created_at),createdAt:r.created_at,updatedAt:r.updated_at
   };
 }
@@ -2448,7 +2449,7 @@ async function getProfile(){
 }
 async function loadSharedData(){
   if(!currentUser){
-    allCharacters=[]; savedCharacters=[]; campaigns=[]; sharedZones=[]; sharedMemberships=[];
+    allCharacters=[]; npcCharacters=[]; savedCharacters=[]; campaigns=[]; sharedZones=[]; sharedMemberships=[];
     characterProgressById={};characterInventory=[];shopListings=[];pendingGradeBonuses={};
     renderCharacters();renderCampaigns();if(typeof renderShop==='function')renderShop();return;
   }
@@ -2484,8 +2485,13 @@ async function loadSharedData(){
     characterRows=[...byId.values()];
   }
 
-  allCharacters=characterRows.map(normalizeCharacter);
-  savedCharacters=allCharacters.filter(c=>c.owner_id===currentUser.id);
+  const {data:npcRows,error:npcError}=await sb.from('characters').select('*').eq('is_npc',true).order('created_at',{ascending:false});
+  if(npcError)throw npcError;
+  npcCharacters=(npcRows||[]).map(normalizeCharacter);
+  const npcIds=new Set(npcCharacters.map(c=>c.id));
+  const regularRows=characterRows.filter(c=>!npcIds.has(c.id));
+  allCharacters=regularRows.map(normalizeCharacter);
+  savedCharacters=[...allCharacters,...npcCharacters].filter(c=>c.owner_id===currentUser.id);
   campaigns=(ca.data||[]).map(normalizeCampaign);
   campaigns.forEach(c=>{
     c.zones=sharedZones.filter(z=>z.campaign_id===c.id).map(z=>({
@@ -2812,17 +2818,21 @@ renderCharacters=function(){
   const root=document.getElementById('characters-list');if(!root)return;
   if(!currentUser){root.innerHTML='<div class="auth-required"><b>Iniciá sesión para ver Mis personajes.</b><br><br>Así tus personajes aparecen también en celular, PC y otros dispositivos.</div>';return}
   const gmForm=isAdmin?gmCharacterCreationHtml():'';
-  if(!savedCharacters.length){root.innerHTML=gmForm+'<div class="empty-characters"><b>No hay personajes guardados todavía.</b><br><br>Creá uno en Ruletas o usá la creación manual si sos GM.</div>';return}
-  root.innerHTML=gmForm+'<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>';
+  const npcGallery='<section class="sheet-card" style="margin-top:20px"><h3>📖 Personajes NPC</h3><p class="muted">Personajes de ambientación visibles para todos. No participan en rankings ni combates.</p>'+(npcCharacters.length?'<div class="characters-grid">'+npcCharacters.map(npcPublicCard).join('')+'</div>':'<div class="muted">Todavía no hay NPC.</div>')+'</section>';
+  const owned=savedCharacters.length?'<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>':'<div class="empty-characters"><b>No hay personajes propios todavía.</b></div>';
+  root.innerHTML=gmForm+owned+npcGallery;
 };
 
+function npcPublicCard(ch){
+  return '<article class="character-card character-side-'+normalizeCharacterSide(ch.side)+'"><div class="character-top">'+(ch.photo?'<img class="character-avatar" src="'+esc(ch.photo)+'" alt="">':'<div class="character-avatar placeholder">術</div>')+'<div><h3>'+esc(ch.sorcererName)+' <small>NPC</small></h3><div class="character-meta">'+esc(sideDisplayName(ch.side))+'</div></div></div><div class="character-summary"><span>Grado</span><strong>'+esc(ch.grade||'—')+'</strong><span>Técnica</span><strong>'+esc(ch.type||'—')+'</strong><span>Control de EM</span><strong>'+esc(ch.control||'—')+'</strong></div><details><summary>Ver ficha del NPC</summary><p>'+esc(ch.techniqueDescription||'Sin descripción todavía.')+'</p><div class="character-summary">'+Object.entries(ch.currentStats||{}).map(([k,v])=>'<span>'+esc(k)+'</span><strong>'+esc(v)+'</strong>').join('')+'</div></details></article>';
+}
 function gmCharacterCreationHtml(){
  return '<details class="sheet-card gm-character-creator"><summary>⚙️ Crear personaje manualmente (GM)</summary><p class="muted">Solo GM y administradores. Podés asignar estadísticas y grado sin usar la ruleta.</p>'+
  '<div class="gm-character-fields"><label>Nombre<input id="gm-char-name" maxlength="100" placeholder="Nombre del personaje"></label>'+
  '<label>Bando<select id="gm-char-side"><option value="hechicero">Hechicero</option><option value="brujo">Brujo</option><option value="maldicion">Maldición</option></select></label>'+
  '<label>Grado<select id="gm-char-grade">'+gradeLadder.map(g=>'<option value="'+esc(g.name)+'">'+esc(g.name)+'</option>').join('')+'</select></label>'+
  '<label>Tipo de técnica<input id="gm-char-technique" placeholder="Ej: Innata" value="Innato"></label>'+
- '<label>Control de EM<input id="gm-char-control" type="number" min="0" value="0"></label></div>'+
+ '<label>Control de EM<input id="gm-char-control" type="number" min="0" value="0"></label><label style="display:flex;align-items:center;gap:9px"><input id="gm-char-npc" type="checkbox" style="width:auto">NPC (visible para todos; fuera de ranking y combate)</label></div>'+
  '<div class="gm-character-stats">'+statNames.map((n,i)=>'<label>'+esc(n)+'<input id="gm-char-stat-'+i+'" type="number" min="0" step="1" value="0"></label>').join('')+'</div>'+
  '<button type="button" onclick="gmCreateCharacter()">Guardar personaje GM</button></details>';
 }
@@ -2832,9 +2842,10 @@ async function gmCreateCharacter(){
  const stats={};for(let i=0;i<statNames.length;i++){const value=Number(document.getElementById('gm-char-stat-'+i)?.value);if(!Number.isSafeInteger(value)||value<0||value>10000){toast('Revisá la estadística '+statNames[i]);return}stats[statNames[i]]=value}
  const control=Number(document.getElementById('gm-char-control')?.value);
  if(!name||!technique||!Number.isSafeInteger(control)||control<0){toast('Completá nombre, tipo de técnica y control de EM.');return}
- const {error}=await sb.rpc('gm_create_character',{p_name:name,p_side:side,p_grade:grade,p_technique:technique,p_control:control,p_stats:stats});
+ const npc=!!document.getElementById('gm-char-npc')?.checked;
+ const {error}=await sb.rpc(npc?'gm_create_npc':'gm_create_character',{p_name:name,p_side:side,p_grade:grade,p_technique:technique,p_control:control,p_stats:stats});
  if(error){toast(error.message);return}
- await loadSharedData();toast('Personaje GM creado. Ya podés editar sus estadísticas desde Mis personajes.');
+ await loadSharedData();toast(npc?'NPC creado y publicado para todos.':'Personaje GM creado. Ya podés editar sus estadísticas desde Mis personajes.');
 }
 
 // Shared campaign helpers
@@ -2866,7 +2877,7 @@ campaignPanelHtml=function(c){
 };
 zoneHtmlFor=function(c,z){
   const sourceCharacters=savedCharacters;
-  const available=sourceCharacters.filter(ch=>!(z.characterIds||[]).includes(ch.id));
+  const available=sourceCharacters.filter(ch=>!ch.isNpc&&!(z.characterIds||[]).includes(ch.id));
   const options=available.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+' — '+esc(ch.userName)+'</option>').join('');
   const players=(z.characterIds||[]).map(id=>allCharacters.find(ch=>ch.id===id)).filter(Boolean);
   const playersHtml=players.length?players.map(ch=>{
@@ -3094,7 +3105,7 @@ async function ensureTokensForAddedCharacter(campaignId,zoneId,charId){
 
 addCharacterToZone=async function(campaignId,zoneId){
   const sel=document.getElementById('addchar-'+zoneId);if(!sel?.value){toast('Elegí un personaje.');return}
-  const chosen=allCharacters.find(ch=>ch.id===sel.value);if(!chosen){toast('No encontré ese personaje.');return}
+  const chosen=allCharacters.find(ch=>ch.id===sel.value);if(!chosen||chosen.isNpc){toast('No se pueden agregar NPC al combate.');return}
   const charId=sel.value;
   const payload={campaign_id:campaignId,zone_id:zoneId,character_id:charId,added_by:currentUser.id};
   const {error}=await sb.from('campaign_characters').insert(payload);
@@ -3294,7 +3305,7 @@ async function loadCombatStates(campaignId){
 }
 async function ensureCombatStates(campaignId){
   if(!isAdmin)return loadCombatStates(campaignId);
-  const ids=selectedCombatZoneId?combatZoneCharacterIds(campaignId,selectedCombatZoneId):campaignCharacterIds(campaignId);
+  const ids=(selectedCombatZoneId?combatZoneCharacterIds(campaignId,selectedCombatZoneId):campaignCharacterIds(campaignId)).filter(id=>allCharacters.some(ch=>ch.id===id&&!ch.isNpc));
   await loadCombatStates(campaignId);
 
   // Mantener las barras especiales del combate sincronizadas con la ficha.
@@ -3397,7 +3408,7 @@ async function renderCombatCampaign(campaignId){
   let chars=[];
   if(selectedCombatZoneId){
     const ids=combatZoneCharacterIds(campaignId,selectedCombatZoneId);
-    chars=ids.map(id=>allCharacters.find(c=>c.id===id)).filter(Boolean);
+    chars=ids.map(id=>allCharacters.find(c=>c.id===id)).filter(ch=>ch&&!ch.isNpc);
     if(!isAdmin)chars=chars.filter(ch=>ch.owner_id===currentUser?.id||combatStates.find(s=>s.character_id===ch.id)?.visible!==false);
   }
 

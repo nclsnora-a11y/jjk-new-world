@@ -4311,6 +4311,18 @@ async function quickSubtractCombatResource(campaignId,charId,prefix){
   const cfg=map[prefix];if(!cfg)return;
   const [field,label]=cfg;
 
+  if(prefix==='hp'){
+   const kind=document.getElementById('hp-damage-type-'+charId)?.value||'fisico';
+   const attacker=document.getElementById('hp-attacker-'+charId)?.value||null;
+   const {data,error}=await sb.rpc('apply_combat_damage',{p_campaign:campaignId,p_character:charId,p_amount:amount,p_type:kind,p_attacker:attacker});
+   if(error){toast(error.message);return}
+   state.hp_current=Number(data.remaining);
+   if(amountInput)amountInput.value='';
+   const field=document.getElementById('hp-current-'+charId);if(field)field.value=state.hp_current;
+   updateCombatBarsFromState(charId);
+   toast('Daño recibido '+data.received+' · mitigado '+data.reduced);
+   return;
+  }
   const currentInput=document.getElementById(prefix+'-current-'+charId);
   const current=Math.max(0,Number(currentInput?.value??state[field]??0));
   const next=Math.max(0,current-amount);

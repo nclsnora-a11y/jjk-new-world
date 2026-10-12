@@ -1,0 +1,474 @@
+{
+  "version": 1,
+  "probabilidades": {
+    "comun": 50,
+    "poco": 28,
+    "rara": 15,
+    "epica": 6,
+    "legendaria": 1
+  },
+  "peculiaridades": [
+    {
+      "id": 1,
+      "rareza": "comun",
+      "nombre": "Resistencia al veneno",
+      "efecto": "Ventaja para resistir venenos y toxinas"
+    },
+    {
+      "id": 2,
+      "rareza": "comun",
+      "nombre": "Cuerpo resistente",
+      "efecto": "+1 Durabilidad permanente"
+    },
+    {
+      "id": 3,
+      "rareza": "comun",
+      "nombre": "Agilidad natural",
+      "efecto": "+1 Agilidad permanente"
+    },
+    {
+      "id": 4,
+      "rareza": "comun",
+      "nombre": "Reserva energética desarrollada",
+      "efecto": "+1 Energía Maldita permanente"
+    },
+    {
+      "id": 5,
+      "rareza": "comun",
+      "nombre": "Control energético natural",
+      "efecto": "+1 Control EM permanente"
+    },
+    {
+      "id": 24,
+      "rareza": "comun",
+      "nombre": "Pulmones desarrollados",
+      "efecto": "+1 Resistencia permanente"
+    },
+    {
+      "id": 25,
+      "rareza": "comun",
+      "nombre": "Músculos densos",
+      "efecto": "+1 Fuerza permanente"
+    },
+    {
+      "id": 26,
+      "rareza": "comun",
+      "nombre": "Reflejos naturales",
+      "efecto": "+1 Velocidad permanente"
+    },
+    {
+      "id": 27,
+      "rareza": "comun",
+      "nombre": "Concentración innata",
+      "efecto": "+1 Inteligencia permanente"
+    },
+    {
+      "id": 28,
+      "rareza": "comun",
+      "nombre": "Piel endurecida",
+      "efecto": "Reduce 5 de daño físico"
+    },
+    {
+      "id": 29,
+      "rareza": "comun",
+      "nombre": "Recuperación ligera",
+      "efecto": "Recupera 3 Resistencia al comenzar turno"
+    },
+    {
+      "id": 30,
+      "rareza": "comun",
+      "nombre": "Equilibrio perfecto",
+      "efecto": "Ventaja en equilibrio y evitar caídas"
+    },
+    {
+      "id": 6,
+      "rareza": "poco",
+      "nombre": "Sentidos agudizados",
+      "efecto": "Ventaja en Inteligencia para detectar enemigos"
+    },
+    {
+      "id": 7,
+      "rareza": "poco",
+      "nombre": "Talento con herramientas malditas",
+      "efecto": "+2 Fuerza en ataques con herramientas malditas"
+    },
+    {
+      "id": 8,
+      "rareza": "poco",
+      "nombre": "Eficiencia energética",
+      "efecto": "Técnicas cuestan 10% menos Energía Maldita"
+    },
+    {
+      "id": 9,
+      "rareza": "poco",
+      "nombre": "Afinidad con barreras",
+      "efecto": "+2 Barreras permanente"
+    },
+    {
+      "id": 10,
+      "rareza": "poco",
+      "nombre": "Constitución excepcional",
+      "efecto": "+2 Resistencia permanente"
+    },
+    {
+      "id": 31,
+      "rareza": "poco",
+      "nombre": "Huesos reforzados",
+      "efecto": "Reduce 10 de daño físico"
+    },
+    {
+      "id": 32,
+      "rareza": "poco",
+      "nombre": "Recuperación acelerada",
+      "efecto": "Recupera 5 Resistencia al comenzar turno"
+    },
+    {
+      "id": 33,
+      "rareza": "poco",
+      "nombre": "Corazón resistente",
+      "efecto": "+2 Durabilidad permanente"
+    },
+    {
+      "id": 34,
+      "rareza": "poco",
+      "nombre": "Impulso natural",
+      "efecto": "+2 Velocidad permanente"
+    },
+    {
+      "id": 35,
+      "rareza": "poco",
+      "nombre": "Instinto de supervivencia",
+      "efecto": "Repite una esquiva fallida por combate"
+    },
+    {
+      "id": 36,
+      "rareza": "poco",
+      "nombre": "Energía Maldita abundante",
+      "efecto": "+2 Energía Maldita permanente"
+    },
+    {
+      "id": 37,
+      "rareza": "poco",
+      "nombre": "Golpes pesados",
+      "efecto": "+2d8 al primer golpe físico que impacta por turno"
+    },
+    {
+      "id": 60,
+      "rareza": "poco",
+      "nombre": "Impulso aéreo",
+      "efecto": "10 EM para desplazarse 15 pies por el aire"
+    },
+    {
+      "id": 11,
+      "rareza": "rara",
+      "nombre": "Sangre venenosa",
+      "efecto": "+3d6 al golpe con sangre propia compatible, 1 por turno"
+    },
+    {
+      "id": 12,
+      "rareza": "rara",
+      "nombre": "Sangre regenerativa",
+      "efecto": "Recupera 20 PV una vez por combate"
+    },
+    {
+      "id": 13,
+      "rareza": "rara",
+      "nombre": "Descarga energética",
+      "efecto": "+3d8 en descarga compatible, 1 por turno"
+    },
+    {
+      "id": 14,
+      "rareza": "rara",
+      "nombre": "Potencial físico extraordinario",
+      "efecto": "+2 Fuerza y +1 Durabilidad permanente"
+    },
+    {
+      "id": 15,
+      "rareza": "rara",
+      "nombre": "Instinto defensivo",
+      "efecto": "Repite una esquiva fallida por combate"
+    },
+    {
+      "id": 38,
+      "rareza": "rara",
+      "nombre": "Energía Maldita explosiva",
+      "efecto": "+4d8 al primer impacto de técnica por turno"
+    },
+    {
+      "id": 39,
+      "rareza": "rara",
+      "nombre": "Regeneración natural",
+      "efecto": "Recupera 10 PV por turno si sigue consciente"
+    },
+    {
+      "id": 40,
+      "rareza": "rara",
+      "nombre": "Piel de acero",
+      "efecto": "Reduce 15 de daño físico"
+    },
+    {
+      "id": 41,
+      "rareza": "rara",
+      "nombre": "Energía Maldita concentrada",
+      "efecto": "+3 Control EM permanente"
+    },
+    {
+      "id": 42,
+      "rareza": "rara",
+      "nombre": "Cuerpo de combate",
+      "efecto": "+2 Fuerza y +2 Durabilidad permanente"
+    },
+    {
+      "id": 43,
+      "rareza": "rara",
+      "nombre": "Agotamiento reducido",
+      "efecto": "Movimiento automático consume 25% menos Resistencia"
+    },
+    {
+      "id": 44,
+      "rareza": "rara",
+      "nombre": "Contraataque instintivo",
+      "efecto": "Reacción al esquivar golpe: 3d8 al atacante cercano, 1 por ronda"
+    },
+    {
+      "id": 64,
+      "rareza": "rara",
+      "nombre": "Reserva secundaria",
+      "efecto": "Si EM baja de 20 recupera 30, una vez por combate"
+    },
+    {
+      "id": 66,
+      "rareza": "rara",
+      "nombre": "Energía adhesiva",
+      "efecto": "2 usos por combate: impacto reduce 10 pies de movimiento rival"
+    },
+    {
+      "id": 71,
+      "rareza": "rara",
+      "nombre": "Coraza energética",
+      "efecto": "15 EM reduce 30 de daño, 2 usos por combate"
+    },
+    {
+      "id": 73,
+      "rareza": "rara",
+      "nombre": "Sensor espiritual",
+      "efecto": "Percibe EM a 30 pies, no atraviesa barreras especiales"
+    },
+    {
+      "id": 77,
+      "rareza": "rara",
+      "nombre": "Endurecimiento muscular",
+      "efecto": "20 EM reduce 20 de daño físico por ataque durante un turno, 2 usos"
+    },
+    {
+      "id": 16,
+      "rareza": "epica",
+      "nombre": "Energía Maldita áspera",
+      "efecto": "+3d6 al primer golpe físico reforzado con EM por turno"
+    },
+    {
+      "id": 17,
+      "rareza": "epica",
+      "nombre": "Reservas monstruosas",
+      "efecto": "+5 Energía Maldita permanente"
+    },
+    {
+      "id": 18,
+      "rareza": "epica",
+      "nombre": "Suerte extraordinaria",
+      "efecto": "Repite una tirada fallida propia por combate"
+    },
+    {
+      "id": 19,
+      "rareza": "epica",
+      "nombre": "Reflejos sobrehumanos",
+      "efecto": "+2 Agilidad y +2 Velocidad permanentes"
+    },
+    {
+      "id": 45,
+      "rareza": "epica",
+      "nombre": "Energía Maldita incandescente",
+      "efecto": "+5d8 al primer impacto reforzado con EM por turno"
+    },
+    {
+      "id": 46,
+      "rareza": "epica",
+      "nombre": "Cuerpo colosal",
+      "efecto": "+4 Fuerza y +2 Durabilidad permanentes"
+    },
+    {
+      "id": 47,
+      "rareza": "epica",
+      "nombre": "Regeneración avanzada",
+      "efecto": "Recupera 60 PV una vez por combate, si sigue consciente"
+    },
+    {
+      "id": 48,
+      "rareza": "epica",
+      "nombre": "Armadura natural",
+      "efecto": "Reduce 25 de daño físico"
+    },
+    {
+      "id": 49,
+      "rareza": "epica",
+      "nombre": "Núcleo energético superior",
+      "efecto": "+4 Energía Maldita y +2 Control EM permanentes"
+    },
+    {
+      "id": 50,
+      "rareza": "epica",
+      "nombre": "Instinto depredador",
+      "efecto": "Ventaja al primer golpe contra objetivo ya impactado, una vez por ronda"
+    },
+    {
+      "id": 59,
+      "rareza": "epica",
+      "nombre": "Energía desbordante",
+      "efecto": "Con menos de 30% PV el siguiente golpe acertado hace +5d10, 1 uso"
+    },
+    {
+      "id": 62,
+      "rareza": "epica",
+      "nombre": "Visión del flujo energético",
+      "efecto": "Una vez por combate ve EM rival y +3 Control EM contra él"
+    },
+    {
+      "id": 63,
+      "rareza": "epica",
+      "nombre": "Puntos de interrupción",
+      "efecto": "El golpe físico reduce 30 EM del rival, 1 uso por combate"
+    },
+    {
+      "id": 65,
+      "rareza": "epica",
+      "nombre": "Reflejo de sustitución",
+      "efecto": "Después de sufrir daño mueve 10 pies con reacción, 1 uso"
+    },
+    {
+      "id": 67,
+      "rareza": "epica",
+      "nombre": "Descarga refleja",
+      "efecto": "Reacción ante golpe: 4d8 eléctrico de vuelta; no cancela daño, 1 por ronda"
+    },
+    {
+      "id": 70,
+      "rareza": "epica",
+      "nombre": "Compresión de energía",
+      "efecto": "Desventaja al ataque pero +6d10 si impacta, 1 por combate"
+    },
+    {
+      "id": 72,
+      "rareza": "epica",
+      "nombre": "Presión abrumadora",
+      "efecto": "Acción adicional; duelo Control EM; desventaja próximo ataque rival contra vos; 2 usos"
+    },
+    {
+      "id": 75,
+      "rareza": "epica",
+      "nombre": "Acumulación cinética",
+      "efecto": "Cada 15 pies en línea acumula carga, máx 3; al impactar +2d10 por carga"
+    },
+    {
+      "id": 78,
+      "rareza": "epica",
+      "nombre": "Rebote de impacto",
+      "efecto": "Reacción contra golpe: devuelve mitad del daño recibido, máx 50, 1 por ronda"
+    },
+    {
+      "id": 79,
+      "rareza": "epica",
+      "nombre": "Visión muscular",
+      "efecto": "+3 esquiva durante 2 rondas, 1 uso"
+    },
+    {
+      "id": 20,
+      "rareza": "legendaria",
+      "nombre": "Energía Maldita electrificada",
+      "efecto": "+3d8 eléctrico al primer golpe reforzado con EM por turno, ventaja contra eléctrico"
+    },
+    {
+      "id": 21,
+      "rareza": "legendaria",
+      "nombre": "Cuatro brazos",
+      "efecto": "+2 Fuerza permanente y puede hacer sellos con manos libres"
+    },
+    {
+      "id": 22,
+      "rareza": "legendaria",
+      "nombre": "Dos bocas",
+      "efecto": "+2 Control EM permanente y cánticos simultáneos"
+    },
+    {
+      "id": 23,
+      "rareza": "legendaria",
+      "nombre": "Seis Ojos",
+      "efecto": "+5 Control EM permanente y técnicas cuestan 20% menos EM"
+    },
+    {
+      "id": 51,
+      "rareza": "legendaria",
+      "nombre": "Energía Maldita devastadora",
+      "efecto": "+6d10 al primer impacto de técnica por turno"
+    },
+    {
+      "id": 52,
+      "rareza": "legendaria",
+      "nombre": "Corazón inmortal",
+      "efecto": "Al caer a 0 PV permanece en 50 PV, 1 uso por combate"
+    },
+    {
+      "id": 53,
+      "rareza": "legendaria",
+      "nombre": "Regeneración monstruosa",
+      "efecto": "Recupera 20 PV por turno mientras siga consciente"
+    },
+    {
+      "id": 54,
+      "rareza": "legendaria",
+      "nombre": "Cuerpo perfecto",
+      "efecto": "+3 Fuerza +3 Agilidad +3 Durabilidad permanentes"
+    },
+    {
+      "id": 55,
+      "rareza": "legendaria",
+      "nombre": "Energía Maldita primordial",
+      "efecto": "+5 Energía Maldita y +3 Control EM permanentes"
+    },
+    {
+      "id": 56,
+      "rareza": "legendaria",
+      "nombre": "Adaptación defensiva",
+      "efecto": "Tras recibir daño reduce en 20 siguientes ataques del mismo rival"
+    },
+    {
+      "id": 57,
+      "rareza": "legendaria",
+      "nombre": "Evolución traumática",
+      "efecto": "Con 10 PV o menos al terminar combate +1 Fuerza Inteligencia o Durabilidad, hasta 3 veces"
+    },
+    {
+      "id": 61,
+      "rareza": "legendaria",
+      "nombre": "Ojos de anticipación",
+      "efecto": "Ventaja permanente defendiendo contra proyectiles"
+    },
+    {
+      "id": 68,
+      "rareza": "legendaria",
+      "nombre": "Energía condicionada",
+      "efecto": "Al empezar combate elige -2 a una estadística para +3 Control EM"
+    },
+    {
+      "id": 74,
+      "rareza": "legendaria",
+      "nombre": "Desplazamiento instantáneo",
+      "efecto": "Dos veces por combate mueve 20 pies gratis, puede usar reacción"
+    },
+    {
+      "id": 81,
+      "rareza": "legendaria",
+      "nombre": "Percepción acelerada",
+      "efecto": "Dos reacciones extra por combate"
+    }
+  ]
+}

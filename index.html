@@ -1292,7 +1292,7 @@ function characterCard(ch){
   return `<article class="character-card character-side-${normalizeCharacterSide(ch.side)}" id="card-${esc(ch.id)}">
     <div class="character-top">
       ${ch.photo?'<img class="character-avatar" src="'+ch.photo+'" alt="Foto de '+esc(ch.sorcererName)+'">':'<div class="character-avatar placeholder">術</div>'}
-      <div><h3>${esc(ch.sorcererName)}</h3><div class="character-meta">Creado: ${new Date(ch.createdAt).toLocaleDateString('es-AR')}</div></div>
+      <div><h3>${esc(ch.sorcererName)} ${ch.isNpc?'<small>NPC</small>':''}</h3><div class="character-meta">Creado: ${new Date(ch.createdAt).toLocaleDateString('es-AR')}</div></div>
     </div>
     <div class="character-summary">
       <span>Tipo de técnica</span><strong>${esc(ch.type||'—')}</strong>
@@ -1661,7 +1661,7 @@ async function loadRanking(){
 }
 function renderRanking(){
   const root=document.getElementById('ranking-root');if(!root)return;
-  const rows=rankingEntries.filter(ch=>rankingFilter==='global'||normalizeCharacterSide(ch.character_side)===rankingFilter)
+  const rows=rankingEntries.filter(ch=>!allCharacters.some(c=>c.id===ch.id&&c.isNpc)&&(rankingFilter==='global'||normalizeCharacterSide(ch.character_side)===rankingFilter))
     .sort((a,b)=>Number(b.score_override??b.stat_total??0)-Number(a.score_override??a.stat_total??0)||String(a.sorcerer_name).localeCompare(String(b.sorcerer_name),'es'));
   if(!rows.length){root.innerHTML='<div class="ranking-empty">No hay personajes en esta clasificación.</div>';return}
   root.innerHTML='<div class="ranking-list">'+rows.map((ch,i)=>{
@@ -2377,7 +2377,7 @@ function normalizeCharacter(r){
     id:r.id,owner_id:r.owner_id,sorcererName:r.sorcerer_name,userName:r.user_name||'—',
     initialStats:r.initial_stats||{},currentStats:r.current_stats||{},type:r.technique_type||null,
     grade:r.grade||null,control:r.control_em==null?null:String(r.control_em),side:normalizeCharacterSide(r.character_side),passives:r.passives||[],techniqueDescription:r.technique_description||'',techniqueActions:Array.isArray(r.technique_actions)?r.technique_actions:[],
-    specialBars:Array.isArray(r.special_bars)?r.special_bars:[],
+    specialBars:Array.isArray(r.special_bars)?r.special_bars:[],isNpc:r.is_npc===true,
     photo_path:r.photo_path||null,photo:imageUrl(r.photo_path,r.updated_at||r.created_at),createdAt:r.created_at,updatedAt:r.updated_at
   };
 }
@@ -2872,7 +2872,7 @@ zoneHtmlFor=function(c,z){
   const players=(z.characterIds||[]).map(id=>allCharacters.find(ch=>ch.id===id)).filter(Boolean);
   const playersHtml=players.length?players.map(ch=>{
     const canRemove=isAdmin||ch.owner_id===currentUser?.id;
-    return '<div class="zone-player">'+(ch.photo?'<img src="'+ch.photo+'" alt="">':'<div class="mini-avatar">術</div>')+'<div class="zp-main"><b>'+esc(ch.sorcererName)+'</b><span class="muted">Usuario: '+esc(ch.userName)+' · '+esc(ch.grade||'Sin grado')+'</span></div>'+(canRemove?'<button class="secondary danger" onclick="removeCharacterFromZone(\''+c.id+'\',\''+z.id+'\',\''+ch.id+'\')">Quitar</button>':'')+'</div>';
+    return '<div class="zone-player">'+(ch.photo?'<img src="'+ch.photo+'" alt="">':'<div class="mini-avatar">術</div>')+'<div class="zp-main"><b>'+esc(ch.sorcererName)+(ch.isNpc?' · NPC':'')+'</b><span class="muted">Usuario: '+esc(ch.userName)+' · '+esc(ch.grade||'Sin grado')+'</span></div>'+(canRemove?'<button class="secondary danger" onclick="removeCharacterFromZone(\''+c.id+'\',\''+z.id+'\',\''+ch.id+'\')">Quitar</button>':'')+'</div>';
   }).join(''):'<div class="muted">Sin personajes en esta zona.</div>';
   return '<div class="zone-card"><div class="zone-head"><b>'+esc(z.name)+'</b>'+(isAdmin?'<button class="secondary danger" onclick="deleteZone(\''+c.id+'\',\''+z.id+'\')">Eliminar zona</button>':'')+'</div>'+
     (available.length?'<div class="campaign-form"><select id="addchar-'+z.id+'"><option value="">'+(isAdmin?'Seleccionar personaje...':'Seleccionar mi personaje...')+'</option>'+options+'</select><button onclick="addCharacterToZone(\''+c.id+'\',\''+z.id+'\')">Agregar personaje</button></div>':'')+

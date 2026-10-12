@@ -1279,7 +1279,7 @@ document.getElementById('save-character').addEventListener('click',()=>{
 });
 
 let peculiaritiesCatalog=[];
-let peculiarityWeights={comun:50,poco:28,rara:15,epica:6,legendaria:1};
+let peculiarityWeights={comun:50.5,poco:28,rara:15,epica:6,legendaria:0.5};
 async function loadPeculiaritiesCatalog(){
  try{
   const response=await fetch('./peculiaridades.json',{cache:'no-store'});
@@ -1289,7 +1289,16 @@ async function loadPeculiaritiesCatalog(){
   peculiarityWeights=data.probabilidades||peculiarityWeights;
   if(currentUser&&typeof renderCharacters==='function')renderCharacters();
   if(typeof renderInformation==='function')renderInformation();
+  const wheel=document.getElementById('card-peculiarities');if(wheel)wheel.outerHTML=peculiarityWheelHtml();
  }catch(e){console.error('Catálogo de peculiaridades',e)}
+}
+function peculiarityWheelHtml(){
+ const rarities=[['comun','Común'],['poco','Poco común'],['rara','Rara'],['epica','Épica'],['legendaria','Legendaria']];
+ return '<section class="card" id="card-peculiarities"><h2>Ruleta de Peculiaridades</h2><p class="muted">77 peculiaridades. Girá desde Mis personajes para asignar una al personaje guardado. Las probabilidades se calculan en el servidor.</p>'+
+ '<div class="info-table">'+rarities.map(([r,n])=>'<div><b>'+n+'</b><strong>'+esc(String(peculiarityWeights[r]).replace('.',','))+'%</strong></div>').join('')+'</div>'+
+ '<div class="wheel" style="max-width:320px;margin:15px auto"><div class="pointer"></div><div id="peculiarity-wheel-disc" style="aspect-ratio:1;border-radius:50%;border:8px solid #29213b;background:conic-gradient(#687180 0% 50.5%,#16a34a 50.5% 78.5%,#2563eb 78.5% 93.5%,#9333ea 93.5% 99.5%,#d4af37 99.5% 100%);display:grid;place-items:center;transition:transform 2.4s cubic-bezier(.15,.75,.15,1)"><div style="border-radius:50%;padding:18px;background:#15121c;font-weight:800;color:#fff">PECULIARIDAD</div></div></div>'+
+ '<p class="muted" style="text-align:center">Seleccioná un personaje en Mis personajes y tocá «Girar ruleta de peculiaridades».</p>'+
+ '<details><summary>Ver las 77 peculiaridades</summary><div class="info-table">'+peculiaritiesCatalog.map(p=>'<div><b>'+esc(p.nombre)+' <small>('+esc(p.rareza)+')</small></b><span>'+esc(p.efecto)+'</span></div>').join('')+'</div></details></section>';
 }
 function peculiarityOf(ch){return peculiaritiesCatalog.find(p=>p.id===Number(ch?.peculiarityId))}
 function peculiaritySelectHtml(ch){
@@ -1309,6 +1318,7 @@ async function rollCharacterPeculiarity(id){
  if(error){toast(error.message);return}
  const result=peculiaritiesCatalog.find(p=>p.id===Number(data));
  await loadSharedData();
+ const disc=document.getElementById('peculiarity-wheel-disc');if(disc)disc.style.transform='rotate('+(1800+Math.round(Math.random()*360))+'deg)';
  toast('¡Te salió '+(result?.nombre||'una peculiaridad')+'!');
 }
 async function setCharacterPeculiarity(id,value){
@@ -5856,6 +5866,7 @@ function restoreRouletteCanvases(){
 window.addEventListener('load',()=>requestAnimationFrame(restoreRouletteCanvases),{once:true});
 
 loadPeculiaritiesCatalog();
+const rouletteAnchor=document.getElementById('card-passives');if(rouletteAnchor)rouletteAnchor.insertAdjacentHTML('afterend',peculiarityWheelHtml());
 initAuth();
 </script>
 </body>

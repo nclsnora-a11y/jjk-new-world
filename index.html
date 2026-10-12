@@ -4359,7 +4359,7 @@ function combatChatMessageHtml(m){
     :m.mode==='private'?'Privado':m.mode==='gm'?'GM':'Global';
   const time=new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   return '<div class="combat-chat-msg '+(own?'mine':'')+'">'+
-    '<div class="combat-chat-msg-top"><span><b>'+esc(combatChatSenderLabel(m))+'</b><span class="combat-chat-mode mode-'+esc(m.mode)+'">'+esc(modeLabel)+'</span></span><span>'+esc(time)+'</span></div>'+
+    '<div class="combat-chat-msg-top"><span><b>'+esc(combatChatSenderLabel(m))+'</b><span class="combat-chat-mode mode-'+esc(m.mode)+'">'+esc(modeLabel)+'</span></span><span>'+esc(time)+(isAdmin||own?' <button type="button" class="secondary danger" style="padding:2px 7px;font-size:11px" onclick="deleteCombatChatMessage(\''+esc(m.id)+'\')">Borrar</button>':'')+'</span></div>'+
     '<div class="combat-chat-body">'+esc(m.body)+'</div>'+
   '</div>';
 }
@@ -4420,6 +4420,16 @@ async function sendCombatMessage(campaignId){
   });
   if(error){toast(error.message);return}
   if(input)input.value='';
+}
+async function deleteCombatChatMessage(id){
+ const msg=combatMessages.find(m=>m.id===id);
+ if(!msg||!(isAdmin||msg.sender_id===currentUser?.id))return;
+ if(!confirm('¿Borrar este mensaje?'))return;
+ const {data,error}=await sb.from('combat_messages').delete().eq('id',id).select('id');
+ if(error){toast(error.message);return}
+ if(!data?.length){toast('No se pudo borrar el mensaje.');return}
+ combatMessages=combatMessages.filter(m=>m.id!==id);
+ renderCombatChatList();
 }
 async function clearCombatMessages(campaignId){
   if(!isAdmin)return;
@@ -5604,7 +5614,7 @@ async function rpRefresh(quiet=false){
  el.innerHTML=rows.map(m=>'<div class="rp-message-row '+(m.user_id===currentUser.id?'mine':'')+'">'+rpAvatar(rpPortraits[m.character_id])+
  '<div class="rp-msg"><div class="rp-msg-head"><b>'+esc(m.character_name)+'</b>'+
  (m.display_title?' <span class="rp-title">['+esc(m.display_title)+']</span>':'')+
- '<small>'+new Date(m.created_at).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+'</small></div>'+
+ '<small>'+new Date(m.created_at).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+'</small>'+(isAdmin||m.user_id===currentUser.id?' <button type="button" class="secondary danger" style="padding:2px 7px;font-size:11px" onclick="rpDeleteMessage(\''+esc(m.id)+'\','+(rpSubroom?'true':'false')+')">Borrar</button>':'')+'</div>'+
  '<div class="rp-msg-text">'+rpFormatBody(m.body)+'</div></div></div>').join('')||'<p class="muted">Todavía no hay mensajes.</p>';
  if(bottom)el.scrollTop=el.scrollHeight;
 }
@@ -5668,9 +5678,18 @@ async function rpRefreshSubroom(quiet=false){
  el.innerHTML=rows.map(m=>'<div class="rp-message-row '+(m.user_id===currentUser.id?'mine':'')+'">'+rpAvatar(rpPortraits[m.character_id])+
  '<div class="rp-msg"><div class="rp-msg-head"><b>'+esc(m.character_name)+'</b>'+
  (m.display_title?'<span class="rp-title">['+esc(m.display_title)+']</span>':'')+
- '<small>'+new Date(m.created_at).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+'</small></div>'+
+ '<small>'+new Date(m.created_at).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+'</small>'+(isAdmin||m.user_id===currentUser.id?' <button type="button" class="secondary danger" style="padding:2px 7px;font-size:11px" onclick="rpDeleteMessage(\''+esc(m.id)+'\','+(rpSubroom?'true':'false')+')">Borrar</button>':'')+'</div>'+
  '<div class="rp-msg-text">'+rpFormatBody(m.body)+'</div></div></div>').join('')||'<p class="muted">Subsala vacía. Cuando salga el último participante se borrará la conversación.</p>';
  if(bottom)el.scrollTop=el.scrollHeight;
+}
+async function rpDeleteMessage(id,inSubroom){
+ if(!currentUser||!id)return;
+ if(!confirm('¿Borrar este mensaje?'))return;
+ const table=inSubroom?'roleplay_subroom_messages':'roleplay_messages';
+ const {data,error}=await sb.from(table).delete().eq('id',id).select('id');
+ if(error){toast(error.message);return}
+ if(!data?.length){toast('No tenés permiso para borrar este mensaje.');return}
+ await rpRefresh(true);
 }
 async function rpSend(){
  const character=document.getElementById('rp-character')?.value,field=document.getElementById('rp-body'),body=field?.value.trim();

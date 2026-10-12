@@ -3692,6 +3692,14 @@ async function useCombatAwakening(campaignId,characterId,key){
  toast(def.name+' activado. Quedan '+data.remaining+' cargas.');
  await renderCombatCampaign(campaignId);
 }
+async function activateCombatPeculiarity(campaignId,charId){
+ const ch=allCharacters.find(c=>c.id===charId);
+ if(!ch||!(isAdmin||ch.owner_id===currentUser?.id))return;
+ const {data,error}=await sb.rpc('activate_peculiarity',{p_campaign:campaignId,p_character:charId});
+ if(error){toast(error.message);return}
+ toast(data?.message||'Peculiaridad activada');
+ await renderCombatCampaign(campaignId);
+}
 function combatQuickMenuHtml(campaignId,ch,canRoll){
   const actions=Array.isArray(ch.techniqueActions)?ch.techniqueActions:[];
   const allPassives=Array.isArray(ch.passives)?ch.passives:[];

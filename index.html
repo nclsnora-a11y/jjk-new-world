@@ -3388,7 +3388,7 @@ async function renderCombatCampaign(campaignId){
     :'<div class="empty-characters"><b>Elegí la zona donde se está peleando.</b><br><br>Los personajes y mapas se cargarán según esa zona.</div>';
 
   const zoneName=selectedCombatZoneId?(zones.find(z=>z.id===selectedCombatZoneId)?.name||'Zona'):'Sin zona elegida';
-  const initiativeButton=isAdmin&&selectedCombatZoneId?'<button class="initiative-btn" id="roll-initiative-'+campaignId+'" onclick="rollCombatInitiative(\''+campaignId+'\')">🎲 Tirar iniciativa</button>':'';
+  const initiativeButton=isAdmin&&selectedCombatZoneId?'<button class="initiative-btn" id="roll-initiative-'+campaignId+'" onclick="rollCombatInitiative(\''+campaignId+'\')">🎲 Tirar iniciativa</button><button class="secondary" onclick="resetCombatReactions(\''+campaignId+'\')">🔄 Nueva ronda · Recuperar reacciones</button>':'';
   root.innerHTML='<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">'+esc(camp.name)+'</h3><div class="muted">'+esc(zoneName)+' · '+chars.length+' personaje(s)'+(isAdmin?' · controles de GM activos':'')+'</div></div><div class="combat-top-actions">'+initiativeButton+zoneSelector+'</div></div>'+
     '<div class="combat-layout"><div>'+roster+'</div>'+combatRollChatHtml(campaignId)+'</div>'+
     combatMapSectionHtml(campaignId)+combatProgressAdminHtml(campaignId);
@@ -3560,6 +3560,7 @@ function combatCharacterHtml(campaignId,ch){
     '</div>'+
     '<div class="combat-bars" onclick="event.stopPropagation()">'+resource('Vida · DUR×50','hp',s.hp_current,s.hp_max,'❤')+resource('Energía Maldita · EM×50','ce',s.ce_current,s.ce_max,'🔥')+resource('Resistencia · RES×50','du',s.durability_current,s.durability_max,'🫁')+specialBars.map(specialResource).join('')+'</div>'+
     '<div class="combat-stats">'+statsHtml+'</div>'+
+    (canRoll?'<div class="combat-admin-row" onclick="event.stopPropagation()"><button class="secondary" '+(s.reaction_used?'disabled':'onclick="useCombatReaction(\''+campaignId+'\',\''+ch.id+'\')"')+'>'+(s.reaction_used?'Reacción usada · Próxima ronda':'Usar reacción · 1 por ronda')+'</button></div>':'')+
     combatQuickMenuHtml(campaignId,ch,canRoll)+
     (canEditCombat?'<div class="combat-admin-row" onclick="event.stopPropagation()">'+(isAdmin?'<button class="secondary" onclick="toggleCombatVisibility(\''+campaignId+'\',\''+ch.id+'\')">'+(s.visible?'Ocultar para los demás':'Mostrar a todos')+'</button>':'')+'<button onclick="saveCombatCharacterState(\''+campaignId+'\',\''+ch.id+'\')">Guardar barras</button></div>':'')+
   '</article>';
@@ -3568,6 +3569,37 @@ function techniqueStatValue(ch,stat){
   if(stat==='Control EM')return Number(ch.control||0);
   if(!rollableStatNames.includes(stat))return null;
   return Number(ch.currentStats?.[stat]??ch.initialStats?.[stat]??0);
+}
+async function useCombatReaction(campaignId,characterId){
+ const {error}=await sb.rpc('set_combat_reaction',{p_campaign:campaignId,p_character:characterId,p_used:true});
+ if(error){toast(error.message);return}
+ await renderCombatCampaign(campaignId);
+ toast('Reacción usada. Se recupera en la próxima ronda.');
+}
+async function resetCombatReactions(campaignId){
+ if(!isAdmin)return;
+ if(!confirm('¿Terminó la ronda completa? Recuperar las reacciones de todos los participantes.'))return;
+ const {error}=await sb.rpc('reset_combat_reactions',{p_campaign:campaignId});
+ if(error){toast(error.message);return}
+ await renderCombatCampaign(campaignId);
+ toast('Nueva ronda: reacciones recuperadas.');
+}
+async function rollPhysicalDamage(campaignId,charId,stat){
+ const ch=allCharacters.find(c=>c.id===charId);
+ if(!ch||!currentUser||!(isAdmin||ch.owner_id===currentUser.id))return;
+ const value=Number(ch.currentStats?.[stat]??ch.initialStats?.[stat]??0);
+ const expression=physicalDamageTable[value-1];
+ if(!expression){toast('Tabla de daño físico definida para estadísticas de 1 a 12.');return}
+ const parsed=parseCompoundDiceExpression(expression);
+ if(!parsed){toast('Formato de dados no válido.');return}
+ const result=rollCompoundDice(parsed);
+ await animateCompoundDice(result.rolled,ch.sorcererName+' · Daño físico ('+stat+') · '+parsed.expression);
+ const {error}=await sb.from('combat_rolls').insert({
+   campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
+   stat_name:'Daño físico · '+stat,die_result:result.rolled[0]?.value||0,
+   stat_bonus:0,total:result.total,roll_expression:parsed.expression,roll_results:result.rolled
+ });
+ if(error)toast(error.message);
 }
 async function useCombatAwakening(campaignId,characterId,key){
  const ch=allCharacters.find(c=>c.id===characterId);
@@ -3611,6 +3643,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     const remaining=Math.max(0,def.charges-spent);
     return '<button class="combat-technique-btn" type="button" '+(!canRoll||!remaining?'disabled':'onclick="event.stopPropagation();useCombatAwakening(\''+campaignId+'\',\''+ch.id+'\',\''+def.key+'\')"')+'>⚡ '+esc(def.name)+' ('+remaining+'/'+def.charges+')'+(def.cost?' · '+def.cost+' EM':' · Gratis')+'</button>';
   }).join(''):'<span class="muted">No hay despertares equipados.</span>';
+  const physicalDamageActions=canRoll?'<div class="quick-tech-actions"><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\')">🎲 Daño físico · Fuerza</button><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Agilidad\')">🎲 Daño físico · Agilidad</button></div>':'';
   return '<div class="combat-quick-menu hidden" id="quick-menu-'+ch.id+'" onclick="event.stopPropagation()">'+
     '<div class="combat-quick-nav">'+
       '<button class="combat-quick-tab active" id="quick-tab-tech-'+ch.id+'" onclick="showCombatQuickTab(\''+ch.id+'\',\'tech\')"><span class="qicon">✦</span><span>Técnica</span></button>'+
@@ -3621,7 +3654,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
       (ch.techniqueDescription?'<div class="quick-tech-desc">'+esc(ch.techniqueDescription)+'</div>':'<div class="muted">Sin descripción de técnica.</div>')+
       '<div class="quick-tech-list" style="margin-top:8px">'+techniqueButtons+'</div>'+
     '</div>'+
-    '<div class="combat-quick-panel hidden" id="quick-panel-actions-'+ch.id+'"><div class="quick-action-list">'+awakeningActions+'</div></div>'+
+    '<div class="combat-quick-panel hidden" id="quick-panel-actions-'+ch.id+'"><div class="quick-action-list">'+physicalDamageActions+awakeningActions+'</div></div>'+
     '<div class="combat-quick-panel hidden" id="quick-panel-passives-'+ch.id+'"><div class="quick-passive-list">'+passiveHtml+'</div></div>'+
   '</div>';
 }

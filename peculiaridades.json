@@ -1,11 +1,11 @@
 {
   "version": 1,
   "probabilidades": {
-    "comun": 50.5,
+    "comun": 49,
     "poco": 28,
     "rara": 15,
     "epica": 6,
-    "legendaria": 0.5
+    "legendaria": 2
   },
   "peculiaridades": [
     {

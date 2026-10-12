@@ -3173,6 +3173,7 @@ let combatMapChannel=null;
 let combatCustomTokenChannel=null;
 let combatDrawingChannel=null;
 let combatViewChannel=null;
+let combatAutoResistance=false;
 let combatMapDrawings=[];
 let selectedCustomTokenId=null;
 let mapDrawTool='none';
@@ -3201,6 +3202,7 @@ async function loadCombatViewState(campaignId){
   const {data,error}=await sb.from('combat_view_state').select('*').eq('campaign_id',campaignId).limit(1);
   if(error)throw error;
   const row=data?.[0]||null;
+  combatAutoResistance=row?.auto_resistance===true;
   if(row){
     const zones=sharedZones.filter(z=>z.campaign_id===campaignId);
     if(row.active_zone_id&&zones.some(z=>z.id===row.active_zone_id)){
@@ -3232,6 +3234,20 @@ async function saveCombatViewState(campaignId,zoneId,mapId){
   const {error}=await sb.from('combat_view_state').upsert(payload,{onConflict:'campaign_id'});
   if(error)throw error;
 }
+async function toggleCombatAutoResistance(campaignId){
+ if(!isAdmin||!currentUser)return;
+ const next=!combatAutoResistance;
+ const button=document.getElementById('combat-auto-resistance-button');
+ if(button)button.disabled=true;
+ const {error}=await sb.rpc('set_combat_auto_resistance',{p_campaign:campaignId,p_enabled:next});
+ if(button)button.disabled=false;
+ if(error){toast(error.message);return}
+ combatAutoResistance=next;
+ const status=document.getElementById('combat-auto-resistance-status');
+ if(status)status.textContent=next?'ACTIVADA · se descuenta al mover':'DESACTIVADA · movimiento libre';
+ if(button){button.textContent=next?'Desactivar resistencia automática':'Activar resistencia automática';button.setAttribute('aria-pressed',String(next))}
+ toast(next?'Resistencia automática activada.':'Movimiento libre activado: no se consume Resistencia.');
+}
 function subscribeCombatView(campaignId){
   if(combatViewChannel){sb.removeChannel(combatViewChannel);combatViewChannel=null}
   combatViewChannel=sb.channel('combat-view-'+campaignId)
@@ -3240,9 +3256,12 @@ function subscribeCombatView(campaignId){
       if(!row||selectedCombatCampaignId!==campaignId)return;
       const nextZone=row.active_zone_id||null;
       const nextMap=row.active_map_id||null;
+      const nextAutoResistance=row.auto_resistance===true;
+      const autoResistanceChanged=nextAutoResistance!==combatAutoResistance;
+      combatAutoResistance=nextAutoResistance;
       const zoneChanged=nextZone!==selectedCombatZoneId;
       const mapChanged=nextMap!==selectedCombatMapId;
-      if(!zoneChanged&&!mapChanged)return;
+      if(!zoneChanged&&!mapChanged){if(autoResistanceChanged){const el=document.getElementById('combat-auto-resistance-status');if(el)el.textContent=combatAutoResistance?'ACTIVADA · se descuenta al mover':'DESACTIVADA · movimiento libre';const btn=document.getElementById('combat-auto-resistance-button');if(btn){btn.textContent=combatAutoResistance?'Desactivar resistencia automática':'Activar resistencia automática';btn.setAttribute('aria-pressed',String(combatAutoResistance));}}return;}
 
       selectedCombatZoneId=nextZone;
       selectedCombatMapId=nextMap;
@@ -3388,8 +3407,9 @@ async function renderCombatCampaign(campaignId){
     :'<div class="empty-characters"><b>Elegí la zona donde se está peleando.</b><br><br>Los personajes y mapas se cargarán según esa zona.</div>';
 
   const zoneName=selectedCombatZoneId?(zones.find(z=>z.id===selectedCombatZoneId)?.name||'Zona'):'Sin zona elegida';
+  const resistanceToggle='<div class="combat-zone-selector"><label>Gasto de Resistencia por movimiento</label><div id="combat-auto-resistance-status" class="muted">'+(combatAutoResistance?'ACTIVADA · se descuenta al mover':'DESACTIVADA · movimiento libre')+'</div>'+(isAdmin?'<button id="combat-auto-resistance-button" class="secondary" type="button" aria-pressed="'+String(combatAutoResistance)+'" onclick="toggleCombatAutoResistance(\''+campaignId+'\')">'+(combatAutoResistance?'Desactivar resistencia automática':'Activar resistencia automática')+'</button>':'')+'</div>';
   const initiativeButton=isAdmin&&selectedCombatZoneId?'<button class="initiative-btn" id="roll-initiative-'+campaignId+'" onclick="rollCombatInitiative(\''+campaignId+'\')">🎲 Tirar iniciativa</button><button class="secondary" onclick="resetCombatReactions(\''+campaignId+'\')">🔄 Nueva ronda · Recuperar reacciones</button>':'';
-  root.innerHTML='<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">'+esc(camp.name)+'</h3><div class="muted">'+esc(zoneName)+' · '+chars.length+' personaje(s)'+(isAdmin?' · controles de GM activos':'')+'</div></div><div class="combat-top-actions">'+initiativeButton+zoneSelector+'</div></div>'+
+  root.innerHTML='<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">'+esc(camp.name)+'</h3><div class="muted">'+esc(zoneName)+' · '+chars.length+' personaje(s)'+(isAdmin?' · controles de GM activos':'')+'</div></div><div class="combat-top-actions">'+initiativeButton+resistanceToggle+zoneSelector+'</div></div>'+
     '<div class="combat-layout"><div>'+roster+'</div>'+combatRollChatHtml(campaignId)+'</div>'+
     combatMapSectionHtml(campaignId)+combatProgressAdminHtml(campaignId);
 
@@ -3641,7 +3661,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     if(!def)return '';
     const spent=Number(combatState?.awakening_uses?.[def.key]||0);
     const remaining=Math.max(0,def.charges-spent);
-    return '<button class="combat-technique-btn" type="button" '+(!canRoll||!remaining?'disabled':'onclick="event.stopPropagation();useCombatAwakening(\''+campaignId+'\',\''+ch.id+'\',\''+def.key+'\')"')+'>⚡ '+esc(def.name)+' ('+remaining+'/'+def.charges+')'+(def.cost?' · '+def.cost+' EM':' · Gratis')+'</button>';
+    return '<div class="quick-passive-item"><button class="combat-technique-btn" type="button" '+(!canRoll||!remaining?'disabled':'onclick="event.stopPropagation();useCombatAwakening(\''+campaignId+'\',\''+ch.id+'\',\''+def.key+'\')"')+'>⚡ '+esc(def.name)+' ('+remaining+'/'+def.charges+')'+(def.cost?' · '+def.cost+' EM':' · Gratis')+'</button><div style="margin-top:6px;font-size:12px;line-height:1.5">'+esc(def.effect)+'</div></div>';
   }).join(''):'<span class="muted">No hay despertares equipados.</span>';
   const physicalDamageActions=canRoll?'<div class="quick-tech-actions"><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\')">🎲 Daño físico · Fuerza</button></div>':'';
   return '<div class="combat-quick-menu hidden" id="quick-menu-'+ch.id+'" onclick="event.stopPropagation()">'+
@@ -5439,7 +5459,7 @@ function bindCombatMapInteractions(map){
             if(label&&state)label.textContent=state.durability_current+' / '+state.durability_max;
             const bar=document.getElementById('du-bar-'+tok.character_id);
             if(bar&&state)bar.style.width=Math.max(0,100*state.durability_current/Math.max(1,state.durability_max))+'%';
-            toast(Number(spent).toFixed(2)+' de Resistencia consumida.');
+            if(Number(spent)>0)toast(Number(spent).toFixed(2)+' de Resistencia consumida.');
           }
         }
         hideMeasureLater(line,label);

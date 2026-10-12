@@ -3569,6 +3569,16 @@ function techniqueStatValue(ch,stat){
   if(!rollableStatNames.includes(stat))return null;
   return Number(ch.currentStats?.[stat]??ch.initialStats?.[stat]??0);
 }
+async function useCombatAwakening(campaignId,characterId,key){
+ const ch=allCharacters.find(c=>c.id===characterId);
+ const def=awakeningDefinitions.find(d=>d.key===key);
+ if(!ch||!def||!(isAdmin||ch.owner_id===currentUser?.id))return;
+ const {data,error}=await sb.rpc('use_combat_awakening',{p_campaign:campaignId,p_character:characterId,p_key:key});
+ if(error){toast(error.message);return}
+ await loadCombatStates(campaignId);
+ toast(def.name+' activado. Quedan '+data.remaining+' cargas.');
+ await renderCombatCampaign(campaignId);
+}
 function combatQuickMenuHtml(campaignId,ch,canRoll){
   const actions=Array.isArray(ch.techniqueActions)?ch.techniqueActions:[];
   const allPassives=Array.isArray(ch.passives)?ch.passives:[];
@@ -3593,7 +3603,14 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     '</details>';
   }).join(''):'<span class="muted">Sin usos de técnica configurados.</span>';
   const passiveHtml=passives.length?passives.map(p=>'<div class="quick-passive-item"><b>'+esc((p.category?p.category+' — ':'')+(p.name||'Pasiva'))+'</b>'+(p.description?'<div>'+esc(p.description)+'</div>':'')+'</div>').join(''):'<span class="muted">Sin pasivas.</span>';
-  const awakeningActions=awakenings.length?awakenings.map(p=>'<button class="combat-technique-btn" type="button" onclick="event.stopPropagation();toast(\''+esc((p.name||'Despertar')+': '+(p.description||''))+'\')">⚡ '+esc(p.name||'Despertar')+'</button>').join(''):'<span class="muted">No hay despertares equipados.</span>';
+  const combatState=combatStates.find(st=>st.character_id===ch.id&&st.campaign_id===campaignId);
+  const awakeningActions=awakenings.length?awakenings.map(p=>{
+    const def=awakeningDefinitions.find(d=>d.key===p.awakeningKey||d.name===p.name);
+    if(!def)return '';
+    const spent=Number(combatState?.awakening_uses?.[def.key]||0);
+    const remaining=Math.max(0,def.charges-spent);
+    return '<button class="combat-technique-btn" type="button" '+(!canRoll||!remaining?'disabled':'onclick="event.stopPropagation();useCombatAwakening(\''+campaignId+'\',\''+ch.id+'\',\''+def.key+'\')"')+'>⚡ '+esc(def.name)+' ('+remaining+'/'+def.charges+')'+(def.cost?' · '+def.cost+' EM':' · Gratis')+'</button>';
+  }).join(''):'<span class="muted">No hay despertares equipados.</span>';
   return '<div class="combat-quick-menu hidden" id="quick-menu-'+ch.id+'" onclick="event.stopPropagation()">'+
     '<div class="combat-quick-nav">'+
       '<button class="combat-quick-tab active" id="quick-tab-tech-'+ch.id+'" onclick="showCombatQuickTab(\''+ch.id+'\',\'tech\')"><span class="qicon">✦</span><span>Técnica</span></button>'+

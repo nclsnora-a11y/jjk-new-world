@@ -1300,7 +1300,8 @@ function peculiaritySelectHtml(ch){
   return '<optgroup label="'+label+'">'+peculiaritiesCatalog.filter(p=>p.rareza===r).map(p=>'<option value="'+p.id+'" '+(p.id===current?'selected':'')+'>'+esc(p.nombre)+'</option>').join('')+'</optgroup>';
  }).join('');
  const selected=peculiarityOf(ch);
- return '<div style="margin:12px 0;padding:12px;border:1px solid #52446a;border-radius:10px"><b>Peculiaridad</b><div style="margin:8px 0"><select style="width:100%" aria-label="Peculiaridad del personaje" onchange="setCharacterPeculiarity(\''+ch.id+'\',this.value)"><option value="" '+(!current?'selected':'')+'>Sin peculiaridad</option>'+options+'</select></div><button type="button" class="secondary" onclick="rollCharacterPeculiarity(\''+ch.id+'\')">🎲 Girar ruleta de peculiaridades</button><div style="margin-top:8px"><small>'+esc(selected?.efecto||'Elegí una peculiaridad para este personaje.')+'</small></div></div>';
+ if(current&&!isAdmin)return '<div style="margin:12px 0;padding:12px;border:1px solid #52446a;border-radius:10px"><b>✨ Peculiaridad: '+esc(selected?.nombre||'Sin identificar')+'</b><div style="margin-top:8px"><small>'+esc(selected?.efecto||'')+'</small></div></div>';
+ return '<div style="margin:12px 0;padding:12px;border:1px solid #52446a;border-radius:10px"><b>Peculiaridad</b><div style="margin:8px 0">'+(isAdmin?'<select style="width:100%" aria-label="Peculiaridad del personaje" onchange="setCharacterPeculiarity(\''+ch.id+'\',this.value)"><option value="" '+(!current?'selected':'')+'>Sin peculiaridad</option>'+options+'</select>':'')+'</div><button type="button" class="secondary" onclick="rollCharacterPeculiarity(\''+ch.id+'\')">🎲 Girar ruleta de peculiaridades</button><div style="margin-top:8px"><small>'+esc(selected?.efecto||'Elegí una peculiaridad para este personaje.')+'</small></div></div>';
 }
 async function rollCharacterPeculiarity(id){
  if(!peculiaritiesCatalog.length)return;
@@ -1311,7 +1312,8 @@ async function rollCharacterPeculiarity(id){
  const pool=peculiaritiesCatalog.filter(p=>p.rareza===rarity);
  if(!pool.length)return;
  const choice=pool[Math.floor(Math.random()*pool.length)];
- if(!confirm('Te salió '+choice.nombre+' ('+rarity+'). ¿Asignarla a este personaje?'))return;
+ if(!isAdmin&&savedCharacters.find(ch=>ch.id===id)?.peculiarityId){toast('Este personaje ya tiene una peculiaridad.');return}
+ toast('Resultado: '+choice.nombre+' ('+rarity+').');
  await setCharacterPeculiarity(id,String(choice.id));
 }
 async function setCharacterPeculiarity(id,value){

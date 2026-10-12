@@ -5481,22 +5481,21 @@ let rpSubroom=null,rpSubChannel=null;
 function rpSubDisconnect(){if(rpSubChannel){sb.removeChannel(rpSubChannel);rpSubChannel=null}}
 function rpFormatBody(body){
  const input=String(body||'').trim();
- // El código de inserción de Tenor se representa como contenido, nunca se ejecuta.
- const embedded=input.match(/data-postid\s*=\s*["'](\d{5,25})["']/i);
- const tenorLink=input.match(/https?:\/\/(?:www\.)?tenor\.com\/(?:view\/[^\s"'<>]*?-gif-|embed\/)(\d{5,25})/i);
- const id=embedded?.[1]||tenorLink?.[1];
- if(id){
-   return '<iframe class="rp-tenor-frame" src="https://tenor.com/embed/'+id+'" title="GIF de Tenor" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="no-referrer" allowfullscreen></iframe>'+
-   '<a class="rp-gif-link" target="_blank" rel="noopener noreferrer" href="https://tenor.com/embed/'+id+'">Abrir GIF en Tenor</a>';
+ // El texto se conserva antes, entre y después de los GIF. Nunca ejecutamos HTML del usuario.
+ const tenor=id=>'<div class="rp-gif-container"><iframe class="rp-tenor-frame" src="https://tenor.com/embed/'+id+'" title="GIF de Tenor" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="no-referrer"></iframe><a class="rp-gif-link" target="_blank" rel="noopener noreferrer" href="https://tenor.com/embed/'+id+'">Abrir GIF en Tenor</a></div>';
+ const direct=url=>'<div class="rp-gif-container"><img class="rp-gif" src="'+esc(url)+'" alt="GIF enviado" loading="lazy" onerror="this.style.display=\'none\'"><a class="rp-gif-link" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Abrir GIF</a></div>';
+ const regex=/(<div\b[^>]*\bdata-postid\s*=\s*["']\d{5,25}["'][\s\S]*?<\/div>(?:\s*<script\b[\s\S]*?<\/script>)?|https?:\/\/(?:www\.)?tenor\.com\/(?:view\/[^\s"'<>]*?-gif-|embed\/)\d{5,25}[^\s<>"']*|https?:\/\/[^\s<>"']+\.gif(?:\?[^\s<>"']*)?)/gi;
+ let result='',offset=0,match;
+ while((match=regex.exec(input))!==null){
+   result+=esc(input.slice(offset,match.index));
+   const part=match[0];
+   const post=part.match(/data-postid\s*=\s*["'](\d{5,25})["']/i);
+   const link=part.match(/tenor\.com\/(?:view\/[^\s"'<>]*?-gif-|embed\/)(\d{5,25})/i);
+   const id=post?.[1]||link?.[1];
+   result+=id?tenor(id):direct(part);
+   offset=regex.lastIndex;
  }
- const parts=input.split(/(https?:\/\/[^\s<>"']+\.gif(?:\?[^\s<>"']*)?)/gi);
- return parts.map(part=>{
-   if(/^https?:\/\//i.test(part)&&/\.gif(?:\?|$)/i.test(part)){
-     const url=esc(part);
-     return '<div class="rp-gif-container"><img class="rp-gif" src="'+url+'" alt="GIF enviado" loading="lazy" onerror="this.style.display=\'none\'"><a class="rp-gif-link" href="'+url+'" target="_blank" rel="noopener noreferrer">Abrir GIF</a></div>';
-   }
-   return esc(part);
- }).join('');
+ return result+esc(input.slice(offset));
 }
 function rpDisconnect(){rpSubDisconnect();if(rpChannel){sb.removeChannel(rpChannel);rpChannel=null}}
 function rpSubscribe(id){rpDisconnect();rpChannel=sb.channel('rp-chat-'+id+'-'+currentUser.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'roleplay_messages',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpRefresh(true)}).on('postgres_changes',{event:'*',schema:'public',table:'roleplay_members',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpLoadRoster()}).on('postgres_changes',{event:'*',schema:'public',table:'roleplay_subrooms',filter:'room_id=eq.'+id},()=>{if(rpActive===id)rpListSubrooms()}).on('postgres_changes',{event:'*',schema:'public',table:'roleplay_subroom_members'},()=>{if(rpActive===id)rpListSubrooms()}).subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Roleplay realtime:',status)})}

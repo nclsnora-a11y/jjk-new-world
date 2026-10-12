@@ -2822,7 +2822,7 @@ function gmCharacterCreationHtml(){
  '<label>Bando<select id="gm-char-side"><option value="hechicero">Hechicero</option><option value="brujo">Brujo</option><option value="maldicion">Maldición</option></select></label>'+
  '<label>Grado<select id="gm-char-grade">'+gradeLadder.map(g=>'<option value="'+esc(g.name)+'">'+esc(g.name)+'</option>').join('')+'</select></label>'+
  '<label>Tipo de técnica<input id="gm-char-technique" placeholder="Ej: Innata" value="Innato"></label>'+
- '<label>Control de EM<input id="gm-char-control" type="number" min="0" value="0"></label></div>'+
+ '<label>Control de EM<input id="gm-char-control" type="number" min="0" value="0"></label><label><span><input id="gm-char-npc" type="checkbox" style="width:auto;display:inline-block;margin-right:8px">Es NPC</span></label></div>'+
  '<div class="gm-character-stats">'+statNames.map((n,i)=>'<label>'+esc(n)+'<input id="gm-char-stat-'+i+'" type="number" min="0" step="1" value="0"></label>').join('')+'</div>'+
  '<button type="button" onclick="gmCreateCharacter()">Guardar personaje GM</button></details>';
 }
@@ -2832,7 +2832,8 @@ async function gmCreateCharacter(){
  const stats={};for(let i=0;i<statNames.length;i++){const value=Number(document.getElementById('gm-char-stat-'+i)?.value);if(!Number.isSafeInteger(value)||value<0||value>10000){toast('Revisá la estadística '+statNames[i]);return}stats[statNames[i]]=value}
  const control=Number(document.getElementById('gm-char-control')?.value);
  if(!name||!technique||!Number.isSafeInteger(control)||control<0){toast('Completá nombre, tipo de técnica y control de EM.');return}
- const {error}=await sb.rpc('gm_create_character',{p_name:name,p_side:side,p_grade:grade,p_technique:technique,p_control:control,p_stats:stats});
+ const isNpc=!!document.getElementById('gm-char-npc')?.checked;
+ const {error}=await sb.rpc(isNpc?'gm_create_npc':'gm_create_character',{p_name:name,p_side:side,p_grade:grade,p_technique:technique,p_control:control,p_stats:stats});
  if(error){toast(error.message);return}
  await loadSharedData();toast('Personaje GM creado. Ya podés editar sus estadísticas desde Mis personajes.');
 }

@@ -1315,7 +1315,7 @@ function characterCard(ch){
 }
 function renderCharacters(){
   const root=document.getElementById('characters-list');
-  const gmForm=isAdmin?gmCharacterCreationHtml():'';
+  const gmForm=(typeof isAdmin!=='undefined'&&isAdmin&&typeof gmCharacterCreationHtml==='function')?gmCharacterCreationHtml():'';
   if(!savedCharacters.length){root.innerHTML=gmForm+'<div class="empty-characters"><b>No hay personajes guardados todavía.</b><br><br>Creá uno en Ruletas o, si sos GM, utilizá el formulario de creación manual.</div>';return}
   root.innerHTML=gmForm+'<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>';
 }

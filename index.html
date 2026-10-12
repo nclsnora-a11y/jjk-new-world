@@ -1317,9 +1317,15 @@ function peculiarityWheelHtml(){
  return '<section class="card" id="card-peculiarities"><h2>Ruleta de Peculiaridades</h2>'+
  '<p class="muted">77 peculiaridades. Cada número corresponde a una peculiaridad; el resultado revela su nombre y efecto. Para asignarla, girá la ruleta desde Mis personajes.</p>'+
  '<div class="wheel"><div class="pointer"></div><canvas id="canvas-peculiarities" width="700" height="700"></canvas></div>'+
+ '<div class="actions"><select id="peculiarity-spin-character" aria-label="Personaje para la peculiaridad"><option value="">Elegí un personaje</option>'+savedCharacters.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+'</option>').join('')+'</select><button type="button" onclick="spinPeculiarityFromWheel()">Girar ruleta</button></div>'+
  '<div class="result" id="result-peculiarities">Resultado: —</div>'+
  '<div class="technique-detail" id="peculiarity-description"><div class="pd-cat">Peculiaridad</div><div class="pd-name">—</div><div class="pd-desc">Girá la ruleta desde la ficha de un personaje.</div></div>'+
  '<div class="legend"><span>Común</span><span>50,5%</span><span>Poco común</span><span>28%</span><span>Rara</span><span>15%</span><span>Épica</span><span>6%</span><span>Legendaria</span><span>0,5%</span></div></section>';
+}
+function spinPeculiarityFromWheel(){
+ const id=document.getElementById('peculiarity-spin-character')?.value;
+ if(!id){toast('Elegí un personaje para girar.');return}
+ rollCharacterPeculiarity(id);
 }
 function showPeculiarityResult(p){
  if(!p)return;
@@ -1400,6 +1406,7 @@ function renderCharacters(){
   const gmForm=(typeof isAdmin!=='undefined'&&isAdmin&&typeof gmCharacterCreationHtml==='function')?gmCharacterCreationHtml():'';
   if(!savedCharacters.length){root.innerHTML=gmForm+'<div class="empty-characters"><b>No hay personajes guardados todavía.</b><br><br>Creá uno en Ruletas o, si sos GM, utilizá el formulario de creación manual.</div>';return}
   root.innerHTML=gmForm+'<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>';
+  const w=document.getElementById('card-peculiarities');if(w){const existing=document.getElementById('peculiarity-spin-character')?.value;w.outerHTML=peculiarityWheelHtml();drawPeculiarityWheel();if(existing&&document.getElementById('peculiarity-spin-character'))document.getElementById('peculiarity-spin-character').value=existing;}
 }
 function optionList(values,current){
   return values.map(v=>'<option '+(v===current?'selected':'')+'>'+esc(v)+'</option>').join('');

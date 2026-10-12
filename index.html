@@ -1290,16 +1290,55 @@ async function loadPeculiaritiesCatalog(){
   if(currentUser&&typeof renderCharacters==='function')renderCharacters();
   if(typeof renderInformation==='function')renderInformation();
   const wheel=document.getElementById('card-peculiarities');if(wheel)wheel.outerHTML=peculiarityWheelHtml();
+  drawPeculiarityWheel();
  }catch(e){console.error('Catálogo de peculiaridades',e)}
 }
-function peculiarityWheelHtml(){
- const rarities=[['comun','Común'],['poco','Poco común'],['rara','Rara'],['epica','Épica'],['legendaria','Legendaria']];
- return '<section class="card" id="card-peculiarities"><h2>Ruleta de Peculiaridades</h2><p class="muted">77 peculiaridades. Girá desde Mis personajes para asignar una al personaje guardado. Las probabilidades se calculan en el servidor.</p>'+
- '<div class="info-table">'+rarities.map(([r,n])=>'<div><b>'+n+'</b><strong>'+esc(String(peculiarityWeights[r]).replace('.',','))+'%</strong></div>').join('')+'</div>'+
- '<div class="wheel" style="max-width:320px;margin:15px auto"><div class="pointer"></div><div id="peculiarity-wheel-disc" style="aspect-ratio:1;border-radius:50%;border:8px solid #29213b;background:conic-gradient(#687180 0% 50.5%,#16a34a 50.5% 78.5%,#2563eb 78.5% 93.5%,#9333ea 93.5% 99.5%,#d4af37 99.5% 100%);display:grid;place-items:center;transition:transform 2.4s cubic-bezier(.15,.75,.15,1)"><div style="border-radius:50%;padding:18px;background:#15121c;font-weight:800;color:#fff">PECULIARIDAD</div></div></div>'+
- '<p class="muted" style="text-align:center">Seleccioná un personaje en Mis personajes y tocá «Girar ruleta de peculiaridades».</p>'+
- '<details><summary>Ver las 77 peculiaridades</summary><div class="info-table">'+peculiaritiesCatalog.map(p=>'<div><b>'+esc(p.nombre)+' <small>('+esc(p.rareza)+')</small></b><span>'+esc(p.efecto)+'</span></div>').join('')+'</div></details></section>';
+let peculiarityWheelRotation=0;
+function peculiarityWheelItems(){
+ const order=['comun','poco','rara','epica','legendaria'];
+ return order.flatMap(r=>{const entries=peculiaritiesCatalog.filter(p=>p.rareza===r);return entries.map(p=>({...p,weight:Number(peculiarityWeights[r]||0)/Math.max(1,entries.length)}))});
 }
+function drawPeculiarityWheel(){
+ const canvas=document.getElementById('canvas-peculiarities');if(!canvas)return;
+ const ctx=canvas.getContext('2d'),items=peculiarityWheelItems();
+ ctx.clearRect(0,0,700,700);ctx.save();ctx.translate(350,350);ctx.rotate(peculiarityWheelRotation*Math.PI/180);
+ let a=-Math.PI/2;
+ const palette={comun:'#566679',poco:'#28744c',rara:'#2766a2',epica:'#8151ad',legendaria:'#ae883b'};
+ for(const p of items){
+  const arc=Number(p.weight)/100*Math.PI*2;
+  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,300,a,a+arc);ctx.closePath();
+  ctx.fillStyle=palette[p.rareza];ctx.fill();ctx.lineWidth=1;ctx.strokeStyle='#eee';ctx.stroke();
+  if(arc>.038){ctx.save();ctx.rotate(a+arc/2);ctx.fillStyle='#fff';ctx.font='bold 16px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(p.id),225,0);ctx.restore();}
+  a+=arc;
+ }
+ ctx.beginPath();ctx.arc(0,0,40,0,2*Math.PI);ctx.fillStyle='#111827';ctx.fill();ctx.restore();
+}
+function peculiarityWheelHtml(){
+ return '<section class="card" id="card-peculiarities"><h2>Ruleta de Peculiaridades</h2>'+
+ '<p class="muted">77 peculiaridades. Cada número corresponde a una peculiaridad; el resultado revela su nombre y efecto. Para asignarla, girá la ruleta desde Mis personajes.</p>'+
+ '<div class="wheel"><div class="pointer"></div><canvas id="canvas-peculiarities" width="700" height="700"></canvas></div>'+
+ '<div class="result" id="result-peculiarities">Resultado: —</div>'+
+ '<div class="technique-detail" id="peculiarity-description"><div class="pd-cat">Peculiaridad</div><div class="pd-name">—</div><div class="pd-desc">Girá la ruleta desde la ficha de un personaje.</div></div>'+
+ '<div class="legend"><span>Común</span><span>50,5%</span><span>Poco común</span><span>28%</span><span>Rara</span><span>15%</span><span>Épica</span><span>6%</span><span>Legendaria</span><span>0,5%</span></div></section>';
+}
+function showPeculiarityResult(p){
+ if(!p)return;
+ const title=document.getElementById('result-peculiarities');if(title)title.textContent='Resultado: '+p.nombre;
+ const detail=document.getElementById('peculiarity-description');
+ if(detail){detail.querySelector('.pd-cat').textContent=p.rareza[0].toUpperCase()+p.rareza.slice(1);detail.querySelector('.pd-name').textContent=p.nombre;detail.querySelector('.pd-desc').textContent=p.efecto;}
+ const items=peculiarityWheelItems();const idx=items.findIndex(item=>item.id===p.id);
+ if(idx>=0){
+  const before=items.slice(0,idx).reduce((a,x)=>a+x.weight,0);
+  const center=before+pesoOrZero(items[idx].weight)/2;
+  const target=-(center/100*360);
+  const extra=1800+((target-peculiarityWheelRotation)%360+360)%360;
+  const from=peculiarityWheelRotation,to=from+extra;
+  const begin=performance.now();
+  function animate(now){const t=Math.min(1,(now-begin)/3000);peculiarityWheelRotation=from+(to-from)*(1-Math.pow(1-t,3));drawPeculiarityWheel();if(t<1)requestAnimationFrame(animate);}
+  requestAnimationFrame(animate);
+ }
+}
+function pesoOrZero(v){return Number(v)||0}
 function peculiarityOf(ch){return peculiaritiesCatalog.find(p=>p.id===Number(ch?.peculiarityId))}
 function peculiaritySelectHtml(ch){
  if(!peculiaritiesCatalog.length)return '<div class="muted">Cargando peculiaridades...</div>';
@@ -1318,7 +1357,7 @@ async function rollCharacterPeculiarity(id){
  if(error){toast(error.message);return}
  const result=peculiaritiesCatalog.find(p=>p.id===Number(data));
  await loadSharedData();
- const disc=document.getElementById('peculiarity-wheel-disc');if(disc)disc.style.transform='rotate('+(1800+Math.round(Math.random()*360))+'deg)';
+ showPeculiarityResult(result);
  toast('¡Te salió '+(result?.nombre||'una peculiaridad')+'!');
 }
 async function setCharacterPeculiarity(id,value){
@@ -5867,6 +5906,7 @@ window.addEventListener('load',()=>requestAnimationFrame(restoreRouletteCanvases
 
 loadPeculiaritiesCatalog();
 const rouletteAnchor=document.getElementById('card-passives');if(rouletteAnchor)rouletteAnchor.insertAdjacentHTML('afterend',peculiarityWheelHtml());
+drawPeculiarityWheel();
 initAuth();
 </script>
 </body>

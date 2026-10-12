@@ -1291,6 +1291,7 @@ async function loadPeculiaritiesCatalog(){
   if(typeof renderInformation==='function')renderInformation();
   const wheel=document.getElementById('card-peculiarities');if(wheel)wheel.outerHTML=peculiarityWheelHtml();
   drawPeculiarityWheel();
+  refreshPeculiarityCharacterOptions();
  }catch(e){console.error('Catálogo de peculiaridades',e)}
 }
 let peculiarityWheelRotation=0;
@@ -1317,10 +1318,20 @@ function peculiarityWheelHtml(){
  return '<section class="card" id="card-peculiarities"><h2>Ruleta de Peculiaridades</h2>'+
  '<p class="muted">77 peculiaridades. Cada número corresponde a una peculiaridad; el resultado revela su nombre y efecto. Para asignarla, girá la ruleta desde Mis personajes.</p>'+
  '<div class="wheel"><div class="pointer"></div><canvas id="canvas-peculiarities" width="700" height="700"></canvas></div>'+
- '<div class="actions"><select id="peculiarity-spin-character" aria-label="Personaje para la peculiaridad"><option value="">Elegí un personaje</option>'+savedCharacters.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+'</option>').join('')+'</select><button type="button" onclick="spinPeculiarityFromWheel()">Girar ruleta</button></div>'+
+ '<div class="actions"><select id="peculiarity-spin-character" aria-label="Personaje para la peculiaridad"><option value="">Elegí un personaje</option>'+savedCharacters.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+'</option>').join('')+'</select><button id="peculiarity-spin-button" type="button" onclick="spinPeculiarityFromWheel()">Girar ruleta</button></div>'+
  '<div class="result" id="result-peculiarities">Resultado: —</div>'+
  '<div class="technique-detail" id="peculiarity-description"><div class="pd-cat">Peculiaridad</div><div class="pd-name">—</div><div class="pd-desc">Girá la ruleta desde la ficha de un personaje.</div></div>'+
  '<div class="legend"><span>Común</span><span>50,5%</span><span>Poco común</span><span>28%</span><span>Rara</span><span>15%</span><span>Épica</span><span>6%</span><span>Legendaria</span><span>0,5%</span></div></section>';
+}
+function refreshPeculiarityCharacterOptions(){
+ const select=document.getElementById('peculiarity-spin-character');
+ if(!select)return;
+ const previous=select.value;
+ const eligible=(savedCharacters||[]).filter(ch=>!ch.isNpc);
+ select.innerHTML='<option value="">Elegí un personaje</option>'+eligible.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+(ch.peculiarityId?' · Ya tiene peculiaridad':'')+'</option>').join('');
+ if(eligible.some(ch=>String(ch.id)===previous))select.value=previous;
+ const spinButton=document.getElementById('peculiarity-spin-button');
+ if(spinButton)spinButton.disabled=!eligible.length;
 }
 function spinPeculiarityFromWheel(){
  const id=document.getElementById('peculiarity-spin-character')?.value;
@@ -2898,6 +2909,7 @@ saveCampaigns=function(){};
 
 // Shared character rendering
 renderCharacters=function(){
+  refreshPeculiarityCharacterOptions();
   const root=document.getElementById('characters-list');if(!root)return;
   if(!currentUser){root.innerHTML='<div class="auth-required"><b>Iniciá sesión para ver Mis personajes.</b><br><br>Así tus personajes aparecen también en celular, PC y otros dispositivos.</div>';return}
   const gmForm=isAdmin?gmCharacterCreationHtml():'';
@@ -5914,6 +5926,7 @@ window.addEventListener('load',()=>requestAnimationFrame(restoreRouletteCanvases
 loadPeculiaritiesCatalog();
 const rouletteAnchor=document.getElementById('card-passives');if(rouletteAnchor)rouletteAnchor.insertAdjacentHTML('afterend',peculiarityWheelHtml());
 drawPeculiarityWheel();
+refreshPeculiarityCharacterOptions();
 initAuth();
 </script>
 </body>

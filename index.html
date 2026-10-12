@@ -614,7 +614,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
 <span>Grado 2 · +3 en 2 estadísticas</span><span>8%</span>
 <span>Semigrado 1 · +3 en 3 estadísticas</span><span>5%</span>
 <span>Grado 1 · +4 en 3 estadísticas</span><span>4%</span>
-<span>Grado Especial · +5 en 4 estadísticas</span><span>2%</span>
+<span>Grado Especial · +5 en 4 estadísticas</span><span>0,5%</span>
 </div>
 <h3>Historial</h3><div class="chips" id="history-grade"></div>
 </section>
@@ -787,7 +787,7 @@ const configs={
 stats:{values:['1','2','3','4','5'],weights:[20,20,20,20,20],canvas:'canvas-stats',spin:'spin-stats',clear:'clear-stats',result:'result-stats',history:'history-stats'},
 type:{values:['Potenciación','Invocación','Creación','Control','Soporte','Marca','Técnica Existente','Restricción Celestial','Extraordinaria'],weights:[94/7,94/7,94/7,94/7,94/7,94/7,94/7,3,3],canvas:'canvas-type',spin:'spin-type',clear:'clear-type',result:'result-type',history:'history-type'},
 technique:{values:["Ilimitado","Santuario","Copia","Diez Sombras","Transfiguración Ociosa","Manipulación de Espíritus Malditos","Furia Estelar","Extinción de Técnicas","Construcción","Apuesta Mortal Ociosa","Sentencia Mortal","Manipulación del Cielo","Formación de Hielo","Manipulación de Sangre","Hechicería de Proyección","Habla Maldita","Cambio de Posición","Llamas del Desastre","Mareas del Desastre","Manipulación de Cuervos","Manipulación de Marionetas","Recreación Contractual","Sistema Antigravedad","Ámbar Bestial Mítico","Bastón de Guerra G","Descarga de Energía Maldita","Encuentro Amoroso","Invocación de Bestias Auspiciosas","Área Prohibida Individual","Canción de Oración","Técnica de Proporción","Técnica de Muñeca de Paja","Plantas del Desastre","Técnica de Putrefacción","Técnica de Séance / Sesión Espiritual","Inversión","Técnica de Clonación","Captura del Corazón","Manipulación de Herramientas","Milagros","Valor Ardiente"],weights:[0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,0.2727272727,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,1.4210526316,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545,5.4545454545],canvas:'canvas-technique',spin:'spin-technique',clear:'clear-technique',result:'result-technique',history:'history-technique'},
-grade:{values:['Grado 4','Semigrado 3','Grado 3','Semigrado 2','Grado 2','Semigrado 1','Grado 1','Grado Especial'],weights:[32,22,16,11,8,5,4,2],canvas:'canvas-grade',spin:'spin-grade',clear:'clear-grade',result:'result-grade',history:'history-grade'},
+grade:{values:['Grado 4','Semigrado 3','Grado 3','Semigrado 2','Grado 2','Semigrado 1','Grado 1','Grado Especial'],weights:[33.5,22,16,11,8,5,4,0.5],canvas:'canvas-grade',spin:'spin-grade',clear:'clear-grade',result:'result-grade',history:'history-grade'},
 passives:{values:Array.from({length:140},(_,i)=>String(i+1)),weights:Array(140).fill(1),canvas:'canvas-passives',spin:'spin-passives',clear:'clear-passives',result:'result-passives',history:'history-passives'}
 };
 const states={stats:{rot:0,busy:false,h:[]},type:{rot:0,busy:false,h:[]},technique:{rot:0,busy:false,h:[]},grade:{rot:0,busy:false,h:[]},passives:{rot:0,busy:false,h:[]}};
@@ -1016,33 +1016,21 @@ function infoTypesHtml(){
 }
 function infoGradesHtml(){
   const grades=[
-    ['Grado 4','+1 en 1 estadística a elección.','32%'],
+    ['Grado 4','+1 en 1 estadística a elección.','33,5%'],
     ['Semigrado 3','+1 en 2 estadísticas a elección.','22%'],
     ['Grado 3','+2 en 1 estadística a elección.','16%'],
     ['Semigrado 2','+2 en 2 estadísticas a elección.','11%'],
     ['Grado 2','+3 en 2 estadísticas a elección.','8%'],
     ['Semigrado 1','+3 en 3 estadísticas a elección.','5%'],
     ['Grado 1','+4 en 3 estadísticas a elección.','4%'],
-    ['Grado Especial','+5 en 4 estadísticas a elección.','2%']
+    ['Grado Especial','+5 en 4 estadísticas a elección.','0,5%']
   ];
   return '<p class="info-lead">El grado define una bonificación inicial de estadísticas. El jugador elige qué estadísticas reciben la mejora indicada.</p>'+
     '<div class="info-table">'+grades.map(g=>'<div><b>'+esc(g[0])+'</b><span>'+esc(g[1])+'</span><strong>'+esc(g[2])+'</strong></div>').join('')+'</div>';
 }
 function infoAwakeningsHtml(){
-  const rows=[
-    ['Fuerza','15 EM','Ventaja en la tirada de ataque físico.'],
-    ['Agilidad','15 EM','Ventaja en la tirada de esquiva/defensa con Agilidad.'],
-    ['Velocidad','20 EM','Efecto especial de Velocidad.'],
-    ['Inteligencia','15 EM','Podés utilizar Inteligencia en una tirada que normalmente correspondería a otra estadística.'],
-    ['Barrera','—','Recursos avanzados para defenderse de Expansiones de Dominio y técnicas que afectan el espacio.'],
-    ['Control de Energía Maldita','20 EM','Aumentar rango o tamaño de una técnica.'],
-    ['Control de Energía Maldita','25 EM','Ventaja en la tirada de ataque de una técnica para determinar si entra.'],
-    ['Durabilidad','20 EM','Reducir a la mitad el daño recibido, antes de la tirada de daño.'],
-    ['Resistencia','Cada 2 turnos','Un movimiento gratuito.'],
-    ['Energía Maldita','Cada 3 turnos','Recuperás 20 EM automáticamente.']
-  ];
-  return '<p class="info-lead">Los despertares se desbloquean al llegar a <b>7 puntos en la estadística correspondiente</b>.</p>'+
-    '<div class="info-table">'+rows.map(r=>'<div><b>'+esc(r[0])+'</b><span><strong>'+esc(r[1])+'</strong> · '+esc(r[2])+'</span></div>').join('')+'</div>';
+ return '<p class="info-lead">Los despertares se desbloquean al llegar a <b>7 puntos en la estadística correspondiente</b>. Cada uno tiene <b>3 cargas por combate</b>, excepto Energía Maldita (2) y Barreras (1). Las cargas gastadas no se recuperan durante ese combate.</p>'+
+ '<div class="info-table">'+awakeningDefinitions.map(d=>'<div><b>'+esc(d.name.replace('Despertar de ',''))+'</b><span><strong>'+esc(d.trigger)+'</strong> · '+esc(d.effect)+'</span></div>').join('')+'</div>';
 }
 
 function renderInformation(){
@@ -1096,7 +1084,7 @@ function renderInformation(){
         '<details class="info-rule-item"><summary>2. Economía del turno</summary>'+
           '<p>Cada personaje dispone de <b>2 Acciones Principales</b>, <b>Movimiento del turno</b>, <b>Acción Adicional</b> y <b>Reacciones</b> cuando una habilidad, pasiva, técnica o regla las habilite.</p>'+
           '<p>Las dos Acciones Principales pueden combinarse libremente: golpear dos veces, usar una técnica y luego golpear, mover o derribar un objeto y luego atacar, u otras combinaciones permitidas.</p>'+
-          '<p>La Acción Adicional se usa principalmente para comunicación breve e intercambio de información táctica. Las Reacciones no son una cantidad fija por turno: dependen de la habilidad que las permita y de sus límites específicos.</p>'+
+          '<p>La Acción Adicional se usa principalmente para comunicación breve e intercambio de información táctica. Cada personaje dispone de <b>1 Reacción por ronda</b>. Puede usarla en cualquier turno, incluso en el propio, si una regla, habilidad o técnica la habilita. Una vez usada, no se recupera hasta que todos los participantes terminen la ronda; no se acumula.</p>'+
         '</details>'+
 
         '<details class="info-rule-item"><summary>3. Movimiento normal</summary>'+
@@ -1106,17 +1094,17 @@ function renderInformation(){
         '</details>'+
 
         '<details class="info-rule-item"><summary>4. Movimiento complejo y obstáculos — Agilidad</summary>'+
-          '<p>Se resuelve con <b>1d20 + Agilidad</b>.</p>'+
+          '<p>Se resuelve con <b>1d20 + Agilidad</b> como parte del movimiento del turno, <b>sin gastar Acción Principal</b>.</p>'+
           '<p><b>Dificultad 5:</b> obstáculos simples, subir o saltar sobre un auto, obstáculos bajos. Si el personaje tiene Agilidad 5, puede superar automáticamente una acción de Dificultad 5.</p>'+
           '<p><b>Dificultad 10:</b> autobús, techo bajo, árbol o estructuras de altura moderada.</p>'+
           '<p><b>Dificultad 15:</b> escalar un edificio, desplazarse por cables de comunicaciones o realizar maniobras acrobáticas especialmente complejas.</p>'+
-          '<p>Si falla, el movimiento termina inmediatamente en la posición alcanzada y el personaje queda <b>Vulnerable</b>.</p>'+
+          '<p>Si falla, el movimiento termina inmediatamente en la posición alcanzada.</p>'+
         '</details>'+
 
         '<details class="info-rule-item"><summary>5. Interacción con objetos del entorno — Fuerza</summary>'+
           '<p>Mover, empujar, levantar, derribar o alterar físicamente objetos se resuelve con <b>1d20 + Fuerza</b>.</p>'+
           '<p><b>Dificultad 5:</b> mesa, silla y objetos sencillos. <b>Dificultad 10:</b> banco, mobiliario pesado y objetos grandes. <b>Dificultad 15:</b> acciones extremas como mover un auto cuando sea posible, derribar un poste o un árbol.</p>'+
-          '<p>El GM determina primero si la acción es físicamente posible.</p>'+
+          '<p>El GM determina primero si la acción es físicamente posible. <b>Esta tirada consume 1 Acción Principal.</b></p>'+
         '</details>'+
 
         '<details class="info-rule-item"><summary>6. Rango de combate cuerpo a cuerpo</summary>'+
@@ -1125,27 +1113,19 @@ function renderInformation(){
 
         '<details class="info-rule-item"><summary>7. Ataques físicos</summary>'+
           '<p>Para intentar impactar físicamente, el atacante puede usar <b>1d20 + Fuerza</b> o <b>1d20 + Agilidad</b>, según el tipo de golpe, maniobra o estilo.</p>'+
-          '<p>La estadística utilizada para impactar no modifica la regla de daño físico.</p>'+
+          '<p>La estadística utilizada para hacer el daño determina los dados según la tabla de daño físico.</p>'+
         '</details>'+
 
         '<details class="info-rule-item"><summary>8. Defensas contra ataques físicos</summary>'+
           '<p><b>Agilidad:</b> el defensor intenta esquivar sin abandonar necesariamente el rango. Debe superar la tirada ofensiva. Si falla, recibe el golpe.</p>'+
-          '<p><b>Velocidad:</b> el defensor intenta salir físicamente del rango. Debe superar la tirada ofensiva y, si tiene éxito, debe abandonar realmente el cuerpo a cuerpo. Si falla, recibe el golpe y queda <b>Vulnerable</b>.</p>'+
+          '<p><b>Velocidad:</b> el defensor intenta salir físicamente del rango. Debe superar la tirada ofensiva y, si tiene éxito, debe abandonar realmente el cuerpo a cuerpo. Si falla, recibe el golpe.</p>'+
         '</details>'+
 
         '<details class="info-rule-item"><summary>9. Daño físico</summary>'+
-          '<p>Una vez que el ataque impacta, el daño se determina con <b>1d20 + Fuerza</b>, incluso si se utilizó Agilidad para impactar.</p>'+
-          '<p>Si el objetivo está Vulnerable, al daño físico se suma además la <b>Inteligencia del atacante</b>.</p>'+
-          '<p>Ejemplo: daño de Fuerza 20 + Inteligencia 5 contra un objetivo Vulnerable = <b>25 de daño</b>.</p>'+
+          '<p>Una vez que impacta, el daño físico depende del valor de la estadística utilizada para el daño. Tirás los dados de la siguiente tabla:</p>'+
+          '<div class="info-table">'+physicalDamageTable.map((dice,i)=>'<div><b>Estadística '+(i+1)+'</b><strong>'+esc(dice)+'</strong></div>').join('')+'</div>'+
+          '<p>Los valores superiores a 12 quedan pendientes de definir.</p>'+
         '</details>'+
-
-        '<details class="info-rule-item"><summary>10. Estado Vulnerable</summary>'+
-          '<p>Vulnerable representa un punto ciego, una mala posición o una apertura temporal.</p>'+
-          '<p>Mientras un personaje está Vulnerable, los ataques que impacten contra él suman al daño la <b>Inteligencia del atacante</b>.</p>'+
-          '<p>Actualmente puede provocarse al fallar una defensa con Velocidad o una tirada de Agilidad durante movimiento complejo.</p>'+
-          '<div class="info-pending"><b>Pendiente de balance:</b> definir la duración estándar del estado Vulnerable cuando una regla concreta no indique su finalización.</div>'+
-        '</details>'+
-
         '<details class="info-rule-item"><summary>11. Desventaja numérica — 2 contra 1</summary>'+
           '<p>Si un personaje enfrenta simultáneamente a dos enemigos dentro del rango cuerpo a cuerpo y ambos atacan durante la misma secuencia o turno, la defensa contra el primer ataque es normal y la defensa contra el segundo se realiza con <b>desventaja</b>.</p>'+
         '</details>'+
@@ -1322,17 +1302,17 @@ function renderCharacters(){
 function optionList(values,current){
   return values.map(v=>'<option '+(v===current?'selected':'')+'>'+esc(v)+'</option>').join('');
 }
+const physicalDamageTable=['3d4','3d6','3d8','3d10','3d12','3d12 + 1d4','3d12 + 1d6','3d12 + 1d8','3d12 + 1d10','4d10','4d12 + 1d4','4d12 + 1d8'];
 const awakeningDefinitions=[
-  {key:'fuerza',stat:'Fuerza',name:'Despertar de Fuerza',trigger:'15 EM',effect:'Ventaja en la tirada de ataque físico.'},
-  {key:'agilidad',stat:'Agilidad',name:'Despertar de Agilidad',trigger:'15 EM',effect:'Ventaja en la tirada de esquiva/defensa con Agilidad.'},
-  {key:'velocidad',stat:'Velocidad',name:'Despertar de Velocidad',trigger:'20 EM',effect:'Efecto especial de Velocidad.'},
-  {key:'inteligencia',stat:'Inteligencia',name:'Despertar de Inteligencia',trigger:'15 EM',effect:'Podés utilizar Inteligencia en una tirada que normalmente correspondería a otra estadística.'},
-  {key:'barreras',stat:'Barreras',name:'Despertar de Barrera',trigger:'Especial',effect:'Recursos avanzados para defenderse de Expansiones de Dominio y técnicas que afectan el espacio.'},
-  {key:'control-rango',stat:'Control EM',name:'Despertar de Control de EM — Rango/Tamaño',trigger:'20 EM',effect:'Aumentar rango o tamaño de una técnica.'},
-  {key:'control-ataque',stat:'Control EM',name:'Despertar de Control de EM — Ataque',trigger:'25 EM',effect:'Ventaja en la tirada de ataque de una técnica para determinar si entra.'},
-  {key:'durabilidad',stat:'Durabilidad',name:'Despertar de Durabilidad',trigger:'20 EM',effect:'Reducir a la mitad el daño recibido, antes de la tirada de daño.'},
-  {key:'resistencia',stat:'Resistencia',name:'Despertar de Resistencia',trigger:'Cada 2 turnos',effect:'Un movimiento gratuito.'},
-  {key:'energia',stat:'Energía Maldita',name:'Despertar de Energía Maldita',trigger:'Cada 3 turnos',effect:'Recuperás 20 EM automáticamente.'}
+ {key:'fuerza',stat:'Fuerza',name:'Despertar de Fuerza',trigger:'30 EM · 3 cargas',effect:'Ventaja en la tirada de ataque físico.',cost:30,charges:3},
+ {key:'agilidad',stat:'Agilidad',name:'Despertar de Agilidad',trigger:'30 EM · 3 cargas',effect:'Ventaja en la tirada de esquiva/defensa con Agilidad.',cost:30,charges:3},
+ {key:'velocidad',stat:'Velocidad',name:'Despertar de Velocidad',trigger:'30 EM · 3 cargas',effect:'Efecto especial de Velocidad.',cost:30,charges:3},
+ {key:'inteligencia',stat:'Inteligencia',name:'Despertar de Inteligencia',trigger:'30 EM · 3 cargas',effect:'Podés utilizar Inteligencia en una tirada que normalmente correspondería a otra estadística.',cost:30,charges:3},
+ {key:'barreras',stat:'Barreras',name:'Despertar de Barrera',trigger:'30 EM · 1 carga',effect:'Ventaja en una tirada relacionada con Barreras.',cost:30,charges:1},
+ {key:'control-rango',stat:'Control EM',name:'Despertar de Control de EM — Rango/Tamaño',trigger:'30 EM · 3 cargas',effect:'Aumentar rango o tamaño de una técnica.',cost:30,charges:3},
+ {key:'durabilidad',stat:'Durabilidad',name:'Despertar de Durabilidad',trigger:'30 EM · 3 cargas',effect:'Reducir a la mitad el daño recibido, antes de la tirada de daño.',cost:30,charges:3},
+ {key:'resistencia',stat:'Resistencia',name:'Despertar de Resistencia',trigger:'Gratis · 3 cargas',effect:'Recuperás 20 de Resistencia automáticamente.',cost:0,charges:3,restore:'du'},
+ {key:'energia',stat:'Energía Maldita',name:'Despertar de Energía Maldita',trigger:'Gratis · 2 cargas',effect:'Recuperás 20 de Energía Maldita automáticamente.',cost:0,charges:2,restore:'ce'}
 ];
 function awakeningStatValue(ch,def,id){
   if(def.stat==='Control EM'){

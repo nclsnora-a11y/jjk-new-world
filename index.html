@@ -3733,6 +3733,12 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     return '<div class="quick-passive-item"><button class="combat-technique-btn" type="button" '+(!canRoll||!remaining?'disabled':'onclick="event.stopPropagation();useCombatAwakening(\''+campaignId+'\',\''+ch.id+'\',\''+def.key+'\')"')+'>⚡ '+esc(def.name)+' ('+remaining+'/'+def.charges+')'+(def.cost?' · '+def.cost+' EM':' · Gratis')+'</button><div style="margin-top:6px;font-size:12px;line-height:1.5">'+esc(def.effect)+'</div></div>';
   }).join(''):'<span class="muted">No hay despertares equipados.</span>';
   const canReinforceDamage=[16,20,45].includes(Number(ch.peculiarityId));
+  const pec=peculiarityOf(ch);
+  const pid=Number(ch.peculiarityId||0);
+  const directIds=[12,47,64,71,77];
+  const maxPecUses=([71,77].includes(pid)?2:1);
+  const usedPec=Number(combatState?.peculiarity_uses?.['action_'+pid]||0);
+  const peculiarityCombatAction=pec?'<div class="quick-passive-item"><b>✨ '+esc(pec.nombre)+'</b><div style="font-size:12px;margin:6px 0">'+esc(pec.efecto)+'</div>'+(directIds.includes(pid)?'<button class="combat-technique-btn" '+(!canRoll||usedPec>=maxPecUses?'disabled':'onclick="activateCombatPeculiarity(\''+campaignId+'\',\''+ch.id+'\')"')+'>Activar peculiaridad ('+(maxPecUses-usedPec)+'/'+maxPecUses+')</button>':'<small class="muted">Efecto pasivo o condicionado por una acción.</small>')+'</div>':'';
   const physicalDamageActions=canRoll?'<div class="quick-tech-actions"><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\')">🎲 Daño físico · Fuerza</button>'+(canReinforceDamage?'<button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\',true)">⚡ Daño físico reforzado</button>':'')+'</div>':'';
   return '<div class="combat-quick-menu hidden" id="quick-menu-'+ch.id+'" onclick="event.stopPropagation()">'+
     '<div class="combat-quick-nav">'+
@@ -3744,7 +3750,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
       (ch.techniqueDescription?'<div class="quick-tech-desc">'+esc(ch.techniqueDescription)+'</div>':'<div class="muted">Sin descripción de técnica.</div>')+
       '<div class="quick-tech-list" style="margin-top:8px">'+techniqueButtons+'</div>'+
     '</div>'+
-    '<div class="combat-quick-panel hidden" id="quick-panel-actions-'+ch.id+'"><div class="quick-action-list">'+physicalDamageActions+awakeningActions+'</div></div>'+
+    '<div class="combat-quick-panel hidden" id="quick-panel-actions-'+ch.id+'"><div class="quick-action-list">'+physicalDamageActions+peculiarityCombatAction+awakeningActions+'</div></div>'+
     '<div class="combat-quick-panel hidden" id="quick-panel-passives-'+ch.id+'"><div class="quick-passive-list">'+passiveHtml+'</div></div>'+
   '</div>';
 }

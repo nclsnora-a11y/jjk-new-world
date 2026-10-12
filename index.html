@@ -1279,7 +1279,7 @@ document.getElementById('save-character').addEventListener('click',()=>{
 });
 
 let peculiaritiesCatalog=[];
-let peculiarityWeights={comun:50.5,poco:28,rara:15,epica:6,legendaria:0.5};
+let peculiarityWeights={comun:49,poco:28,rara:15,epica:6,legendaria:2};
 async function loadPeculiaritiesCatalog(){
  try{
   const response=await fetch('./peculiaridades.json',{cache:'no-store'});
@@ -1321,7 +1321,7 @@ function peculiarityWheelHtml(){
  '<div class="actions"><select id="peculiarity-spin-character" aria-label="Personaje para la peculiaridad"><option value="">Elegí un personaje</option>'+savedCharacters.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+'</option>').join('')+'</select><button id="peculiarity-spin-button" type="button" onclick="spinPeculiarityFromWheel()">Girar ruleta</button></div>'+
  '<div class="result" id="result-peculiarities">Resultado: —</div>'+
  '<div class="technique-detail" id="peculiarity-description"><div class="pd-cat">Peculiaridad</div><div class="pd-name">—</div><div class="pd-desc">Girá la ruleta desde la ficha de un personaje.</div></div>'+
- '<div class="legend"><span>Común</span><span>50,5%</span><span>Poco común</span><span>28%</span><span>Rara</span><span>15%</span><span>Épica</span><span>6%</span><span>Legendaria</span><span>0,5%</span></div></section>';
+ '<div class="legend"><span>Común</span><span>49%</span><span>Poco común</span><span>28%</span><span>Rara</span><span>15%</span><span>Épica</span><span>6%</span><span>Legendaria</span><span>2%</span></div></section>';
 }
 function refreshPeculiarityCharacterOptions(){
  const select=document.getElementById('peculiarity-spin-character');

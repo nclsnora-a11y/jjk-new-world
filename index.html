@@ -2885,8 +2885,11 @@ zoneHtmlFor=function(c,z){
    if(!currentUser){toast('Iniciá sesión para guardar el personaje.');return}
    const ch=makeCharacterFromSheet();
    const payload={owner_id:currentUser.id,sorcerer_name:ch.sorcererName,user_name:'—',character_side:ch.side||'hechicero',initial_stats:ch.initialStats,current_stats:ch.currentStats,technique_type:ch.type,grade:ch.grade,control_em:ch.control?Number(ch.control):null,passives:ch.passives,technique_description:'',technique_actions:[],special_bars:[]};
-   const {error}=await sb.from('characters').insert(payload);if(error){toast(error.message);return}
-   await loadSharedData();toast('Personaje guardado y sincronizado.');
+   btn.disabled=true;
+   try{const {error}=await sb.from('characters').insert(payload);if(error)throw error;
+   await loadSharedData();toast('Personaje guardado y sincronizado.');}
+   catch(e){console.error('No se pudo guardar el personaje de ruletas',e);toast('No se pudo guardar: '+(e?.message||String(e)))}
+   finally{btn.disabled=false}
  }}
 }
 

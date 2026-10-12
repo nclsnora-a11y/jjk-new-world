@@ -1306,7 +1306,7 @@ function characterCard(ch){
     </div>
     <div class="character-actions">
       <button onclick="toggleEditor('${esc(ch.id)}')">Editar</button>
-      <button class="secondary" onclick="toggleInventoryExperience('${esc(ch.id)}')">Inventario y experiencia</button>
+      ${ch.isNpc?'':'<button class="secondary" onclick="toggleInventoryExperience(\''+esc(ch.id)+'\')">Inventario y experiencia</button>'}
       <button class="secondary danger" onclick="deleteCharacter('${esc(ch.id)}')">Eliminar</button>
     </div>
     <div class="editor hidden" id="editor-${esc(ch.id)}"></div>

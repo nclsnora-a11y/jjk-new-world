@@ -2811,8 +2811,9 @@ saveCampaigns=function(){};
 renderCharacters=function(){
   const root=document.getElementById('characters-list');if(!root)return;
   if(!currentUser){root.innerHTML='<div class="auth-required"><b>Iniciá sesión para ver Mis personajes.</b><br><br>Así tus personajes aparecen también en celular, PC y otros dispositivos.</div>';return}
-  if(!savedCharacters.length){root.innerHTML='<div class="empty-characters"><b>No hay personajes guardados todavía.</b><br><br>Creá uno en Ruletas y tocá <b>Guardar personaje</b>.</div>';return}
-  root.innerHTML='<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>';
+  const gmForm=isAdmin?gmCharacterCreationHtml():'';
+  if(!savedCharacters.length){root.innerHTML=gmForm+'<div class="empty-characters"><b>No hay personajes guardados todavía.</b><br><br>Creá uno en Ruletas o usá la creación manual si sos GM.</div>';return}
+  root.innerHTML=gmForm+'<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>';
 };
 
 function gmCharacterCreationHtml(){

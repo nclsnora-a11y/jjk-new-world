@@ -5686,6 +5686,15 @@ async function rpTitle(userId){
  await roleplayRender();toast('Título actualizado');
 }
 
+function restoreRouletteCanvases(){
+ for(const key of Object.keys(configs)){
+  const cfg=configs[key],canvas=document.getElementById(cfg.canvas);
+  if(!canvas)continue;
+  try{draw(key)}catch(e){console.error('Error restaurando ruleta',key,e)}
+ }
+}
+window.addEventListener('load',()=>requestAnimationFrame(restoreRouletteCanvases),{once:true});
+
 initAuth();
 </script>
 </body>

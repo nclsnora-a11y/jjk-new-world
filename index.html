@@ -2710,7 +2710,9 @@ async function initAuth(){
 
   renderAuth();
 
-  sb.auth.onAuthStateChange(async(_event,session)=>{
+  sb.auth.onAuthStateChange((_event,session)=>{
+    // Posponer las consultas a Supabase fuera del callback para evitar bloqueos de Auth.
+    setTimeout(async()=>{
     const previousUserId=currentUser?.id||null;
     const nextUser=session?.user||null;
     const sameUser=!!(previousUserId&&nextUser?.id===previousUserId);
@@ -2734,7 +2736,7 @@ async function initAuth(){
     // Al volver a la pestaña Supabase puede renovar/reemitir la misma sesión.
     // Si es el mismo usuario y los datos ya están cargados, no reconstruimos
     // Combate ni las demás vistas: así se conserva exactamente el scroll.
-    if(sameUser&&(_event==='TOKEN_REFRESHED'||_event==='SIGNED_IN'||_event==='INITIAL_SESSION')){
+    if(sameUser&&currentProfile&&(_event==='TOKEN_REFRESHED'||_event==='SIGNED_IN'||_event==='INITIAL_SESSION')){
       renderAuth();
       return;
     }
@@ -2752,6 +2754,7 @@ async function initAuth(){
       renderCharacters();renderCampaigns();
     }
     renderAuth();
+    },0);
   });
 }
 

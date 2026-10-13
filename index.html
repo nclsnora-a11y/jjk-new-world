@@ -3743,7 +3743,7 @@ function combatCharacterHtml(campaignId,ch){
     '</div>'+
     '<div class="combat-bars" onclick="event.stopPropagation()">'+resource('Vida · DUR×50','hp',s.hp_current,s.hp_max,'❤')+resource('Energía Maldita · EM×50','ce',s.ce_current,s.ce_max,'🔥')+resource('Resistencia · RES×50','du',s.durability_current,s.durability_max,'🫁')+specialBars.map(specialResource).join('')+'</div>'+
     '<div class="combat-stats">'+statsHtml+'</div>'+
-    (canRoll?'<div class="combat-admin-row" onclick="event.stopPropagation()"><button class="secondary" '+(s.reaction_used?'disabled':'onclick="useCombatReaction(\''+campaignId+'\',\''+ch.id+'\')"')+'>'+(s.reaction_used?'Reacción usada · Próxima ronda':'Usar reacción · 1 por ronda')+'</button></div>':'')+
+    (canRoll?'<div class="combat-admin-row" onclick="event.stopPropagation()"><button class="secondary" '+((s.reaction_used&&(Number(ch.peculiarityId)!==81||Number(s.peculiarity_uses?.extra_reactions_used||0)>=2))?'disabled':'onclick="useCombatReaction(\''+campaignId+'\',\''+ch.id+'\')"')+'>'+(s.reaction_used?(Number(ch.peculiarityId)===81&&Number(s.peculiarity_uses?.extra_reactions_used||0)<2?'Reacción extra · quedan '+(2-Number(s.peculiarity_uses?.extra_reactions_used||0)):'Reacción usada · Próxima ronda'):'Usar reacción · 1 por ronda')+'</button></div>':'')+
     combatQuickMenuHtml(campaignId,ch,canRoll)+
     (canEditCombat?'<div class="combat-admin-row" onclick="event.stopPropagation()">'+(isAdmin?'<button class="secondary" onclick="toggleCombatVisibility(\''+campaignId+'\',\''+ch.id+'\')">'+(s.visible?'Ocultar para los demás':'Mostrar a todos')+'</button>':'')+'<button onclick="saveCombatCharacterState(\''+campaignId+'\',\''+ch.id+'\')">Guardar barras</button></div>':'')+
   '</article>';
@@ -3757,7 +3757,7 @@ async function useCombatReaction(campaignId,characterId){
  const {error}=await sb.rpc('set_combat_reaction',{p_campaign:campaignId,p_character:characterId,p_used:true});
  if(error){toast(error.message);return}
  await renderCombatCampaign(campaignId);
- toast('Reacción usada. Se recupera en la próxima ronda.');
+ toast('Reacción registrada. Si tenés Percepción acelerada, las dos reacciones adicionales se consumen automáticamente después de la reacción normal.');
 }
 async function resetCombatReactions(campaignId){
  if(!isAdmin)return;

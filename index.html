@@ -2781,18 +2781,20 @@ document.getElementById('auth-login').onclick=async()=>{
 };
 
 document.getElementById('auth-resend-confirmation').onclick=async()=>{
-  const email=document.getElementById('auth-email').value.trim();
-  const feedback=document.getElementById('auth-login-feedback');
-  if(!email){if(feedback)feedback.textContent='Escribí tu correo electrónico primero.';return}
-  const btn=document.getElementById('auth-resend-confirmation');
-  btn.disabled=true;btn.textContent='Enviando...';
-  try{
-    const {error}=await sb.auth.resend({type:'signup',email,options:{emailRedirectTo:'https://jjknewworld.uk/'}});
-    if(error)throw error;
-    if(feedback)feedback.textContent='Si la cuenta está pendiente, recibirás otro correo. Abrí solamente el enlace más reciente, esperá a volver a la web y después iniciá sesión.';
-  }catch(e){
-    if(feedback)feedback.textContent='No se pudo reenviar el correo: '+(e?.message||'Error desconocido');
-  }finally{btn.disabled=false;btn.textContent='Reenviar confirmación de correo'}
+ const email=document.getElementById('auth-email').value.trim();
+ const feedback=document.getElementById('auth-login-feedback');
+ if(!email||!/^\S+@\S+\.\S+$/.test(email)){if(feedback)feedback.textContent='Ingresá un correo electrónico válido.';return}
+ if(Date.now()<Number(localStorage.getItem(RESEND_COOLDOWN_KEY)||0)){updateResendCooldown();return}
+ const btn=document.getElementById('auth-resend-confirmation');btn.dataset.processing='1';updateResendCooldown();
+ try{
+  const {error}=await sb.auth.resend({type:'signup',email,options:{emailRedirectTo:JJK_AUTH_REDIRECT}});
+  if(error)throw error;
+  if(feedback)feedback.textContent='Si la cuenta está pendiente, solicitamos otro mensaje de confirmación. Revisá spam y promociones; utilizá solo el enlace más reciente. No podemos confirmar su entrega.';
+  beginResendCooldown();
+ }catch(e){
+  if(feedback)feedback.textContent=authEmailError(e);
+  if(e?.status===429||String(e?.code||'').includes('rate_limit'))beginResendCooldown();
+ }finally{btn.dataset.processing='0';updateResendCooldown()}
 };
 
 document.getElementById('auth-forgot-password').onclick=async()=>{
@@ -2804,8 +2806,8 @@ document.getElementById('auth-forgot-password').onclick=async()=>{
   try{
     const redirectTo='https://jjknewworld.uk';
     const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
-    if(error){toast(error.message);return}
-    toast('Te enviamos un correo para restablecer tu contraseña.');
+    if(error){toast(authEmailError(error));btn.disabled=false;btn.textContent='Olvidé mi contraseña';return}
+    toast('Si existe una cuenta con ese correo, se solicitó el envío de un enlace para restablecer la contraseña. Revisá también spam.');
     btn.textContent='Correo enviado';
     setTimeout(()=>{btn.disabled=false;btn.textContent='Olvidé mi contraseña'},20000);
   }catch(e){
@@ -2833,8 +2835,38 @@ document.getElementById('auth-save-new-password').onclick=async()=>{
   toast('Contraseña actualizada correctamente.');
   renderAuth();
 };
-const REGISTER_COOLDOWN_MS=20000;
+const REGISTER_COOLDOWN_MS=60000;
 const REGISTER_PROCESS_LABEL_MS=5000;
+const JJK_AUTH_REDIRECT='https://jjknewworld.uk/';
+const RESEND_COOLDOWN_KEY='jjk-resend-confirmation-until';
+let resendCooldownTimer=null;
+function authEmailError(error){
+ const code=String(error?.code||'').toLowerCase();const message=String(error?.message||'');
+ if(code.includes('rate_limit')||error?.status===429||/after [0-9]+ seconds|rate limit|too many requests/i.test(message))return 'Hay demasiados intentos de envío. Esperá al menos un minuto antes de volver a solicitar el correo.';
+ if(/email not confirmed/i.test(message)||code==='email_not_confirmed')return 'Esta cuenta todavía no confirmó su correo. Revisá spam y promociones o solicitá otro enlace.';
+ if(/email address not authorized/i.test(message))return 'El servidor de correo todavía no está habilitado para enviar a esta dirección. Contactá al administrador de JJK New World.';
+ if(error?.status>=500||/email.*send|smtp|templatemailer/i.test(message))return 'El servicio de correo presentó un error temporal. No podemos asegurar que se haya enviado el mensaje. Reintentá más tarde o avisá al administrador.';
+ return message||'No se pudo completar la solicitud. Intentá nuevamente.';
+}
+function updateResendCooldown(){
+ const btn=document.getElementById('auth-resend-confirmation');if(!btn)return;
+ const remaining=Math.max(0,Number(localStorage.getItem(RESEND_COOLDOWN_KEY)||0)-Date.now());
+ btn.disabled=remaining>0||btn.dataset.processing==='1';
+ btn.textContent=btn.dataset.processing==='1'?'Solicitando...':remaining>0?'Reenviar en '+Math.ceil(remaining/1000)+' s':'Reenviar confirmación de correo';
+ clearTimeout(resendCooldownTimer);if(remaining>0)resendCooldownTimer=setTimeout(updateResendCooldown,1000);
+}
+function beginResendCooldown(){localStorage.setItem(RESEND_COOLDOWN_KEY,String(Date.now()+60000));updateResendCooldown()}
+function showAuthRedirectError(){
+ const params=new URLSearchParams(window.location.search),hash=new URLSearchParams(window.location.hash.slice(1));
+ const code=params.get('error_code')||hash.get('error_code');const error=params.get('error')||hash.get('error');
+ if(!code&&!error)return;
+ const feedback=document.getElementById('auth-login-feedback');
+ const reason=code==='otp_expired'||/expired|invalid/i.test(code||'')?'El enlace de confirmación venció o ya fue utilizado. Ingresá tu correo y solicitá un enlace nuevo.':'No se pudo verificar el correo con ese enlace. Revisá la dirección y solicitá uno nuevo.';
+ if(feedback)feedback.textContent=reason;
+ const section=document.getElementById('account-section');if(section){document.querySelectorAll('main>section').forEach(x=>x.classList.add('hidden'));section.classList.remove('hidden')}
+ history.replaceState(null,'',window.location.pathname);
+}
+
 const REGISTER_COOLDOWN_KEY='jjk-register-cooldown-until';
 let registerCooldownTimer=null;
 
@@ -2868,6 +2900,8 @@ function startRegisterCooldown(){
 }
 
 updateRegisterCooldown();
+updateResendCooldown();
+showAuthRedirectError();
 
 document.getElementById('auth-register').onclick=async()=>{
   const btn=document.getElementById('auth-register');
@@ -2891,15 +2925,16 @@ document.getElementById('auth-register').onclick=async()=>{
     const {data,error}=await sb.auth.signUp({
       email,
       password,
-      options:{emailRedirectTo:'https://jjknewworld.uk'}
+      options:{emailRedirectTo:JJK_AUTH_REDIRECT}
     });
     if(error){
-      toast(error.message);
-      return;
+      const message=authEmailError(error);const feedback=document.getElementById('auth-login-feedback');if(feedback)feedback.textContent=message;
+      toast(message);return;
     }
-    if(data.session)toast('Cuenta creada y sesión iniciada.');
-    else toast('Cuenta creada. Revisá tu email para confirmarla.');
-  }finally{
+    const message=data.session?'Cuenta creada y sesión iniciada.':'Solicitud de registro procesada. Si se requiere confirmación, revisá tu correo, spam y promociones. Si no llega, podés solicitar otro enlace después de un minuto.';
+    const feedback=document.getElementById('auth-login-feedback');if(feedback)feedback.textContent=message;
+    toast(message);
+  }catch(e){const message=authEmailError(e);const feedback=document.getElementById('auth-login-feedback');if(feedback)feedback.textContent=message;toast(message)}finally{
     clearTimeout(restoreCountdownLabel);
     btn.dataset.processing='0';
     updateRegisterCooldown();

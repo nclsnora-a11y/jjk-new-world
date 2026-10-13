@@ -652,7 +652,7 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
   <div class="sheet-card" id="campaign-admin-create">
     <h3 style="margin-top:0">Crear campaña</h3>
     <div class="campaign-form">
-      <input id="new-campaign-name" placeholder="Ej: Shibuya">
+      <input id="new-campaign-name" aria-label="Nombre de la campaña" placeholder="Ej: Shibuya">
       <button id="create-campaign">Crear campaña</button>
     </div>
     <div class="campaign-edit-photo">
@@ -709,8 +709,8 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
     <div id="account-login-box" style="margin-top:16px">
       <h3>Iniciar sesión o registrarse</h3>
       <div class="campaign-form">
-        <input id="auth-email" type="email" name="email" autocomplete="username" placeholder="Email">
-        <div class="password-wrap"><input id="auth-password" type="password" name="password" autocomplete="current-password" placeholder="Contraseña"><button type="button" id="toggle-password" class="password-toggle" aria-label="Mostrar contraseña" title="Mostrar/ocultar contraseña">👁</button></div>
+        <input id="auth-email" aria-label="Correo electrónico" type="email" name="email" autocomplete="username" placeholder="Email">
+        <div class="password-wrap"><input id="auth-password" aria-label="Contraseña" type="password" name="password" autocomplete="current-password" placeholder="Contraseña"><button type="button" id="toggle-password" class="password-toggle" aria-label="Mostrar contraseña" title="Mostrar/ocultar contraseña">👁</button></div>
       </div>
       <div class="campaign-actions">
         <button id="auth-login">Iniciar sesión</button>
@@ -730,8 +730,8 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
       <h3>Nueva contraseña</h3>
       <div class="account-help" style="margin-bottom:8px">Escribí una contraseña nueva para tu cuenta.</div>
       <div class="campaign-form">
-        <input id="recovery-password" type="password" autocomplete="new-password" placeholder="Nueva contraseña">
-        <input id="recovery-password-confirm" type="password" autocomplete="new-password" placeholder="Repetir nueva contraseña">
+        <input id="recovery-password" aria-label="Nueva contraseña" type="password" autocomplete="new-password" placeholder="Nueva contraseña">
+        <input id="recovery-password-confirm" aria-label="Confirmar nueva contraseña" type="password" autocomplete="new-password" placeholder="Repetir nueva contraseña">
       </div>
       <div class="campaign-actions">
         <button id="auth-save-new-password">Guardar nueva contraseña</button>

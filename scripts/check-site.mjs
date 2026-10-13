@@ -4,14 +4,14 @@ import vm from 'node:vm';
 const html=fs.readFileSync('index.html','utf8');
 const data=JSON.parse(fs.readFileSync('peculiaridades.json','utf8'));
 const fail=(message)=>{throw new Error(message)};
-const scripts=[...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(x=>x[1]).filter(Boolean);
+const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(x=>x[1]).filter(Boolean);
 if(!scripts.length)fail('No se encontraron scripts de la aplicación');
 for(const [i,source] of scripts.entries()){
  try{new vm.Script(source,{filename:'index.html:inline-'+i})}
  catch(e){fail('Error de sintaxis JavaScript en script '+i+': '+e.message)}
 }
-const staticHtml=html.replace(/<script[\\s\\S]*?<\\/script>/gi,'');
-const ids=[...staticHtml.matchAll(/\\bid="([A-Za-z][\\w-]*)"/g)].map(x=>x[1]);
+const staticHtml=html.replace(/<script[\s\S]*?<\/script>/gi,'');
+const ids=[...staticHtml.matchAll(/\bid="([A-Za-z][\w-]*)"/g)].map(x=>x[1]);
 const duplicates=[...new Set(ids.filter((id,i)=>ids.indexOf(id)!==i))];
 if(duplicates.length)fail('IDs HTML duplicados: '+duplicates.join(', '));
 if(!Array.isArray(data.peculiaridades)||data.peculiaridades.length!==77)fail('El catálogo debe contener exactamente 77 peculiaridades');

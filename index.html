@@ -2824,7 +2824,7 @@ document.getElementById('auth-forgot-password').onclick=async()=>{
 document.getElementById('auth-save-new-password').onclick=async()=>{
   const p1=document.getElementById('recovery-password').value;
   const p2=document.getElementById('recovery-password-confirm').value;
-  if(p1.length<6){toast('La contraseña debe tener al menos 6 caracteres.');return}
+  if(p1.length<10){toast('La contraseña nueva debe tener al menos 10 caracteres.');return}
   if(p1!==p2){toast('Las contraseñas no coinciden.');return}
   const btn=document.getElementById('auth-save-new-password');
   btn.disabled=true;btn.textContent='Guardando...';
@@ -2912,7 +2912,7 @@ document.getElementById('auth-register').onclick=async()=>{
   if(until>Date.now()){updateRegisterCooldown();return}
 
   const email=document.getElementById('auth-email').value.trim(),password=document.getElementById('auth-password').value;
-  if(!/^\S+@\S+\.\S+$/.test(email)||password.length<6){toast('Ingresá un email válido y una contraseña de al menos 6 caracteres.');return}
+  if(!/^\S+@\S+\.\S+$/.test(email)||password.length<10){toast('Ingresá un email válido y una contraseña de al menos 10 caracteres.');return}
 
   startRegisterCooldown();
   btn.dataset.processing='1';

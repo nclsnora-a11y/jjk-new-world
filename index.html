@@ -2771,7 +2771,7 @@ document.getElementById('auth-login').onclick=async()=>{
   if(feedback)feedback.textContent='Comprobando datos...';
   const {error}=await sb.auth.signInWithPassword({email,password});
   if(error){
-    const msg=/email not confirmed/i.test(error.message)?'Tu correo todavía no está confirmado. Tocá «Reenviar confirmación de correo», abrí el enlace más reciente y luego iniciá sesión.':error.message;
+    const msg=authEmailError(error);
     if(feedback)feedback.textContent=msg;
     toast(msg);
   }else{
@@ -2909,7 +2909,7 @@ document.getElementById('auth-register').onclick=async()=>{
   if(until>Date.now()){updateRegisterCooldown();return}
 
   const email=document.getElementById('auth-email').value.trim(),password=document.getElementById('auth-password').value;
-  if(!email||password.length<6){toast('Usá un email válido y contraseña de al menos 6 caracteres.');return}
+  if(!/^\S+@\S+\.\S+$/.test(email)||password.length<6){toast('Ingresá un email válido y una contraseña de al menos 6 caracteres.');return}
 
   startRegisterCooldown();
   btn.dataset.processing='1';

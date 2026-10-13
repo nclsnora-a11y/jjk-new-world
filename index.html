@@ -3873,6 +3873,14 @@ function showCombatQuickTab(charId,tab){
     if(panel)panel.classList.toggle('hidden',t!==tab);
   });
 }
+async function chargeTechniqueCost(campaignId,charId,index){
+ const {data,error}=await sb.rpc('spend_technique_energy',{p_campaign:campaignId,p_character:charId,p_index:index});
+ if(error){toast('No se pudo gastar EM: '+error.message);return false}
+ const st=combatStates.find(x=>x.character_id===charId);
+ if(st)st.ce_current=Number(data.remaining);
+ updateCombatBarsFromState(charId);
+ return true;
+}
 async function rollTechniqueAttack(campaignId,charId,index){
   const ch=allCharacters.find(c=>c.id===charId);if(!ch)return;
   if(!isAdmin&&ch.owner_id!==currentUser?.id){toast('Solo podés usar técnicas de tus personajes.');return}
@@ -3889,16 +3897,7 @@ async function rollTechniqueAttack(campaignId,charId,index){
   }
 
   if(noRoll){
-    if(cost>0){
-      const newCE=Math.max(0,Number(state.ce_current)-cost);
-      const {error:ceError}=await sb.from('combat_states')
-        .update({ce_current:newCE,updated_at:new Date().toISOString()})
-        .eq('campaign_id',campaignId)
-        .eq('character_id',charId);
-      if(ceError){toast('No pude descontar la Energía Maldita: '+ceError.message);return}
-      state.ce_current=newCE;
-      updateCombatBarsFromState(charId);
-    }
+    if(cost>0&&!(await chargeTechniqueCost(campaignId,charId,index)))return;
     const {error}=await sb.from('combat_rolls').insert({
       campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
       stat_name:'Uso · '+action.name+(cost?' · -'+cost+' EM':'')+' · Sin tirada',
@@ -3913,15 +3912,7 @@ async function rollTechniqueAttack(campaignId,charId,index){
   const die=Math.floor(Math.random()*20)+1,total=die+bonus;
   await animateD20(die,ch.sorcererName,action.name+' · Ataque');
 
-  if(cost>0){
-    const newCE=Math.max(0,Number(state.ce_current)-cost);
-    const {error:ceError}=await sb.from('combat_states')
-      .update({ce_current:newCE,updated_at:new Date().toISOString()})
-      .eq('campaign_id',campaignId)
-      .eq('character_id',charId);
-    if(ceError){toast('No pude descontar la Energía Maldita: '+ceError.message);return}
-    state.ce_current=newCE;
-  }
+  if(cost>0&&!(await chargeTechniqueCost(campaignId,charId,index)))return;
 
   const {error}=await sb.from('combat_rolls').insert({
     campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
@@ -3930,8 +3921,8 @@ async function rollTechniqueAttack(campaignId,charId,index){
     media_url:sanitizeTechniqueMediaUrl(action.mediaUrl||action.media_url||'')||null
   });
   if(error){toast(error.message);return}
-  if(cost>0)updateCombatBarsFromState(charId);
 }
+
 
 async function rollTechniqueDamage(campaignId,charId,index){
  const ch=allCharacters.find(c=>c.id===charId);if(!ch)return;

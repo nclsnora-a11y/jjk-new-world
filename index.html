@@ -3799,7 +3799,7 @@ function combatCharacterHtml(campaignId,ch){
     '<div class="combat-stats">'+statsHtml+'</div>'+
     (canRoll?'<div class="combat-admin-row" onclick="event.stopPropagation()"><button class="secondary" '+((s.reaction_used&&(Number(ch.peculiarityId)!==81||Number(s.peculiarity_uses?.extra_reactions_used||0)>=2))?'disabled':'onclick="useCombatReaction(\''+campaignId+'\',\''+ch.id+'\')"')+'>'+(s.reaction_used?(Number(ch.peculiarityId)===81&&Number(s.peculiarity_uses?.extra_reactions_used||0)<2?'Reacción extra · quedan '+(2-Number(s.peculiarity_uses?.extra_reactions_used||0)):'Reacción usada · Próxima ronda'):'Usar reacción · 1 por ronda')+'</button></div>':'')+
     combatQuickMenuHtml(campaignId,ch,canRoll)+
-    (canEditCombat?'<div class="combat-admin-row" onclick="event.stopPropagation()">'+(isAdmin?'<button class="secondary" onclick="toggleCombatVisibility(\''+campaignId+'\',\''+ch.id+'\')">'+(s.visible?'Ocultar para los demás':'Mostrar a todos')+'</button>':'')+'<button onclick="saveCombatCharacterState(\''+campaignId+'\',\''+ch.id+'\')">Guardar barras</button></div>':'')+
+    (canEditCombat?'<div class="combat-admin-row" onclick="event.stopPropagation()">'+(isAdmin?'<button class="secondary" onclick="toggleCombatVisibility(\''+campaignId+'\',\''+ch.id+'\')">'+(s.visible?'Ocultar para los demás':'Mostrar a todos')+'</button>':'')+'</div>':'')+
   '</article>';
 }
 function techniqueStatValue(ch,stat){
@@ -3820,28 +3820,6 @@ async function resetCombatReactions(campaignId){
  if(error){toast(error.message);return}
  await renderCombatCampaign(campaignId);
  toast('Nueva ronda: reacciones recuperadas.');
-}
-async function rollPhysicalDamage(campaignId,charId,stat,reinforced=false){
- const ch=allCharacters.find(c=>c.id===charId);
- if(!ch||!currentUser||!(isAdmin||ch.owner_id===currentUser.id))return;
- const value=Number(ch.currentStats?.[stat]??ch.initialStats?.[stat]??0);
- const base=physicalDamageTable[value-1];
- if(!base){toast('Tabla de daño físico definida para estadísticas de 1 a 12.');return}
- const kind=reinforced?'fisico_reforzado':'fisico';
- const {data:bonus,error:bonusError}=await sb.rpc('claim_peculiarity_damage',{p_campaign:campaignId,p_character:charId,p_kind:kind});
- if(bonusError){toast(bonusError.message);return}
- const expression=base+(bonus?' + '+bonus:'');
- const parsed=parseCompoundDiceExpression(expression);
- if(!parsed){toast('Dados de daño inválidos.');return}
- const result=rollCompoundDice(parsed);
- await animateCompoundDice(result.rolled,ch.sorcererName+' · Daño físico'+(bonus?' + Peculiaridad':'')+' · '+parsed.expression);
- const {error}=await sb.from('combat_rolls').insert({
-  campaign_id:campaignId,character_id:charId,rolled_by:currentUser.id,
-  stat_name:'Daño físico · '+stat+(bonus?' · peculiaridad':''),
-  die_result:result.rolled[0]?.value||0,stat_bonus:parsed.modifier,
-  total:result.total,roll_expression:parsed.expression,roll_results:result.rolled
- });
- if(error)toast(error.message);
 }
 async function useCombatAwakening(campaignId,characterId,key){
  const ch=allCharacters.find(c=>c.id===characterId);
@@ -3893,14 +3871,12 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
     const remaining=Math.max(0,def.charges-spent);
     return '<div class="quick-passive-item"><button class="combat-technique-btn" type="button" '+(!canRoll||!remaining?'disabled':'onclick="event.stopPropagation();useCombatAwakening(\''+campaignId+'\',\''+ch.id+'\',\''+def.key+'\')"')+'>⚡ '+esc(def.name)+' ('+remaining+'/'+def.charges+')'+(def.cost?' · '+def.cost+' EM':' · Gratis')+'</button><div style="margin-top:6px;font-size:12px;line-height:1.5">'+esc(def.effect)+'</div></div>';
   }).join(''):'<span class="muted">No hay despertares equipados.</span>';
-  const canReinforceDamage=[16,20,45].includes(Number(ch.peculiarityId));
   const pec=peculiarityOf(ch);
   const pid=Number(ch.peculiarityId||0);
   const directIds=[12,47,64,71,77];
   const maxPecUses=([71,77].includes(pid)?2:1);
   const usedPec=Number(combatState?.peculiarity_uses?.['action_'+pid]||0);
   const peculiarityCombatAction=pec?'<div class="quick-passive-item"><b>✨ '+esc(pec.nombre)+'</b><div style="font-size:12px;margin:6px 0">'+esc(pec.efecto)+'</div>'+(directIds.includes(pid)?'<button class="combat-technique-btn" '+(!canRoll||usedPec>=maxPecUses?'disabled':'onclick="activateCombatPeculiarity(\''+campaignId+'\',\''+ch.id+'\')"')+'>Activar peculiaridad ('+(maxPecUses-usedPec)+'/'+maxPecUses+')</button>':'<small class="muted">Efecto pasivo o condicionado por una acción.</small>')+'</div>':'';
-  const physicalDamageActions=canRoll?'<div class="quick-tech-actions"><button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\')">🎲 Daño físico · Fuerza</button>'+(canReinforceDamage?'<button class="combat-technique-btn secondary" onclick="rollPhysicalDamage(\''+campaignId+'\',\''+ch.id+'\',\'Fuerza\',true)">⚡ Daño físico reforzado</button>':'')+'</div>':'';
   return '<div class="combat-quick-menu hidden" id="quick-menu-'+ch.id+'" onclick="event.stopPropagation()">'+
     '<div class="combat-quick-nav">'+
       '<button class="combat-quick-tab active" id="quick-tab-tech-'+ch.id+'" onclick="showCombatQuickTab(\''+ch.id+'\',\'tech\')"><span class="qicon">✦</span><span>Técnica</span></button>'+
@@ -3911,7 +3887,7 @@ function combatQuickMenuHtml(campaignId,ch,canRoll){
       (ch.techniqueDescription?'<div class="quick-tech-desc">'+esc(ch.techniqueDescription)+'</div>':'<div class="muted">Sin descripción de técnica.</div>')+
       '<div class="quick-tech-list" style="margin-top:8px">'+techniqueButtons+'</div>'+
     '</div>'+
-    '<div class="combat-quick-panel hidden" id="quick-panel-actions-'+ch.id+'"><div class="quick-action-list">'+physicalDamageActions+peculiarityCombatAction+awakeningActions+'</div></div>'+
+    '<div class="combat-quick-panel hidden" id="quick-panel-actions-'+ch.id+'"><div class="quick-action-list">'+peculiarityCombatAction+awakeningActions+'</div></div>'+
     '<div class="combat-quick-panel hidden" id="quick-panel-passives-'+ch.id+'"><div class="quick-passive-list">'+passiveHtml+'</div></div>'+
   '</div>';
 }

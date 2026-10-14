@@ -1648,9 +1648,9 @@ function techniqueMultilineKeydown(event){
 
 
 const gradeLadder=[
- {name:'Grado 4',xp:0},{name:'Semigrado 3',xp:320},{name:'Grado 3',xp:450},
- {name:'Semigrado 2',xp:640},{name:'Grado 2',xp:1280},{name:'Semigrado 1',xp:2560},
- {name:'Grado 1',xp:4500},{name:'Grado Especial',xp:6000}
+ {name:'Grado 4',xp:0,bonusTotal:1},{name:'Semigrado 3',xp:320,bonusTotal:2},{name:'Grado 3',xp:450,bonusTotal:2},
+ {name:'Semigrado 2',xp:640,bonusTotal:4},{name:'Grado 2',xp:1280,bonusTotal:6},{name:'Semigrado 1',xp:2560,bonusTotal:9},
+ {name:'Grado 1',xp:4500,bonusTotal:12},{name:'Grado Especial',xp:6000,bonusTotal:20}
 ];
 function gradeProgressHtml(ch,xpValue){
  const xp=Math.max(0,Math.floor(Number(xpValue)||0));
@@ -1658,6 +1658,7 @@ function gradeProgressHtml(ch,xpValue){
  const ix=Math.max(0,savedIndex);
  const current=gradeLadder[ix];
  const next=gradeLadder[ix+1];
+ const nextCredit=next?Math.max(0,Number(next.bonusTotal||0)-Number(current.bonusTotal||0)):0;
  if(!next)return '<section class="rank-progress rank-progress-complete"><div class="rank-progress-head"><div class="rank-progress-now">👑 Actualmente eres '+esc(current.name)+'</div></div><div class="rank-progress-message">¡Has alcanzado el rango máximo!</div><div class="rank-progress-numbers"><span>'+xp+' XP acumulada</span><span>Rango máximo desbloqueado</span></div></section>';
  const needed=Math.max(1,next.xp);
  const earned=Math.max(0,Math.min(needed,xp));
@@ -1667,7 +1668,8 @@ function gradeProgressHtml(ch,xpValue){
  '<div class="rank-progress-message">'+esc(msg)+'</div>'+
  '<div style="font-size:13px;margin:8px 0;font-weight:bold">'+pct.toFixed(1)+'% completado</div><div class="rank-progress-track" role="progressbar" aria-valuenow="'+xp+'" aria-valuemin="0" aria-valuemax="'+next.xp+'" style="display:block;overflow:hidden;height:17px;border-radius:12px;background:#292337"><div class="rank-quarter-fill" style="width:'+pct+'%;height:100%;min-width:'+(pct>0?'3px':'0')+';background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:12px"></div></div>'+
  '<div class="rank-progress-milestones"><span>Inicio</span><span>25%</span><span>50%</span><span>75%</span><span>Meta</span></div>'+
- '<div class="rank-progress-numbers"><span>'+xp+' XP acumulada · Meta: '+next.xp+' XP</span><span>'+(xp>=next.xp?'🔒 Ascenso pendiente de prueba · '+(xp-next.xp)+' XP excedente':'Te faltan '+(next.xp-xp)+' XP')+'</span></div></section>';
+ '<div class="rank-progress-numbers"><span>'+xp+' XP acumulada · Meta: '+next.xp+' XP</span><span>'+(xp>=next.xp?'🔒 Ascenso pendiente de prueba · '+(xp-next.xp)+' XP excedente':'Te faltan '+(next.xp-xp)+' XP')+'</span></div>'+
+ '<div class="rank-progress-message">Al ascender a '+esc(next.name)+': <b>+'+nextCredit+' puntos nuevos</b> para distribuir. '+(nextCredit===0?'Ya tenés el total correspondiente a ese grado.':'Los puntos de grados anteriores se conservan.')+'</div></section>';
 }
 function showGradeAscension(characterName,newGrade,extraPoints=null){
  const old=document.querySelector('.rank-up-notice');if(old)old.remove();
@@ -1900,6 +1902,7 @@ async function adminApproveCombatGrade(campaignId){
   if(ix<0||ix>=gradeLadder.length-1){toast('Este personaje no tiene un rango superior disponible.');return}
   const xp=Number(progressForCharacter(characterId).experience||0);
   if(xp<gradeLadder[ix+1].xp){toast('Todavía no alcanzó la experiencia necesaria.');return}
+  if(pendingGradeBonuses[characterId]){toast('Antes de ascender, el personaje debe repartir la bonificación de grado pendiente en Mis personajes.');return}
   if(!confirm('¿Confirmás que '+ch.sorcererName+' aprobó su prueba para ascender a '+gradeLadder[ix+1].name+'?'))return;
   const {data,error}=await sb.rpc('admin_approve_grade',{p_character_id:characterId});
   if(error){toast(error.message);return}

@@ -3778,11 +3778,11 @@ function combatCharacterHtml(campaignId,ch){
       '<div class="enemy-hidden-note">No conocés sus recursos, estadísticas, técnica ni pasivas.</div>'+
     '</article>';
   }
-  const resource=(label,prefix,cur,max,icon)=>'<div class="combat-resource combat-resource-'+prefix+'"><div class="combat-resource-top"><b><span class="combat-resource-icon">'+icon+'</span>'+label+'</b><span id="'+prefix+'-text-'+ch.id+'">'+cur+' / '+max+'</span></div><div class="combat-bar"><div class="combat-bar-fill" id="'+prefix+'-bar-'+ch.id+'"></div></div>'+(canEditCombat?'<input type="range" id="'+prefix+'-range-'+ch.id+'" min="0" max="'+max+'" value="'+Math.min(cur,max)+'" oninput="combatRangeInput(\''+ch.id+'\',\''+prefix+'\')"><div class="combat-number-row"><input type="number" min="0" id="'+prefix+'-current-'+ch.id+'" value="'+cur+'" oninput="combatNumberInput(\''+ch.id+'\',\''+prefix+'\')"><span>/</span><input type="number" min="1" id="'+prefix+'-max-'+ch.id+'" value="'+max+'" oninput="combatMaxInput(\''+ch.id+'\',\''+prefix+'\')"></div><div class="combat-quick-subtract"><input type="number" min="0" step="1" id="'+prefix+'-subtract-'+ch.id+'" placeholder="Restar"><button onclick="quickSubtractCombatResource(\''+campaignId+'\',\''+ch.id+'\',\''+prefix+'\')">− Restar</button>'+(prefix==='hp'?'<select id="hp-damage-type-'+ch.id+'"><option value="fisico">Físico</option><option value="otro">Otro</option></select><select id="hp-attacker-'+ch.id+'"><option value="">Sin atacante</option>'+allCharacters.filter(x=>x.id!==ch.id&&sharedMemberships.some(m=>m.campaign_id===campaignId&&m.character_id===x.id)).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.sorcererName)+'</option>').join('')+'</select>':'')+'</div>':'')+'</div>';
+  const resource=(label,prefix,cur,max,icon)=>'<div class="combat-resource combat-resource-'+prefix+'"><div class="combat-resource-top"><b><span class="combat-resource-icon">'+icon+'</span>'+label+'</b><span id="'+prefix+'-text-'+ch.id+'">'+cur+' / '+max+'</span></div><div class="combat-bar"><div class="combat-bar-fill" id="'+prefix+'-bar-'+ch.id+'"></div></div>'+(canEditCombat?'<input type="range" id="'+prefix+'-range-'+ch.id+'" min="0" max="'+max+'" value="'+Math.min(cur,max)+'" oninput="combatRangeInput(\''+ch.id+'\',\''+prefix+'\')" onchange="flushCombatBarFromElement(this)"><div class="combat-number-row"><input type="number" min="0" id="'+prefix+'-current-'+ch.id+'" value="'+cur+'" oninput="combatNumberInput(\''+ch.id+'\',\''+prefix+'\')" onchange="flushCombatBarFromElement(this)"><span>/</span><input type="number" min="1" id="'+prefix+'-max-'+ch.id+'" value="'+max+'" oninput="combatMaxInput(\''+ch.id+'\',\''+prefix+'\')" onchange="flushCombatBarFromElement(this)"></div><div class="combat-quick-subtract"><input type="number" min="0" step="1" id="'+prefix+'-subtract-'+ch.id+'" placeholder="Restar"><button onclick="quickSubtractCombatResource(\''+campaignId+'\',\''+ch.id+'\',\''+prefix+'\')">− Restar</button>'+(prefix==='hp'?'<select id="hp-damage-type-'+ch.id+'"><option value="fisico">Físico</option><option value="otro">Otro</option></select><select id="hp-attacker-'+ch.id+'"><option value="">Sin atacante</option>'+allCharacters.filter(x=>x.id!==ch.id&&sharedMemberships.some(m=>m.campaign_id===campaignId&&m.character_id===x.id)).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.sorcererName)+'</option>').join('')+'</select>':'')+'</div>':'')+'</div>';
   const specialBars=(Array.isArray(s.special_bars)?s.special_bars:[]).slice(0,2);
   const specialResource=(bar,index)=>{
     const prefix='sp'+index,cur=Math.max(0,Number(bar.current??bar.max??100)),max=Math.max(1,Number(bar.max||100)),color=bar.color||'#8b5cf6';
-    return '<div class="combat-resource combat-resource-special"><div class="combat-resource-top"><b><span class="combat-resource-icon">◆</span>'+esc(bar.name||'Barra especial')+'</b><span id="'+prefix+'-text-'+ch.id+'">'+cur+' / '+max+'</span></div><div class="combat-bar"><div class="combat-bar-fill" id="'+prefix+'-bar-'+ch.id+'" style="background:'+esc(color)+'"></div></div>'+(canEditCombat?'<input type="range" id="'+prefix+'-range-'+ch.id+'" min="0" max="'+max+'" value="'+Math.min(cur,max)+'" oninput="combatRangeInput(\''+ch.id+'\',\''+prefix+'\')"><div class="combat-number-row"><input type="number" min="0" id="'+prefix+'-current-'+ch.id+'" value="'+cur+'" oninput="combatNumberInput(\''+ch.id+'\',\''+prefix+'\')"><span>/</span><input type="number" min="1" id="'+prefix+'-max-'+ch.id+'" value="'+max+'" oninput="combatMaxInput(\''+ch.id+'\',\''+prefix+'\')"></div><div class="combat-quick-subtract"><input type="number" min="0" step="1" id="'+prefix+'-subtract-'+ch.id+'" placeholder="Restar"><button onclick="quickSubtractSpecialBar(\''+campaignId+'\',\''+ch.id+'\','+index+')">− Restar</button></div>':'')+'</div>';
+    return '<div class="combat-resource combat-resource-special"><div class="combat-resource-top"><b><span class="combat-resource-icon">◆</span>'+esc(bar.name||'Barra especial')+'</b><span id="'+prefix+'-text-'+ch.id+'">'+cur+' / '+max+'</span></div><div class="combat-bar"><div class="combat-bar-fill" id="'+prefix+'-bar-'+ch.id+'" style="background:'+esc(color)+'"></div></div>'+(canEditCombat?'<input type="range" id="'+prefix+'-range-'+ch.id+'" min="0" max="'+max+'" value="'+Math.min(cur,max)+'" oninput="combatRangeInput(\''+ch.id+'\',\''+prefix+'\')" onchange="flushCombatBarFromElement(this)"><div class="combat-number-row"><input type="number" min="0" id="'+prefix+'-current-'+ch.id+'" value="'+cur+'" oninput="combatNumberInput(\''+ch.id+'\',\''+prefix+'\')" onchange="flushCombatBarFromElement(this)"><span>/</span><input type="number" min="1" id="'+prefix+'-max-'+ch.id+'" value="'+max+'" oninput="combatMaxInput(\''+ch.id+'\',\''+prefix+'\')" onchange="flushCombatBarFromElement(this)"></div><div class="combat-quick-subtract"><input type="number" min="0" step="1" id="'+prefix+'-subtract-'+ch.id+'" placeholder="Restar"><button onclick="quickSubtractSpecialBar(\''+campaignId+'\',\''+ch.id+'\','+index+')">− Restar</button></div>':'')+'</div>';
   };
   const statsHtml=stats.map(([n,v])=>{
     const num=Number(v),rollable=canRoll&&Number.isFinite(num);
@@ -4382,6 +4382,7 @@ function updateCombatBarsFromState(charId){
   const s=combatStateByChar(charId);if(!s)return;
   const defs=[['hp','hp_current','hp_max'],['ce','ce_current','ce_max'],['du','durability_current','durability_max']];
   defs.forEach(([prefix,curKey,maxKey])=>{
+    if(isCombatBarWritePending(charId,prefix))return;
     const cur=Number(s[curKey]),rawMax=Math.max(0,Number(s[maxKey])),max=Math.max(1,rawMax);
     const active=document.activeElement;
     const curInput=document.getElementById(prefix+'-current-'+charId);
@@ -4397,6 +4398,7 @@ function updateCombatBarsFromState(charId){
   });
   (Array.isArray(s.special_bars)?s.special_bars:[]).slice(0,2).forEach((sp,i)=>{
     const prefix='sp'+i,cur=Math.max(0,Number(sp.current??sp.max??0)),rawMax=Math.max(1,Number(sp.max||1)),active=document.activeElement;
+    if(isCombatBarWritePending(charId,prefix))return;
     const curInput=document.getElementById(prefix+'-current-'+charId),maxInput=document.getElementById(prefix+'-max-'+charId),range=document.getElementById(prefix+'-range-'+charId);
     if(curInput&&active!==curInput)curInput.value=cur;
     if(maxInput&&active!==maxInput)maxInput.value=rawMax;
@@ -4427,16 +4429,96 @@ function updateCombatBars(charId){
     if(bar)bar.style.width=pct+'%';if(txt)txt.textContent=cur+' / '+max;
   });
 }
+// Los cambios se guardan durante el arrastre, limitando la frecuencia de consultas.
+const pendingCombatBarWrites=new Map();
+function scheduleCombatBarWrite(charId,prefix,field,immediate=false){
+ if(!currentUser||!selectedCombatCampaignId)return;
+ const character=allCharacters.find(ch=>ch.id===charId);
+ const state=combatStateByChar(charId);
+ if(!character||!state||state.campaign_id!==selectedCombatCampaignId||
+    (!isAdmin&&character.owner_id!==currentUser.id))return;
+ if(!['hp','ce','du','sp0','sp1'].includes(prefix)||!['current','max'].includes(field))return;
+ const input=document.getElementById(prefix+'-'+field+'-'+charId);
+ if(!input||input.value.trim()==='')return;
+ const raw=Number(input.value);
+ if(!Number.isFinite(raw))return;
+ const value=Math.min(1000000,Math.max(field==='max'?1:0,raw));
+ const key=state.campaign_id+'|'+charId+'|'+prefix+'|'+field;
+ let job=pendingCombatBarWrites.get(key);
+ if(!job){
+  job={campaignId:state.campaign_id,charId,prefix,field,value:null,timer:null,inFlight:false};
+  pendingCombatBarWrites.set(key,job);
+ }
+ job.value=value;
+ if(immediate&&job.timer){clearTimeout(job.timer);job.timer=null}
+ if(immediate&&!job.inFlight){sendCombatBarWrite(key);return}
+ // Throttle: las otras sesiones ven cambios mientras se arrastra la barra.
+ if(!job.timer&&!job.inFlight)job.timer=setTimeout(()=>sendCombatBarWrite(key),150);
+}
+function isCombatBarWritePending(charId,prefix){
+ for(const job of pendingCombatBarWrites.values()){
+  if(job.charId===charId&&job.prefix===prefix)return true;
+ }
+ return false;
+}
+async function sendCombatBarWrite(key){
+ const job=pendingCombatBarWrites.get(key);
+ if(!job||job.inFlight||job.value===null)return;
+ if(job.timer){clearTimeout(job.timer);job.timer=null}
+ const value=job.value;job.value=null;job.inFlight=true;
+ try{
+  const {data,error}=await sb.rpc('update_combat_bar_live',{
+   p_campaign:job.campaignId,p_character:job.charId,p_bar:job.prefix,
+   p_field:job.field,p_value:value
+  });
+  if(error)throw error;
+  if(data&&selectedCombatCampaignId===job.campaignId)syncCombatStateRow(data);
+ }catch(error){
+  console.error('No pude sincronizar la barra',error);
+  toast('No se pudo actualizar la barra en vivo: '+(error?.message||'Error de conexión'));
+  job.value=null;
+  try{
+   const {data}=await sb.from('combat_states').select('*')
+    .eq('campaign_id',job.campaignId).eq('character_id',job.charId).maybeSingle();
+   if(data&&selectedCombatCampaignId===job.campaignId)syncCombatStateRow(data);
+  }catch(e){console.error(e)}
+ }finally{
+  job.inFlight=false;
+  if(job.value!==null){
+   job.timer=setTimeout(()=>sendCombatBarWrite(key),150);
+  }else{
+   pendingCombatBarWrites.delete(key);
+   updateCombatBarsFromState(job.charId);
+  }
+ }
+}
+function flushCombatBarFromElement(input){
+ const match=input?.id?.match(/^(hp|ce|du|sp0|sp1)-(range|current|max)-(.+)$/);
+ if(match)scheduleCombatBarWrite(match[3],match[1],match[2]==='max'?'max':'current',true);
+}
 function combatRangeInput(charId,prefix){
-  const r=document.getElementById(prefix+'-range-'+charId),c=document.getElementById(prefix+'-current-'+charId);if(r&&c)c.value=r.value;updateCombatBars(charId)
+ const r=document.getElementById(prefix+'-range-'+charId);
+ const c=document.getElementById(prefix+'-current-'+charId);
+ if(r&&c)c.value=r.value;
+ updateCombatBars(charId);
+ scheduleCombatBarWrite(charId,prefix,'current');
 }
 function combatNumberInput(charId,prefix){
-  const c=document.getElementById(prefix+'-current-'+charId),r=document.getElementById(prefix+'-range-'+charId),m=document.getElementById(prefix+'-max-'+charId);
-  if(c&&r){r.max=Math.max(1,Number(m?.value||r.max));r.value=Math.min(Number(c.value||0),Number(r.max))}updateCombatBars(charId)
+ const c=document.getElementById(prefix+'-current-'+charId);
+ const r=document.getElementById(prefix+'-range-'+charId);
+ const m=document.getElementById(prefix+'-max-'+charId);
+ if(c&&r){r.max=Math.max(1,Number(m?.value||r.max));r.value=Math.min(Math.max(0,Number(c.value||0)),Number(r.max))}
+ updateCombatBars(charId);
+ scheduleCombatBarWrite(charId,prefix,'current');
 }
 function combatMaxInput(charId,prefix){
-  const m=document.getElementById(prefix+'-max-'+charId),r=document.getElementById(prefix+'-range-'+charId);if(m&&r)r.max=Math.max(1,Number(m.value||1));updateCombatBars(charId)
+ const m=document.getElementById(prefix+'-max-'+charId);
+ const r=document.getElementById(prefix+'-range-'+charId);
+ if(m&&r)r.max=Math.max(1,Number(m.value||1));
+ updateCombatBars(charId);
+ scheduleCombatBarWrite(charId,prefix,'max');
 }
+
 async function quickSubtractCombatResource(campaignId,charId,prefix){
   const ch=allCharacters.find(c=>c.id===charId);
   if(!ch||(!isAdmin&&ch.owner_id!==currentUser?.id))return;
@@ -4503,26 +4585,6 @@ async function quickSubtractSpecialBar(campaignId,charId,index){
   toast((bar.name||'Barra especial')+': '+current+' − '+amount+' = '+bar.current);
 }
 
-async function saveCombatCharacterState(campaignId,charId){
-  const ch=allCharacters.find(c=>c.id===charId);
-  if(!ch||(!isAdmin&&ch.owner_id!==currentUser?.id))return;
-  const val=(p,t)=>Math.max(0,Number(document.getElementById(p+'-'+t+'-'+charId)?.value||0));
-  const payload={hp_current:val('hp','current'),hp_max:val('hp','max'),ce_current:val('ce','current'),ce_max:val('ce','max'),durability_current:val('du','current'),durability_max:val('du','max'),updated_at:new Date().toISOString()};
-  payload.hp_current=Math.min(payload.hp_current,payload.hp_max);
-  payload.ce_current=Math.min(payload.ce_current,payload.ce_max);
-  payload.durability_current=Math.min(payload.durability_current,payload.durability_max);
-  const existingSpecial=Array.isArray(combatStateByChar(charId)?.special_bars)?combatStateByChar(charId).special_bars:[];
-  payload.special_bars=existingSpecial.slice(0,2).map((bar,i)=>{
-    const prefix='sp'+i,max=Math.max(1,Number(document.getElementById(prefix+'-max-'+charId)?.value??bar.max??1));
-    const current=Math.min(max,Math.max(0,Number(document.getElementById(prefix+'-current-'+charId)?.value??bar.current??max)));
-    return {...bar,max,current};
-  });
-  const {error}=await sb.from('combat_states').update(payload).eq('campaign_id',campaignId).eq('character_id',charId);
-  if(error){toast(error.message);return}
-  const s=combatStateByChar(charId);if(s)Object.assign(s,payload);
-  updateCombatBarsFromState(charId);
-  toast('Estado de combate guardado.');
-}
 async function toggleCombatVisibility(campaignId,charId){
   if(!isAdmin)return;
   const s=combatStateByChar(charId);if(!s)return;

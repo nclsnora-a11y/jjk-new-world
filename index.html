@@ -3522,7 +3522,8 @@ async function ensureCombatStates(campaignId){
     if(!ch||!state)continue;
     const desired=(Array.isArray(ch.specialBars)?ch.specialBars:[]).slice(0,2).map(bar=>{
       const prev=(Array.isArray(state.special_bars)?state.special_bars:[]).find(x=>x.id===bar.id);
-      const max=Math.max(1,Number(bar.max||100));
+      // En combate conservamos los máximos ya ajustados en vivo.
+      const max=Math.max(1,Number(prev?.max??bar.max??100));
       return {
         id:bar.id,
         name:bar.name||'Barra especial',

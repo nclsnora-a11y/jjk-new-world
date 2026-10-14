@@ -14,6 +14,11 @@ const staticHtml=html.replace(/<script[\s\S]*?<\/script>/gi,'');
 const ids=[...staticHtml.matchAll(/\bid="([A-Za-z][\w-]*)"/g)].map(x=>x[1]);
 const duplicates=[...new Set(ids.filter((id,i)=>ids.indexOf(id)!==i))];
 if(duplicates.length)fail('IDs HTML duplicados: '+duplicates.join(', '));
+// Mantener en futuras actualizaciones las barras compartidas y los accesos simplificados.
+if(!html.includes("update_combat_bar_live"))fail("Las barras dejaron de guardarse automáticamente en Supabase");
+if(!html.includes("table:'combat_states'"))fail("Se perdió la suscripción de barras a Supabase Realtime");
+if((html.match(/onchange="flushCombatBarFromElement\(this\)"/g)||[]).length!==6)fail("Faltan controles de barras en vivo");
+if(html.includes("Guardar barras")||html.includes("rollPhysicalDamage("))fail("Reaparecieron acciones retiradas del combate");
 if(!Array.isArray(data.peculiaridades)||data.peculiaridades.length!==77)fail('El catálogo debe contener exactamente 77 peculiaridades');
 const unique=new Set(data.peculiaridades.map(x=>x.id));
 if(unique.size!==77)fail('Hay identificadores de peculiaridad duplicados');

@@ -2993,7 +2993,7 @@ document.getElementById('auth-register').onclick=async()=>{
   if(readAuthCooldown(REGISTER_COOLDOWN_KEY)>Date.now()){updateRegisterCooldown();return}
   const email=document.getElementById('auth-email').value.trim().toLowerCase();
   const password=document.getElementById('auth-password').value;
-  if(!/^\\S+@\\S+\\.\\S+$/.test(email)||password.length<10){
+  if(!/^\S+@\S+\.\S+$/.test(email)||password.length<10){
     const message='Ingresá un email válido y una contraseña de al menos 10 caracteres.';
     if(feedback)feedback.textContent=message;
     toast(message);

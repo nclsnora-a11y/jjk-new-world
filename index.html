@@ -3193,9 +3193,20 @@ saveCharacterEdit=async function(id){
   await loadSharedData();toast('Cambios guardados y recursos recalculados.');
 };
 deleteCharacter=async function(id){
-  if(!confirm('¿Eliminar este personaje de Mis personajes?'))return;
-  const {error}=await sb.from('characters').delete().eq('id',id);if(error){toast(error.message);return}
-  await loadSharedData();toast('Personaje eliminado.');
+  const ch=savedCharacters.find(c=>c.id===id);
+  if(!ch){toast('No encontré este personaje en tu cuenta.');return}
+  if(!confirm('¿Eliminar a '+ch.sorcererName+' de Mis personajes? Sus mensajes anteriores en Roleplay se conservarán.'))return;
+  try{
+    const {data,error}=await sb.from('characters').delete().eq('id',id).eq('owner_id',currentUser.id).select('id');
+    if(error)throw error;
+    if(!data?.length){toast('No se pudo eliminar el personaje. Revisá los permisos de tu cuenta.');return}
+    delete pendingCharacterCrops[id];
+    await loadSharedData();
+    toast('Personaje eliminado. El historial de Roleplay se conservó.');
+  }catch(e){
+    console.error('Error eliminando personaje',e);
+    toast('No se pudo eliminar el personaje: '+(e?.message||'error desconocido'));
+  }
 };
 removePhoto=async function(id){
   delete pendingCharacterCrops[id];

@@ -3162,19 +3162,29 @@ zoneHtmlFor=function(c,z){
     '<div class="zone-players">'+playersHtml+'</div></div>';
 };
 
-// Replace Save Character listener by cloning button
+// Guardar ficha y peculiaridad elegida en una misma transacción de servidor.
 {
- const old=document.getElementById('save-character');
- if(old){const btn=old.cloneNode(true);old.replaceWith(btn);btn.onclick=async()=>{
-   if(!currentUser){toast('Iniciá sesión para guardar el personaje.');return}
-   const ch=makeCharacterFromSheet();
-   const payload={owner_id:currentUser.id,sorcerer_name:ch.sorcererName,user_name:'—',character_side:ch.side||'hechicero',initial_stats:ch.initialStats,current_stats:ch.currentStats,technique_type:ch.type,grade:ch.grade,control_em:ch.control?Number(ch.control):null,passives:ch.passives,technique_description:'',technique_actions:[],special_bars:[]};
-   btn.disabled=true;
-   try{const {error}=await sb.from('characters').insert(payload);if(error)throw error;
-   await loadSharedData();toast('Personaje guardado y sincronizado.');}
-   catch(e){console.error('No se pudo guardar el personaje de ruletas',e);toast('No se pudo guardar: '+(e?.message||String(e)))}
-   finally{btn.disabled=false}
- }}
+  const old=document.getElementById('save-character');
+  if(old){const btn=old.cloneNode(true);old.replaceWith(btn);btn.onclick=async()=>{
+    if(!currentUser){toast('Iniciá sesión para guardar el personaje.');return}
+    if(creationPeculiarityRolling){toast('Terminá primero la tirada de peculiaridad.');return}
+    if(sheetState.savedCharacterId){toast('Esta ficha ya está guardada. Usá «Nuevo personaje».');return}
+    const draft=sheetState.draftId,expected=sheetState.peculiarityId;
+    const ch=makeCharacterFromSheet();
+    const payload={sorcerer_name:ch.sorcererName,user_name:'—',character_side:ch.side||'hechicero',initial_stats:ch.initialStats,current_stats:ch.currentStats,technique_type:ch.type,grade:ch.grade,control_em:ch.control?Number(ch.control):null,passives:ch.passives,technique_description:''};
+    btn.disabled=true;
+    try{
+      const {data,error}=await sb.rpc('save_creation_character',{p_draft:draft,p_character:payload,p_expected_peculiarity:expected});
+      if(error)throw error;
+      if(draft===sheetState.draftId){sheetState.savedCharacterId=data;renderSheet();}
+      await loadSharedData();
+      refreshPeculiarityCharacterOptions();
+      toast('Personaje guardado con su peculiaridad.');
+    }catch(e){
+      console.error('No se pudo guardar el personaje de ruletas',e);
+      toast('No se pudo guardar: '+(e?.message||String(e)));
+    }finally{btn.disabled=!!sheetState.savedCharacterId;}
+  }}
 }
 
 // Character DB actions

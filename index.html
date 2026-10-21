@@ -1353,7 +1353,7 @@ function drawPeculiarityWheel(){
 }
 function peculiarityWheelHtml(){
  return '<section class="card" id="card-peculiarities"><h2>Ruleta de Peculiaridades</h2>'+
- '<p class="muted">77 peculiaridades. Tirás la peculiaridad para la ficha que estás creando arriba. El resultado se guardará junto con el personaje.</p>'+
+ '<p class="muted">77 peculiaridades. Podés volver a girar todas las veces que quieras mientras creás la ficha. Al guardar el personaje se conserva el último resultado.</p>'+
  '<div class="wheel"><div class="pointer"></div><canvas id="canvas-peculiarities" width="700" height="700"></canvas></div>'+
  '<div class="actions"><button id="peculiarity-spin-button" type="button" onclick="spinPeculiarityFromWheel()">Girar para esta ficha</button></div>'+
  '<div class="result" id="result-peculiarities">Resultado: —</div>'+
@@ -1384,8 +1384,8 @@ function refreshPeculiarityCharacterOptions(){
   }
   const btn=document.getElementById('peculiarity-spin-button');
   if(btn){
-    btn.disabled=creationPeculiarityRolling||!currentUser||!peculiaritiesCatalog.length||!!sheetState.peculiarityId||!!sheetState.savedCharacterId;
-    btn.textContent=creationPeculiarityRolling?'Girando...':sheetState.savedCharacterId?'Ficha guardada':sheetState.peculiarityId?'Peculiaridad obtenida':'Girar para esta ficha';
+    btn.disabled=creationPeculiarityRolling||!currentUser||!peculiaritiesCatalog.length||!!sheetState.savedCharacterId;
+    btn.textContent=creationPeculiarityRolling?'Girando...':sheetState.savedCharacterId?'Ficha guardada':sheetState.peculiarityId?'Volver a girar':'Girar para esta ficha';
   }
 }
 async function spinPeculiarityFromWheel(){
@@ -1393,7 +1393,6 @@ async function spinPeculiarityFromWheel(){
   if(!currentUser){toast('Iniciá sesión para tirar la peculiaridad.');return}
   if(!peculiaritiesCatalog.length){toast('Se está cargando el catálogo de peculiaridades.');return}
   if(sheetState.savedCharacterId){toast('Esta ficha ya está guardada. Creá una nueva para volver a tirar.');return}
-  if(sheetState.peculiarityId){toast('Esta ficha ya tiene su peculiaridad.');return}
   const draft=sheetState.draftId;
   creationPeculiarityRolling=true;
   refreshPeculiarityCharacterOptions();

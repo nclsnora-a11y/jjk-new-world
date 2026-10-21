@@ -1353,29 +1353,67 @@ function drawPeculiarityWheel(){
 }
 function peculiarityWheelHtml(){
  return '<section class="card" id="card-peculiarities"><h2>Ruleta de Peculiaridades</h2>'+
- '<p class="muted">77 peculiaridades. Cada número corresponde a una peculiaridad; el resultado revela su nombre y efecto. Para asignarla, girá la ruleta desde Mis personajes.</p>'+
+ '<p class="muted">77 peculiaridades. Tirás la peculiaridad para la ficha que estás creando arriba. El resultado se guardará junto con el personaje.</p>'+
  '<div class="wheel"><div class="pointer"></div><canvas id="canvas-peculiarities" width="700" height="700"></canvas></div>'+
- '<div class="actions"><select id="peculiarity-spin-character" aria-label="Personaje para la peculiaridad"><option value="">Elegí un personaje</option>'+savedCharacters.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+'</option>').join('')+'</select><button id="peculiarity-spin-button" type="button" onclick="spinPeculiarityFromWheel()">Girar ruleta</button></div>'+
+ '<div class="actions"><button id="peculiarity-spin-button" type="button" onclick="spinPeculiarityFromWheel()">Girar para esta ficha</button></div>'+
  '<div class="result" id="result-peculiarities">Resultado: —</div>'+
- '<div class="technique-detail" id="peculiarity-description"><div class="pd-cat">Peculiaridad</div><div class="pd-name">—</div><div class="pd-desc">Girá la ruleta desde la ficha de un personaje.</div></div>'+
+ '<div class="technique-detail" id="peculiarity-description"><div class="pd-cat">Peculiaridad</div><div class="pd-name">—</div><div class="pd-desc">La tirada se asignará a la ficha actual.</div></div>'+
  '<div class="legend"><span>Común</span><span>49%</span><span>Poco común</span><span>28%</span><span>Rara</span><span>15%</span><span>Épica</span><span>6%</span><span>Legendaria</span><span>2%</span></div></section>';
 }
+let creationPeculiarityRolling=false;
 function refreshPeculiarityCharacterOptions(){
- const select=document.getElementById('peculiarity-spin-character');
- if(!select)return;
- const previous=select.value;
- const eligible=(savedCharacters||[]).filter(ch=>!ch.isNpc&&!ch.peculiarityId);
- select.innerHTML='<option value="">Elegí un personaje</option>'+eligible.map(ch=>'<option value="'+esc(ch.id)+'">'+esc(ch.sorcererName)+(ch.peculiarityId?' · Ya tiene peculiaridad':'')+'</option>').join('');
- if(eligible.some(ch=>String(ch.id)===previous))select.value=previous;
- const spinButton=document.getElementById('peculiarity-spin-button');
- if(spinButton)spinButton.disabled=!eligible.length;
+  const p=peculiaritiesCatalog.find(item=>item.id===Number(sheetState.peculiarityId));
+  const result=document.getElementById('result-peculiarities');
+  const detail=document.getElementById('peculiarity-description');
+  if(p){
+    if(result)result.textContent='Resultado: '+p.nombre;
+    if(detail){
+      detail.querySelector('.pd-cat').textContent=p.rareza[0].toUpperCase()+p.rareza.slice(1);
+      detail.querySelector('.pd-name').textContent=p.nombre;
+      detail.querySelector('.pd-desc').textContent=p.efecto;
+    }
+  }else{
+    if(result)result.textContent='Resultado: —';
+    if(detail){
+      detail.querySelector('.pd-cat').textContent='Peculiaridad';
+      detail.querySelector('.pd-name').textContent='—';
+      detail.querySelector('.pd-desc').textContent='La tirada se asignará a la ficha actual.';
+    }
+    peculiarityWheelRotation=0;
+    drawPeculiarityWheel();
+  }
+  const btn=document.getElementById('peculiarity-spin-button');
+  if(btn){
+    btn.disabled=creationPeculiarityRolling||!currentUser||!peculiaritiesCatalog.length||!!sheetState.peculiarityId||!!sheetState.savedCharacterId;
+    btn.textContent=creationPeculiarityRolling?'Girando...':sheetState.savedCharacterId?'Ficha guardada':sheetState.peculiarityId?'Peculiaridad obtenida':'Girar para esta ficha';
+  }
 }
-function spinPeculiarityFromWheel(){
- const id=document.getElementById('peculiarity-spin-character')?.value;
- if(!id){toast('Elegí un personaje para girar.');return}
- const ch=savedCharacters.find(c=>String(c.id)===String(id));
- if(!ch||ch.peculiarityId){toast('La peculiaridad de este personaje ya está bloqueada.');return}
- rollCharacterPeculiarity(id);
+async function spinPeculiarityFromWheel(){
+  if(creationPeculiarityRolling)return;
+  if(!currentUser){toast('Iniciá sesión para tirar la peculiaridad.');return}
+  if(!peculiaritiesCatalog.length){toast('Se está cargando el catálogo de peculiaridades.');return}
+  if(sheetState.savedCharacterId){toast('Esta ficha ya está guardada. Creá una nueva para volver a tirar.');return}
+  if(sheetState.peculiarityId){toast('Esta ficha ya tiene su peculiaridad.');return}
+  const draft=sheetState.draftId;
+  creationPeculiarityRolling=true;
+  refreshPeculiarityCharacterOptions();
+  try{
+    const {data,error}=await sb.rpc('roll_creation_peculiarity',{p_draft:draft});
+    if(error)throw error;
+    if(draft!==sheetState.draftId)return;
+    const p=peculiaritiesCatalog.find(item=>item.id===Number(data));
+    if(!p)throw Error('No se encontró la peculiaridad obtenida en el catálogo.');
+    sheetState.peculiarityId=p.id;
+    renderSheet();
+    showPeculiarityResult(p);
+    toast('¡Te salió '+p.nombre+'! Quedó en tu ficha.');
+  }catch(e){
+    console.error('No se pudo tirar la peculiaridad para la ficha',e);
+    toast('No se pudo tirar: '+(e?.message||String(e)));
+  }finally{
+    creationPeculiarityRolling=false;
+    refreshPeculiarityCharacterOptions();
+  }
 }
 function showPeculiarityResult(p){
  if(!p)return;
@@ -1459,7 +1497,7 @@ function renderCharacters(){
   const gmForm=(typeof isAdmin!=='undefined'&&isAdmin&&typeof gmCharacterCreationHtml==='function')?gmCharacterCreationHtml():'';
   if(!savedCharacters.length){root.innerHTML=gmForm+'<div class="empty-characters"><b>No hay personajes guardados todavía.</b><br><br>Creá uno en Ruletas o, si sos GM, utilizá el formulario de creación manual.</div>';return}
   root.innerHTML=gmForm+'<div class="characters-grid">'+savedCharacters.map(characterCard).join('')+'</div>';
-  const w=document.getElementById('card-peculiarities');if(w){const existing=document.getElementById('peculiarity-spin-character')?.value;w.outerHTML=peculiarityWheelHtml();drawPeculiarityWheel();if(existing&&document.getElementById('peculiarity-spin-character'))document.getElementById('peculiarity-spin-character').value=existing;}
+  refreshPeculiarityCharacterOptions();
 }
 function optionList(values,current){
   return values.map(v=>'<option '+(v===current?'selected':'')+'>'+esc(v)+'</option>').join('');

@@ -557,6 +557,11 @@ main{max-width:1500px!important;width:min(98vw,1500px)!important}
       <h3>Pasivas obtenidas</h3>
       <div class="sheet-passives" id="sheet-passives"><span class="muted">Todavía no hay pasivas.</span></div>
     </div>
+    <div class="sheet-block">
+      <h3>Peculiaridad obtenida</h3>
+      <div class="sheet-row"><span>Resultado</span><span class="sheet-value" id="sheet-peculiarity">—</span></div>
+      <div class="tech-desc" id="sheet-peculiarity-effect">Girá la ruleta de peculiaridades para esta ficha.</div>
+    </div>
   </div>
 </section>
 <div class="grid">
@@ -844,18 +849,28 @@ function sideValueFromLabel(value){
 function sideDisplayName(value){
   return value==='maldicion'?'Maldición':value==='brujo'?'Brujo':'Hechicero';
 }
-let sheetState={stats:blankStats(),type:null,technique:null,grade:null,control:null,passives:[],sorcererName:'',userName:'',side:'hechicero',undo:[]};
+function newSheetDraftId(){
+  if(typeof crypto!=='undefined'&&crypto.randomUUID)return crypto.randomUUID();
+  const b=new Uint8Array(16);crypto.getRandomValues(b);b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;
+  const hex=Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+  return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+}
+let peculiaritiesCatalog=[];
+let sheetState={stats:blankStats(),type:null,technique:null,grade:null,control:null,passives:[],peculiarityId:null,draftId:newSheetDraftId(),savedCharacterId:null,sorcererName:'',userName:'',side:'hechicero',undo:[]};
 try{
   const saved=JSON.parse(localStorage.getItem('jjk-character-sheet')||'null');
   if(saved){
     sheetState.stats=normalizeStatsObject({...blankStats(),...(saved.stats||{})});
     sheetState.type=saved.type||null; sheetState.technique=saved.technique||null; sheetState.grade=saved.grade||null; sheetState.control=saved.control||null;
     sheetState.passives=Array.isArray(saved.passives)?saved.passives:[];
+    sheetState.peculiarityId=Number(saved.peculiarityId)||null;
+    sheetState.draftId=/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(saved.draftId||'')?saved.draftId:newSheetDraftId();
+    sheetState.savedCharacterId=saved.savedCharacterId||null;
     sheetState.sorcererName=saved.sorcererName||''; sheetState.userName=''; sheetState.side=normalizeCharacterSide(saved.side);
     sheetState.undo=[];
   }
 }catch(e){}
-function snapshotSheet(){return JSON.stringify({stats:sheetState.stats,type:sheetState.type,technique:sheetState.technique,grade:sheetState.grade,control:sheetState.control,passives:sheetState.passives,sorcererName:sheetState.sorcererName,userName:sheetState.userName,side:sheetState.side})}
+function snapshotSheet(){return JSON.stringify({stats:sheetState.stats,type:sheetState.type,technique:sheetState.technique,grade:sheetState.grade,control:sheetState.control,passives:sheetState.passives,peculiarityId:sheetState.peculiarityId,draftId:sheetState.draftId,savedCharacterId:sheetState.savedCharacterId,sorcererName:sheetState.sorcererName,userName:sheetState.userName,side:sheetState.side})}
 function pushUndo(){sheetState.undo.push(snapshotSheet());if(sheetState.undo.length>50)sheetState.undo.shift()}
 function saveSheet(){localStorage.setItem('jjk-character-sheet',snapshotSheet())}
 function renderSheet(){
@@ -865,6 +880,11 @@ function renderSheet(){
   document.getElementById('sheet-control').textContent=sheetState.control||'—';
   document.getElementById('sorcerer-name').value=sheetState.sorcererName||'';const sideEl=document.getElementById('character-side');if(sideEl)sideEl.value=sheetState.side||'hechicero';const p=document.getElementById('sheet-passives');
   p.innerHTML=sheetState.passives.length?sheetState.passives.map((x,i)=>'<div class="sheet-passive"><b>'+(i+1)+'. '+x.category+' — '+x.name+'</b><span>'+x.description+'</span></div>').join(''):'<span class="muted">Todavía no hay pasivas.</span>';
+  const chosenPeculiarity=peculiaritiesCatalog.find(x=>x.id===Number(sheetState.peculiarityId));
+  document.getElementById('sheet-peculiarity').textContent=chosenPeculiarity?.nombre||(sheetState.peculiarityId?'#'+sheetState.peculiarityId:'—');
+  document.getElementById('sheet-peculiarity-effect').textContent=chosenPeculiarity?.efecto||(sheetState.peculiarityId?'Cargando descripción...':'Girá la ruleta de peculiaridades para esta ficha.');
+  const saveBtn=document.getElementById('save-character');
+  if(saveBtn){saveBtn.disabled=!!sheetState.savedCharacterId;saveBtn.textContent=sheetState.savedCharacterId?'Personaje guardado':'Guardar personaje';}
   saveSheet();
 }
 function registerResult(key,idx){
@@ -884,11 +904,13 @@ function sheetText(){
   lines.push('','TÉCNICA','Tipo: '+(sheetState.type||'—'),'Técnica Maldita: '+(sheetState.technique||'—'),'Descripción: '+(sheetState.type?(typeDescriptions[sheetState.type]||'—'):'—'),'Grado inicial: '+(sheetState.grade||'—'),'Control de Energía Maldita: '+(sheetState.control||'—'),'','PASIVAS');
   if(sheetState.passives.length)sheetState.passives.forEach((p,i)=>lines.push((i+1)+'. '+p.category+' — '+p.name+' | '+p.description));
   else lines.push('—');
+  const pec=peculiaritiesCatalog.find(p=>p.id===Number(sheetState.peculiarityId));
+  lines.push('','PECULIARIDAD',pec?pec.nombre+' | '+pec.efecto:'—');
   return lines.join('\n');
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
-document.getElementById('undo-sheet').addEventListener('click',()=>{if(!sheetState.undo.length){toast('No hay tiradas para deshacer.');return}const prev=JSON.parse(sheetState.undo.pop());sheetState={...sheetState,...prev,undo:sheetState.undo};renderSheet();});
-document.getElementById('new-sheet').addEventListener('click',()=>{pushUndo();sheetState.stats=blankStats();sheetState.type=null;sheetState.technique=null;sheetState.grade=null;sheetState.control=null;sheetState.passives=[];sheetState.sorcererName='';sheetState.userName='';sheetState.side='hechicero';renderSheet();toast('Ficha nueva creada.');});
+document.getElementById('undo-sheet').addEventListener('click',()=>{if(!sheetState.undo.length){toast('No hay tiradas para deshacer.');return}const prev=JSON.parse(sheetState.undo.pop());sheetState={...sheetState,...prev,undo:sheetState.undo};renderSheet();refreshPeculiarityCharacterOptions();});
+document.getElementById('new-sheet').addEventListener('click',()=>{pushUndo();sheetState.stats=blankStats();sheetState.type=null;sheetState.technique=null;sheetState.grade=null;sheetState.control=null;sheetState.passives=[];sheetState.peculiarityId=null;sheetState.draftId=newSheetDraftId();sheetState.savedCharacterId=null;sheetState.sorcererName='';sheetState.userName='';sheetState.side='hechicero';renderSheet();refreshPeculiarityCharacterOptions();toast('Ficha nueva creada.');});
 document.getElementById('sorcerer-name').addEventListener('input',e=>{sheetState.sorcererName=e.target.value;saveSheet()});document.getElementById('character-side').addEventListener('change',e=>{sheetState.side=normalizeCharacterSide(e.target.value);saveSheet()});
 document.getElementById('copy-sheet').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(sheetText());toast('Ficha copiada para Discord.')}catch(e){const ta=document.createElement('textarea');ta.value=sheetText();document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Ficha copiada para Discord.')}});
 renderSheet();
@@ -1293,7 +1315,6 @@ document.getElementById('save-character').addEventListener('click',()=>{
   savedCharacters.unshift(ch);saveCharacters();renderCharacters();toast('Personaje guardado en Mis personajes.');
 });
 
-let peculiaritiesCatalog=[];
 let peculiarityWeights={comun:49,poco:28,rara:15,epica:6,legendaria:2};
 async function loadPeculiaritiesCatalog(){
  try{
@@ -1306,6 +1327,7 @@ async function loadPeculiaritiesCatalog(){
   if(typeof renderInformation==='function')renderInformation();
   const wheel=document.getElementById('card-peculiarities');if(wheel)wheel.outerHTML=peculiarityWheelHtml();
   drawPeculiarityWheel();
+  renderSheet();
   refreshPeculiarityCharacterOptions();
  }catch(e){console.error('Catálogo de peculiaridades',e)}
 }

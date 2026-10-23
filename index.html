@@ -2781,103 +2781,81 @@ async function loadRegisteredUsersCount(){
   }
 }
 
-async function initAuth(){
-  // Mostrar estado conocido inmediatamente para evitar quedarse en "Comprobando sesión..."
-  let cachedSessionRaw=null;try{cachedSessionRaw=localStorage.getItem('sb-qaagrybxkxverxvgaimb-auth-token')}catch(e){}
-  if(cachedSessionRaw){
-    try{
-      const parsed=JSON.parse(cachedSessionRaw);
-      const cachedUser=parsed?.user||parsed?.currentSession?.user||parsed?.session?.user||null;
-      if(cachedUser){
-        currentUser=cachedUser;
-        document.getElementById('account-state-title').textContent='Restaurando sesión...';
-        document.getElementById('account-state-subtitle').textContent='Ya encontramos una sesión guardada en este dispositivo.';
-      }
-    }catch(e){}
+let authSyncRevision=0;
+let authReady=false;
+async function syncAuthSession(session,event='INITIAL_SESSION'){
+  const revision=++authSyncRevision;
+  const nextUser=session?.user||null;
+  const previousId=currentUser?.id||null;
+  const sameUser=!!(previousId&&nextUser?.id===previousId);
+  const recovery=event==='PASSWORD_RECOVERY';
+  if(recovery){
+    currentUser=nextUser;
+    const loginBox=document.getElementById('account-login-box');
+    const userBox=document.getElementById('account-user-box');
+    const recoveryBox=document.getElementById('password-recovery-box');
+    if(loginBox)loginBox.classList.add('hidden');
+    if(userBox)userBox.classList.add('hidden');
+    if(recoveryBox)recoveryBox.classList.remove('hidden');
+    const section=document.getElementById('account-section');
+    document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));
+    if(section)section.classList.remove('hidden');
+    toast('Elegí una nueva contraseña.');
+    return;
   }
-
+  if(sameUser&&currentProfile&&['TOKEN_REFRESHED','SIGNED_IN','INITIAL_SESSION','USER_UPDATED'].includes(event)){
+    // La renovación del token no debe reconstruir Combate ni reiniciar sus vistas.
+    renderAuth();
+    return;
+  }
+  currentUser=nextUser;
+  currentProfile=null;isAdmin=false;staffViewAsPlayer=false;
+  if(!nextUser){
+    allCharacters=[];savedCharacters=[];campaigns=[];
+    renderCharacters();renderCampaigns();renderAuth();refreshPeculiarityCharacterOptions();
+    return;
+  }
   try{
-    const sessionPromise=sb.auth.getSession();
-    const timeoutPromise=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),3500));
-    const {data:{session}}=await Promise.race([sessionPromise,timeoutPromise]);
-    currentUser=session?.user||null;
-    currentProfile=null;isAdmin=false;staffViewAsPlayer=false;
-
-    if(currentUser){
-      try{
-        currentProfile=await getProfile();
-        try{staffViewAsPlayer=hasStaffRole()&&localStorage.getItem('jjk-staff-player-view-'+currentUser.id)==='1'}catch(e){staffViewAsPlayer=false}
-        applyEffectiveRole();
-        await loadSharedData();
-      }catch(e){
-        console.error(e);
-        toast('La cuenta está conectada, pero hubo un problema cargando datos compartidos.');
-      }
-    }else{
-      allCharacters=[];savedCharacters=[];campaigns=[];
-      renderCharacters();renderCampaigns();
+    // Usar el ID concreto, evitando que una sesión anterior cargue datos
+    // después de cerrar sesión o entrar con otra cuenta.
+    const {data,error}=await sb.from('profiles').select('id,email,display_name,role').eq('id',nextUser.id).single();
+    if(error)throw error;
+    if(revision!==authSyncRevision)return;
+    currentProfile=data;
+    try{staffViewAsPlayer=hasStaffRole()&&localStorage.getItem('jjk-staff-player-view-'+nextUser.id)==='1'}catch(e){staffViewAsPlayer=false}
+    applyEffectiveRole();
+    renderAuth();
+    await loadSharedData();
+    if(revision!==authSyncRevision)return;
+  }catch(e){
+    if(revision!==authSyncRevision)return;
+    console.error('No se pudo sincronizar la sesión',e);
+    toast('Sesión iniciada, pero hubo un problema cargando datos. Actualizá la página o revisá la conexión.');
+  }
+  if(revision===authSyncRevision){renderAuth();refreshPeculiarityCharacterOptions();}
+}
+async function initAuth(){
+  // El evento de Auth se registra ANTES de leer la sesión, para no perder
+  // SIGNED_IN / SIGNED_OUT durante el arranque del navegador.
+  sb.auth.onAuthStateChange((event,session)=>{
+    setTimeout(()=>{syncAuthSession(session,event).catch(e=>console.error('Error de Auth',e));},0);
+  });
+  try{
+    const {data,error}=await sb.auth.getSession();
+    if(error)throw error;
+    if(!authReady){
+      authReady=true;
+      await syncAuthSession(data?.session,'INITIAL_SESSION');
     }
   }catch(e){
     console.error('Error comprobando sesión',e);
-    // Si había sesión cacheada, conservarla visualmente; si no, mostrar estado claro
-    if(!currentUser){
+    if(!authReady){
       const title=document.getElementById('account-state-title');
       const subtitle=document.getElementById('account-state-subtitle');
-      const dot=document.getElementById('account-dot');
       if(title)title.textContent='No pude comprobar la sesión';
-      if(subtitle)subtitle.textContent='Podés intentar iniciar sesión nuevamente.';
-      if(dot)dot.classList.add('off');
+      if(subtitle)subtitle.textContent='Comprobá la conexión y actualizá la página.';
     }
   }
-
-  renderAuth();
-
-  sb.auth.onAuthStateChange((_event,session)=>{
-    // Posponer las consultas a Supabase fuera del callback para evitar bloqueos de Auth.
-    setTimeout(async()=>{
-    const previousUserId=currentUser?.id||null;
-    const nextUser=session?.user||null;
-    const sameUser=!!(previousUserId&&nextUser?.id===previousUserId);
-
-    currentUser=nextUser;
-
-    if(_event==='PASSWORD_RECOVERY'){
-      const loginBox=document.getElementById('account-login-box');
-      const userBox=document.getElementById('account-user-box');
-      const recoveryBox=document.getElementById('password-recovery-box');
-      if(loginBox)loginBox.classList.add('hidden');
-      if(userBox)userBox.classList.add('hidden');
-      if(recoveryBox)recoveryBox.classList.remove('hidden');
-      const accountSection=document.getElementById('account-section');
-      document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));
-      if(accountSection)accountSection.classList.remove('hidden');
-      toast('Elegí una nueva contraseña.');
-      return;
-    }
-
-    // Al volver a la pestaña Supabase puede renovar/reemitir la misma sesión.
-    // Si es el mismo usuario y los datos ya están cargados, no reconstruimos
-    // Combate ni las demás vistas: así se conserva exactamente el scroll.
-    if(sameUser&&currentProfile&&(_event==='TOKEN_REFRESHED'||_event==='SIGNED_IN'||_event==='INITIAL_SESSION')){
-      renderAuth();
-      return;
-    }
-
-    currentProfile=null;isAdmin=false;staffViewAsPlayer=false;
-    if(currentUser){
-      try{
-        currentProfile=await getProfile();
-        try{staffViewAsPlayer=hasStaffRole()&&localStorage.getItem('jjk-staff-player-view-'+currentUser.id)==='1'}catch(e){staffViewAsPlayer=false}
-        applyEffectiveRole();
-        await loadSharedData();
-      }catch(e){console.error(e)}
-    }else{
-      allCharacters=[];savedCharacters=[];campaigns=[];
-      renderCharacters();renderCampaigns();
-    }
-    renderAuth();
-    },0);
-  });
 }
 
 document.getElementById('toggle-password').onclick=()=>{

@@ -130,3 +130,80 @@
  .hub-month-btn{padding:8px;min-width:30px}
  .hub-calendar-legend{gap:10px;font-size:11px}
 }
+
+
+/* Alimentación: cuatro comidas y suplementos con calendario de seguimiento */
+.hub-food-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.food-stat{border:1px solid #2a394d;border-radius:16px;background:#101d2f;padding:15px 17px;display:flex;flex-direction:column;gap:7px}
+.food-stat span{font-size:12px;color:#b5c5d9;font-weight:760}
+.food-stat strong{font-size:27px;letter-spacing:-.04em}
+.food-stat small{font-size:11px;font-weight:850}
+.food-stat.red small{color:#ff9ba7}.food-stat.orange small{color:#ffc08b}.food-stat.yellow small{color:#ffe18a}.food-stat.green small{color:#8fe8bc}
+.food-layout{grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr)}
+.food-calendar-day{min-height:79px;gap:4px}
+.food-calendar-day span{min-height:12px}
+.food-calendar-day.level-red{background:rgba(202,61,85,.24);border-color:#a64f64;color:#ffd6dc}
+.food-calendar-day.level-orange{background:rgba(226,128,47,.23);border-color:#b47a45;color:#ffe1bd}
+.food-calendar-day.level-yellow{background:rgba(206,171,58,.21);border-color:#b6a04e;color:#fff0bb}
+.food-calendar-day.level-green{background:rgba(45,156,105,.23);border-color:#4fbd8c;color:#c4ffe4}
+.food-supp-markers{display:flex;gap:3px;justify-content:center;align-items:center;min-height:12px!important}
+.food-supp-markers em{font-style:normal;font-size:9px;line-height:1;border:1px solid currentColor;border-radius:4px;padding:2px 3px;opacity:.87;font-weight:950}
+.food-calendar-legend{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:20px;color:#bccbdc;font-size:12px;font-weight:700}
+.food-calendar-legend span{display:flex;align-items:center;gap:6px}
+.food-legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.food-legend-dot.red{background:#e66b7e}.food-legend-dot.orange{background:#f2a458}.food-legend-dot.yellow{background:#f7d770}.food-legend-dot.green{background:#5fdaa2}.food-legend-dot.neutral{background:#7d8a9b}
+.food-calendar-hint{margin:15px 0 0!important;font-size:12px!important}
+.food-day-card h3{font-size:23px}
+.food-day-card>.hub-muted{margin-top:11px}
+.food-tracker-form{display:grid;gap:18px;margin-top:18px}
+.food-choices{display:grid;gap:8px}
+.food-choice-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #263a52;border-radius:12px;background:#0a1728;padding:10px 11px}
+.food-row-name{display:flex;align-items:center;gap:9px;min-width:0}
+.food-row-name strong{font-size:13px;color:#dce8f8;font-weight:780;line-height:1.3}
+.food-meal-symbol{font-size:14px;min-width:22px;text-align:center;color:#94b9dd}
+.food-choice-buttons{display:flex;gap:4px;flex-shrink:0}
+.food-choice{position:relative;cursor:pointer}
+.food-choice input{position:absolute;opacity:0;width:1px;height:1px}
+.food-choice span{display:grid;place-items:center;min-width:34px;min-height:33px;border:1px solid #394d65;border-radius:9px;color:#a8bdd3;background:#132135;font-weight:820;font-size:11px;padding:6px}
+.food-choice.yes input:checked+span{background:#174c39;border-color:#42c99a;color:#c2ffe2}
+.food-choice.no input:checked+span{background:#4a2331;border-color:#eb8794;color:#ffd7dd}
+.food-choice.unknown input:checked+span{background:#2b3b50;border-color:#a0aec3;color:#f1f6ff}
+.food-choice input:focus-visible+span{outline:2px solid #a3bfff;outline-offset:2px}
+.food-choice span:hover{border-color:#8da4c2}
+.food-supplements{padding-top:17px;border-top:1px solid #27364b;display:grid;gap:8px}
+.food-supplements-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:5px}
+.food-supplements-head h4{margin:0;font-size:16px}
+.food-supplements-head span{font-size:11px;color:#8da4ba}
+.food-day-status{border-radius:12px;border:1px solid #324357;background:#111f32;padding:13px 14px;color:#bfcee0;font-size:12px;line-height:1.4}
+.food-day-status.level-red{border-color:#92516a;color:#ffd7dd;background:#321c2a}
+.food-day-status.level-orange{border-color:#a17946;color:#ffe5cc;background:#352517}
+.food-day-status.level-yellow{border-color:#a29451;color:#f9e8b1;background:#302b1b}
+.food-day-status.level-green{border-color:#43956e;color:#b6f7d5;background:#143426}
+.food-form-actions{display:flex;gap:8px;flex-wrap:wrap}
+.food-form-actions .hub-submit{flex:1}
+.food-clear-btn{border:1px solid #554650;background:#211822;color:#efbac1;font-size:12px;font-weight:780;padding:11px 14px;border-radius:10px}
+.food-clear-btn:hover{background:#38202b}
+.hub-food-footer{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.food-supp-summary{display:flex;align-items:center;gap:14px;background:#0d1d31;border:1px solid #253c57;border-radius:14px;padding:17px 20px}
+.food-supp-summary strong{font-size:25px;color:#d7e6ff}
+.food-supp-summary span{font-size:12px;color:#a8bcd4;line-height:1.4}
+@media(max-width:1120px){.food-layout{grid-template-columns:1fr}}
+@media(max-width:760px){
+ .hub-food-stats{gap:6px}
+ .food-stat{padding:11px 9px;border-radius:12px}
+ .food-stat span,.food-stat small{font-size:10px}
+ .food-stat strong{font-size:23px}
+ .food-calendar-day{min-height:65px}
+ .food-calendar-legend{gap:9px;font-size:11px}
+ .food-supp-markers em{font-size:8px;padding:1px 2px}
+ .food-row-name strong{font-size:12px}
+ .food-choice-row{padding:9px 8px}
+ .food-choice span{min-width:31px;min-height:31px}
+ .food-supp-summary{padding:13px}
+}
+@media(max-width:420px){
+ .food-row-name{gap:4px}
+ .food-meal-symbol{min-width:18px}
+ .food-choice-buttons{gap:3px}
+ .food-choice span{min-width:28px;padding:5px}
+}

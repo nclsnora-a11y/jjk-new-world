@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#07111f">
   <title>Nico Hub · Estudio, gimnasio y alimentación</title>
   <link rel="stylesheet" href="styles.css?v=20261123-1">
-  <link rel="stylesheet" href="lifestyle.css?v=20261123-1">
+  <link rel="stylesheet" href="lifestyle.css?v=20261123-2">
 </head>
 <body>
   <div class="app-shell">
@@ -236,33 +236,64 @@
       </div><!-- Fin de las herramientas de estudio existentes -->
       <section class="hub-area" id="area-gimnasio" hidden aria-labelledby="gym-title">
         <div class="hub-hero">
-          <div><p class="eyebrow">Tu entrenamiento</p><h2 id="gym-title">Gimnasio, sin vueltas.</h2>
-            <p>Registrá ejercicios, consultá tus cargas y seguí tu avance. Sin rutinas impuestas: armamos la tuya cuando definamos tus objetivos.</p></div>
-          <div class="hub-stat" id="gym-total-sessions">0 días registrados</div>
+          <div>
+            <p class="eyebrow">Seguimiento personal</p>
+            <h2 id="gym-title">Tu constancia, de un vistazo.</h2>
+            <p>Marcá si fuiste al gimnasio y, cuando quieras, valorá cómo te fue del 1 al 10. Cada día queda reflejado en el calendario.</p>
+          </div>
+          <div class="hub-stat" id="gym-total-sessions">0 días asistidos</div>
         </div>
-        <div class="hub-grid">
-          <article class="hub-card">
-            <h3>Registrar ejercicio</h3><p class="hub-muted">Guardá lo que hiciste en cada sesión.</p>
-            <form class="hub-form" id="workout-form">
-              <div class="hub-field"><label for="workout-date">Fecha</label><input type="date" id="workout-date" required></div>
-              <div class="hub-field"><label for="workout-group">Tipo de entrenamiento</label>
-                <select id="workout-group"><option>Tren superior</option><option>Tren inferior</option><option>Full body</option><option>Cardio</option><option>Movilidad</option><option>Otro</option></select></div>
-              <div class="hub-field"><label for="workout-name">Ejercicio</label><input type="text" id="workout-name" maxlength="90" placeholder="Ej.: press de banca" required></div>
-              <div class="hub-form-row">
-                <div class="hub-field"><label for="workout-sets">Series</label><input type="number" id="workout-sets" min="1" max="30" value="3" required></div>
-                <div class="hub-field"><label for="workout-reps">Repeticiones</label><input type="text" id="workout-reps" maxlength="25" placeholder="8-12" required></div>
-                <div class="hub-field"><label for="workout-weight">Peso (kg)</label><input type="number" id="workout-weight" min="0" max="9999" step="0.5" placeholder="Opcional"></div>
+
+        <div class="hub-gym-stats" aria-label="Resumen del mes">
+          <article class="hub-gym-stat"><span class="gym-stat-dot attended"></span><span>Fui</span><strong id="gym-month-attended">0</strong><small>días este mes</small></article>
+          <article class="hub-gym-stat"><span class="gym-stat-dot missed"></span><span>No fui</span><strong id="gym-month-missed">0</strong><small>días este mes</small></article>
+          <article class="hub-gym-stat"><span class="gym-stat-dot neutral"></span><span>Nota media</span><strong id="gym-month-rating">—</strong><small>sobre 10</small></article>
+        </div>
+
+        <div class="hub-gym-layout">
+          <article class="hub-card hub-calendar-card">
+            <div class="hub-calendar-heading">
+              <div><p class="eyebrow">Registro mensual</p><h3 id="gym-month-title">Calendario</h3></div>
+              <div class="hub-month-actions">
+                <button type="button" class="hub-month-btn" id="gym-month-prev" aria-label="Mes anterior">←</button>
+                <button type="button" class="hub-month-btn" id="gym-month-today">Hoy</button>
+                <button type="button" class="hub-month-btn" id="gym-month-next" aria-label="Mes siguiente">→</button>
               </div>
-              <button type="submit" class="hub-submit">+ Guardar ejercicio</button>
+            </div>
+            <div class="hub-calendar-weekdays" aria-hidden="true"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div>
+            <div id="gym-calendar-grid" class="hub-calendar-grid" aria-label="Calendario de asistencia"></div>
+            <div class="hub-calendar-legend"><span><i class="gym-stat-dot attended"></i>Fui</span><span><i class="gym-stat-dot missed"></i>No fui</span><span><i class="gym-stat-dot neutral"></i>Sin registrar</span></div>
+            <p class="hub-muted gym-calendar-hint">Elegí un día para registrar o modificar tu asistencia. Los días sin marcar quedan neutros.</p>
+          </article>
+
+          <article class="hub-card gym-day-card">
+            <p class="eyebrow">Registro del día</p>
+            <h3 id="gym-day-label">Hoy</h3>
+            <p class="hub-muted">¿Fuiste al gimnasio este día?</p>
+            <form id="gym-attendance-form" class="hub-form">
+              <div class="gym-status-options" role="radiogroup" aria-label="Asistencia">
+                <label class="gym-status-choice went"><input type="radio" name="gym-attendance" value="fui"><span>✓ Fui</span></label>
+                <label class="gym-status-choice missed"><input type="radio" name="gym-attendance" value="no-fui"><span>✕ No fui</span></label>
+                <label class="gym-status-choice clear"><input type="radio" name="gym-attendance" value="" checked><span>Sin registrar</span></label>
+              </div>
+              <div class="hub-field" id="gym-rating-wrap">
+                <label for="gym-rating">¿Cómo te fue? (1 al 10)</label>
+                <select id="gym-rating">
+                  <option value="">Elegí una nota (opcional)</option>
+                  <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                  <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                </select>
+              </div>
+              <div class="hub-field">
+                <label for="gym-comment">Comentario del día (opcional)</label>
+                <textarea id="gym-comment" maxlength="500" placeholder="Ej.: Tuve mucha energía, terminé cansado, me sentí bien..."></textarea>
+              </div>
+              <button type="submit" class="hub-submit">Guardar día</button>
+              <p class="hub-save-message" id="gym-save-message" role="status" aria-live="polite"></p>
             </form>
           </article>
-          <article class="hub-card">
-            <div class="hub-card-top"><h3 id="gym-day-label">Sesión de hoy</h3><span class="hub-pill" id="gym-day-count">0 ejercicios</span></div>
-            <p class="hub-muted">Elegí la fecha a la izquierda para ver la sesión correspondiente.</p>
-            <div id="gym-session-list" class="hub-list"></div>
-          </article>
         </div>
-        <article class="hub-card"><h3>Actividad reciente</h3><div class="hub-history" id="gym-history"></div></article>
+        <p class="hub-muted">El registro queda guardado en este navegador. Faltar no se registra automáticamente: solo los días que marques en rojo cuentan como «No fui».</p>
       </section>
       <section class="hub-area" id="area-alimentacion" hidden aria-labelledby="food-title">
         <div class="hub-hero food">
@@ -299,6 +330,6 @@
   </div>
   <script src="practice-data.js?v=20261123-1"></script>
   <script src="app.js?v=20261123-1"></script>
-  <script src="lifestyle.js?v=20261123-1"></script>
+  <script src="lifestyle.js?v=20261123-2"></script>
 </body>
 </html>

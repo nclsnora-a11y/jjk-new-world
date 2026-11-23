@@ -4,37 +4,48 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07111f">
-  <title>Nico Study Hub · Privado II + Penal</title>
-  <link rel="stylesheet" href="styles.css?v=20261006-4">
+  <title>Nico Hub · Estudio, gimnasio y alimentación</title>
+  <link rel="stylesheet" href="styles.css?v=20261123-1">
+  <link rel="stylesheet" href="lifestyle.css?v=20261123-1">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">NS</div>
-        <div><strong>Nico Study Hub</strong><span>Finales 2026</span></div>
+        <div class="brand-mark">NH</div>
+        <div><strong>Nico Hub</strong><span>Estudio · Gimnasio · Alimentación</span></div>
       </div>
 
-      <nav class="nav">
+      <nav class="nav main-sections" aria-label="Áreas principales" role="tablist">
+        <button type="button" class="main-tab active" data-area="estudio" role="tab" aria-controls="study-workspace" aria-selected="true"><span class="main-tab-icon">📚</span><span>Estudio</span></button>
+        <button type="button" class="main-tab" data-area="gimnasio" role="tab" aria-controls="area-gimnasio" aria-selected="false"><span class="main-tab-icon">🏋️</span><span>Gimnasio</span></button>
+        <button type="button" class="main-tab" data-area="alimentacion" role="tab" aria-controls="area-alimentacion" aria-selected="false"><span class="main-tab-icon">🥗</span><span>Alimentación</span></button>
+      </nav>
+
+      <div class="sidebar-note">
+        <span class="dot"></span>
+        <p>Tus registros quedan guardados en este navegador.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">Tu espacio personal</p><h1 id="view-title">Hoy</h1></div>
+        <div class="date-chip" id="today-chip"></div>
+      </header>
+      <div class="study-tools" id="study-tools">
+        <span class="study-tools-caption">Herramientas de estudio</span>
+        <nav class="study-nav" aria-label="Herramientas de estudio">
+
         <button class="nav-btn active" data-view="hoy">◎ <span>Hoy</span></button>
         <button class="nav-btn" data-view="calendario">▦ <span>Calendario</span></button>
         <button class="nav-btn" data-view="unidades">◫ <span>Unidades</span></button>
         <button class="nav-btn" data-view="repasos">↻ <span>Repasos</span></button>
         <button class="nav-btn" data-view="practica">◇ <span>Práctica</span></button>
         <button class="nav-btn" data-view="simulador">✦ <span>Bolillero</span></button>
-      </nav>
-
-      <div class="sidebar-note">
-        <span class="dot"></span>
-        <p>Tu progreso queda guardado en este navegador.</p>
+        </nav>
       </div>
-    </aside>
-
-    <main class="main">
-      <header class="topbar">
-        <div><p class="eyebrow">Plan de estudio</p><h1 id="view-title">Hoy</h1></div>
-        <div class="date-chip" id="today-chip"></div>
-      </header>
+      <div id="study-workspace">
 
       <section class="view active" id="view-hoy">
         <div class="hero today-hero">
@@ -221,9 +232,73 @@
           </div>
         </div>
       </section>
+
+      </div><!-- Fin de las herramientas de estudio existentes -->
+      <section class="hub-area" id="area-gimnasio" hidden aria-labelledby="gym-title">
+        <div class="hub-hero">
+          <div><p class="eyebrow">Tu entrenamiento</p><h2 id="gym-title">Gimnasio, sin vueltas.</h2>
+            <p>Registrá ejercicios, consultá tus cargas y seguí tu avance. Sin rutinas impuestas: armamos la tuya cuando definamos tus objetivos.</p></div>
+          <div class="hub-stat" id="gym-total-sessions">0 días registrados</div>
+        </div>
+        <div class="hub-grid">
+          <article class="hub-card">
+            <h3>Registrar ejercicio</h3><p class="hub-muted">Guardá lo que hiciste en cada sesión.</p>
+            <form class="hub-form" id="workout-form">
+              <div class="hub-field"><label for="workout-date">Fecha</label><input type="date" id="workout-date" required></div>
+              <div class="hub-field"><label for="workout-group">Tipo de entrenamiento</label>
+                <select id="workout-group"><option>Tren superior</option><option>Tren inferior</option><option>Full body</option><option>Cardio</option><option>Movilidad</option><option>Otro</option></select></div>
+              <div class="hub-field"><label for="workout-name">Ejercicio</label><input type="text" id="workout-name" maxlength="90" placeholder="Ej.: press de banca" required></div>
+              <div class="hub-form-row">
+                <div class="hub-field"><label for="workout-sets">Series</label><input type="number" id="workout-sets" min="1" max="30" value="3" required></div>
+                <div class="hub-field"><label for="workout-reps">Repeticiones</label><input type="text" id="workout-reps" maxlength="25" placeholder="8-12" required></div>
+                <div class="hub-field"><label for="workout-weight">Peso (kg)</label><input type="number" id="workout-weight" min="0" max="9999" step="0.5" placeholder="Opcional"></div>
+              </div>
+              <button type="submit" class="hub-submit">+ Guardar ejercicio</button>
+            </form>
+          </article>
+          <article class="hub-card">
+            <div class="hub-card-top"><h3 id="gym-day-label">Sesión de hoy</h3><span class="hub-pill" id="gym-day-count">0 ejercicios</span></div>
+            <p class="hub-muted">Elegí la fecha a la izquierda para ver la sesión correspondiente.</p>
+            <div id="gym-session-list" class="hub-list"></div>
+          </article>
+        </div>
+        <article class="hub-card"><h3>Actividad reciente</h3><div class="hub-history" id="gym-history"></div></article>
+      </section>
+      <section class="hub-area" id="area-alimentacion" hidden aria-labelledby="food-title">
+        <div class="hub-hero food">
+          <div><p class="eyebrow">Tus hábitos</p><h2 id="food-title">Alimentación, simple.</h2>
+            <p>Llevá un registro flexible de tus comidas y tu hidratación, sin calorías ni metas impuestas.</p></div>
+          <div class="hub-stat" id="food-total-days">0 días con comidas registradas</div>
+        </div>
+        <div class="hub-grid">
+          <article class="hub-card">
+            <h3>Registrar comida</h3><p class="hub-muted">Anotá lo que comiste, con tus propias palabras.</p>
+            <form class="hub-form" id="food-form">
+              <div class="hub-field"><label for="food-date">Fecha</label><input type="date" id="food-date" required></div>
+              <div class="hub-field"><label for="meal-type">Momento del día</label>
+                <select id="meal-type"><option>Desayuno</option><option>Almuerzo</option><option>Merienda</option><option>Cena</option><option>Colación</option></select></div>
+              <div class="hub-field"><label for="meal-detail">¿Qué comiste?</label>
+                <textarea id="meal-detail" maxlength="600" placeholder="Ej.: arroz con pollo y ensalada" required></textarea></div>
+              <button class="hub-submit" type="submit">+ Guardar comida</button>
+            </form>
+          </article>
+          <article class="hub-card">
+            <div class="hub-card-top"><h3 id="food-day-label">Hoy</h3><span class="hub-pill" id="food-day-count">0 registros</span></div>
+            <div class="hub-water">
+              <div><h4>Agua</h4><p>Vasos registrados en este día</p></div>
+              <div class="hub-stepper"><button id="water-less" type="button" aria-label="Restar un vaso">−</button>
+                <strong id="water-count" aria-live="polite">0</strong>
+                <button id="water-more" type="button" aria-label="Sumar un vaso">+</button></div>
+            </div>
+            <div id="meal-list" class="hub-list"></div>
+          </article>
+        </div>
+        <p class="hub-muted" id="hub-storage-note">Los registros de Gimnasio y Alimentación se guardan en este navegador, separados de tu progreso de Estudio.</p>
+      </section>
     </main>
   </div>
-  <script src="practice-data.js?v=20261006-4"></script>
-  <script src="app.js?v=20261006-4"></script>
+  <script src="practice-data.js?v=20261123-1"></script>
+  <script src="app.js?v=20261123-1"></script>
+  <script src="lifestyle.js?v=20261123-1"></script>
 </body>
 </html>

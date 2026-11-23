@@ -5,10 +5,12 @@
 const KEY='nico-hub-lifestyle-v1';
 const AREA_KEY='nico-hub-last-area';
 const allowedAreas=['estudio','gimnasio','alimentacion'];
-const blank=()=>({gymDays:{},workouts:[],meals:[],water:{}});
+const blank=()=>({gymDays:{},foodDays:{},workouts:[],meals:[],water:{}});
 let state=blank();
 let selectedGymDate='';
 let gymMonthCursor=null;
+let selectedFoodDate='';
+let foodMonthCursor=null;
 
 function load(){
   try{
@@ -16,6 +18,7 @@ function load(){
     if(saved&&typeof saved==='object'){
       state={
         gymDays:saved.gymDays&&typeof saved.gymDays==='object'&&!Array.isArray(saved.gymDays)?saved.gymDays:{},
+        foodDays:saved.foodDays&&typeof saved.foodDays==='object'&&!Array.isArray(saved.foodDays)?saved.foodDays:{},
         // Se conservan los datos de ejercicios anteriores, aunque la interfaz ya no los muestra.
         workouts:Array.isArray(saved.workouts)?saved.workouts:[],
         meals:Array.isArray(saved.meals)?saved.meals:[],
@@ -166,27 +169,139 @@ function saveGymDay(event){
   el('gym-save-message').textContent=saved?(status?'Día guardado ✓':'Registro eliminado ✓'):'No se pudo guardar.';
 }
 
-// Alimentación conserva su funcionamiento original.
-function renderFood(){
-  const date=el('food-date').value||today();
-  const items=state.meals.filter(x=>x.date===date).sort((a,b)=>a.created-b.created);
-  el('food-day-label').textContent='Comidas del '+fmt(date);
-  el('food-day-count').textContent=items.length===1?'1 registro':items.length+' registros';
-  el('meal-list').innerHTML=items.length?items.map(x=>
-    '<div class="hub-record"><div class="record-main"><strong>'+esc(x.type)+'</strong><span>'+esc(x.detail)+'</span></div><button type="button" class="record-delete" data-delete-meal="'+esc(x.id)+'" aria-label="Eliminar '+esc(x.type)+'">Eliminar</button></div>'
-  ).join(''):'<div class="hub-empty">Todavía no registraste comidas para esta fecha.</div>';
-  const n=Math.max(0,Number(state.water[date])||0);
-  el('water-count').textContent=String(n);
-  el('water-less').disabled=n===0;
-  el('food-total-days').textContent=new Set(state.meals.map(x=>x.date)).size+' días con comidas registradas';
+// Registro de cuatro comidas y suplementos. Sin datos completos: día neutro.
+const MEAL_KEYS=['breakfast','lunch','snack','dinner'];
+const SUPP_KEYS=['creatine','protein'];
+const FOOD_ALL=[...MEAL_KEYS,...SUPP_KEYS];
+function validFoodValue(value){
+  return value==='si'||value==='no'?value:'';
 }
+function foodDay(date){
+  const rec=state.foodDays[date];
+  return rec&&typeof rec==='object'&&!Array.isArray(rec)?rec:null;
+}
+function mealValues(rec){
+  return MEAL_KEYS.map(key=>validFoodValue(rec?.meals?.[key]));
+}
+function foodLevel(rec){
+  if(!rec)return null;
+  const values=mealValues(rec);
+  if(!values.every(x=>x==='si'||x==='no'))return null;
+  const count=values.filter(x=>x==='si').length;
+  return {count,key:count<=1?'red':count===2?'orange':count===3?'yellow':'green'};
+}
+function foodInput(name){
+  return document.querySelector('input[name="food-'+name+'"]:checked')?.value||'';
+}
+function foodDraft(){
+  const meals={},supplements={};
+  for(const key of MEAL_KEYS)meals[key]=foodInput(key);
+  for(const key of SUPP_KEYS)supplements[key]=foodInput(key);
+  return {meals,supplements};
+}
+function foodStatusText(level,partial){
+  if(!level)return partial?'Registro parcial: completá las cuatro comidas para colorear el día.':'Sin registro de comidas todavía.';
+  return level.count+' de 4 comidas registradas: '+(level.key==='red'?'rojo':level.key==='orange'?'naranja':level.key==='yellow'?'amarillo':'verde')+'.';
+}
+function previewFood(){
+  const draft=foodDraft(),level=foodLevel(draft);
+  const hasAny=FOOD_ALL.some(k=>validFoodValue(draft.meals[k]??draft.supplements[k]));
+  const status=el('food-day-status');
+  status.className='food-day-status'+(level?' level-'+level.key:'');
+  status.textContent=foodStatusText(level,hasAny);
+}
+function renderSelectedFoodDay(){
+  const rec=foodDay(selectedFoodDate);
+  el('food-day-label').textContent=selectedFoodDate===today()?'Hoy · '+fmt(selectedFoodDate):fmt(selectedFoodDate);
+  for(const key of FOOD_ALL){
+    const value=validFoodValue(MEAL_KEYS.includes(key)?rec?.meals?.[key]:rec?.supplements?.[key]);
+    const selector='input[name="food-'+key+'"]';
+    document.querySelectorAll(selector).forEach(r=>{r.checked=r.value===value;});
+  }
+  previewFood();
+  el('food-save-message').textContent='';
+}
+function renderFood(){
+  const y=foodMonthCursor.getFullYear(),m=foodMonthCursor.getMonth();
+  const title=new Intl.DateTimeFormat('es-AR',{month:'long',year:'numeric'}).format(foodMonthCursor);
+  el('food-month-title').textContent=title[0].toUpperCase()+title.slice(1);
+  const now=new Date();
+  el('food-month-next').disabled=y===now.getFullYear()&&m===now.getMonth();
+  const firstDay=(new Date(y,m,1).getDay()+6)%7;
+  const countDays=new Date(y,m+1,0).getDate();
+  const cells=[];
+  const buckets={red:0,orange:0,yellow:0,green:0};
+  let creatineCount=0,proteinCount=0;
+  for(let n=0;n<firstDay;n++)cells.push('<span class="gym-calendar-spacer" aria-hidden="true"></span>');
+  for(let d=1;d<=countDays;d++){
+    const date=iso(y,m,d),rec=foodDay(date),level=foodLevel(rec);
+    if(level)buckets[level.key]++;
+    const creatine=rec?.supplements?.creatine==='si';
+    const protein=rec?.supplements?.protein==='si';
+    if(creatine)creatineCount++;
+    if(protein)proteinCount++;
+    const selected=date===selectedFoodDate,future=date>today(),isToday=date===today();
+    const css='gym-calendar-day food-calendar-day'+(level?' level-'+level.key:'')+(selected?' selected':'')+(isToday?' is-today':'')+(future?' is-future':'');
+    const badge=level?(level.count+'/4'):'';
+    const marks=(creatine?'<em>C</em>':'')+(protein?'<em>P</em>':'');
+    const spoken=level?(level.count+' de 4 comidas'):'sin registro completo de comidas';
+    cells.push('<button class="'+css+'" type="button" data-food-date="'+date+'" aria-label="'+fmt(date)+': '+spoken+(creatine?', creatina sí':'')+(protein?', proteína sí':'')+'" aria-pressed="'+selected+'"'+(future?' disabled':'')+'><strong>'+d+'</strong><span>'+badge+'</span><span class="food-supp-markers">'+marks+'</span></button>');
+  }
+  el('food-calendar-grid').innerHTML=cells.join('');
+  for(const key of Object.keys(buckets))el('food-month-'+key).textContent=String(buckets[key]);
+  el('food-month-creatine').textContent=String(creatineCount);
+  el('food-month-protein').textContent=String(proteinCount);
+  const fullyDone=Object.values(state.foodDays).filter(rec=>foodLevel(rec)?.count===4).length;
+  el('food-total-days').textContent=fullyDone===1?'1 día con 4 comidas':fullyDone+' días con 4 comidas';
+  renderSelectedFoodDay();
+}
+function setFoodDate(date){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>today())return;
+  selectedFoodDate=date;
+  const [y,m]=date.split('-').map(Number);
+  foodMonthCursor=new Date(y,m-1,1);
+  renderFood();
+}
+function shiftFoodMonth(delta){
+  const proposed=new Date(foodMonthCursor.getFullYear(),foodMonthCursor.getMonth()+delta,1);
+  const now=new Date(),current=new Date(now.getFullYear(),now.getMonth(),1);
+  if(proposed>current)return;
+  foodMonthCursor=proposed;
+  selectedFoodDate=proposed.getTime()===current.getTime()?today():iso(proposed.getFullYear(),proposed.getMonth(),1);
+  renderFood();
+}
+function saveFoodDay(event){
+  event.preventDefault();
+  if(selectedFoodDate>today())return;
+  const draft=foodDraft();
+  // Guardar el suplemento aun cuando las comidas todavía no se completaron.
+  const any=FOOD_ALL.some(key=>validFoodValue(draft.meals[key]??draft.supplements[key]));
+  if(any)state.foodDays[selectedFoodDate]={...draft,updated:new Date().toISOString()};
+  else delete state.foodDays[selectedFoodDate];
+  const saved=save();
+  renderFood();
+  el('food-save-message').textContent=saved?'Día guardado ✓':'No se pudo guardar el día.';
+}
+function clearFoodDay(){
+  if(!foodDay(selectedFoodDate))return;
+  if(!confirm('¿Borrar el registro del '+fmt(selectedFoodDate)+'?'))return;
+  delete state.foodDays[selectedFoodDate];
+  const saved=save();
+  renderFood();
+  el('food-save-message').textContent=saved?'Registro eliminado ✓':'No se pudo guardar el cambio.';
+}
+
 load();
 selectedGymDate=today();
 {
   const [y,m]=selectedGymDate.split('-').map(Number);
   gymMonthCursor=new Date(y,m-1,1);
 }
-el('food-date').value=today();
+selectedFoodDate=today();
+{
+  const [y,m]=selectedFoodDate.split('-').map(Number);
+  foodMonthCursor=new Date(y,m-1,1);
+}
 document.querySelectorAll('.main-tab').forEach(btn=>btn.addEventListener('click',()=>selectArea(btn.dataset.area,true)));
 document.querySelectorAll('.study-nav .nav-btn').forEach(btn=>btn.addEventListener('click',()=>{
   if(document.body.dataset.activeArea!=='estudio')selectArea('estudio',false);
@@ -200,31 +315,16 @@ el('gym-calendar-grid').addEventListener('click',event=>{
 });
 document.querySelectorAll('input[name="gym-attendance"]').forEach(x=>x.addEventListener('change',updateGymRatingVisibility));
 el('gym-attendance-form').addEventListener('submit',saveGymDay);
-el('food-date').addEventListener('change',renderFood);
-el('food-form').addEventListener('submit',event=>{
-  event.preventDefault();
-  const date=el('food-date').value,detail=el('meal-detail').value.trim();
-  if(!date||!detail)return;
-  state.meals.push({id:newId(),date,type:el('meal-type').value,detail,created:Date.now()});
-  save();
-  el('meal-detail').value='';
-  el('meal-detail').focus();
-  renderFood();
+el('food-month-prev').addEventListener('click',()=>shiftFoodMonth(-1));
+el('food-month-next').addEventListener('click',()=>shiftFoodMonth(1));
+el('food-month-today').addEventListener('click',()=>setFoodDate(today()));
+el('food-calendar-grid').addEventListener('click',event=>{
+  const button=event.target.closest('[data-food-date]');
+  if(button)setFoodDate(button.dataset.foodDate);
 });
-document.addEventListener('click',event=>{
-  const m=event.target.closest('[data-delete-meal]');
-  if(m){state.meals=state.meals.filter(x=>x.id!==m.dataset.deleteMeal);save();renderFood();}
-});
-el('water-more').addEventListener('click',()=>{
-  const date=el('food-date').value;
-  state.water[date]=Math.min(40,(Number(state.water[date])||0)+1);
-  save();renderFood();
-});
-el('water-less').addEventListener('click',()=>{
-  const date=el('food-date').value;
-  state.water[date]=Math.max(0,(Number(state.water[date])||0)-1);
-  save();renderFood();
-});
+document.querySelectorAll('input[name^="food-"]').forEach(input=>input.addEventListener('change',previewFood));
+el('food-tracker-form').addEventListener('submit',saveFoodDay);
+el('food-clear-day').addEventListener('click',clearFoodDay);
 renderGym();
 renderFood();
 let last='estudio';

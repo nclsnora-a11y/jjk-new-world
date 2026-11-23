@@ -727,8 +727,8 @@ function toggleTimer(){
     timer.remaining--;
     if(timer.remaining<=0){
       timer.remaining=0;clearInterval(timer.handle);timer.handle=null;timer.running=false;renderTimer();beep();
-      document.title='✓ '+timer.mode+' terminado · Nico Study Hub';
-      setTimeout(()=>document.title='Nico Study Hub · Privado II + Penal',3000);
+      document.title='✓ '+timer.mode+' terminado · Nico Hub';
+      setTimeout(()=>document.title='Nico Hub · Estudio, Gimnasio y Alimentación',3000);
       return;
     }
     renderTimer();

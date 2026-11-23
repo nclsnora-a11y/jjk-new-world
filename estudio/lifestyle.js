@@ -91,6 +91,8 @@ function renderGym(){
   const year=gymMonthCursor.getFullYear(),month=gymMonthCursor.getMonth();
   const monthName=new Intl.DateTimeFormat('es-AR',{month:'long',year:'numeric'}).format(gymMonthCursor);
   el('gym-month-title').textContent=monthName[0].toUpperCase()+monthName.slice(1);
+  const now=new Date();
+  el('gym-month-next').disabled=year===now.getFullYear()&&month===now.getMonth();
   const daysInMonth=new Date(year,month+1,0).getDate();
   const firstDay=(new Date(year,month,1).getDay()+6)%7;
   const cells=[];
@@ -132,7 +134,12 @@ function updateGymRatingVisibility(){
   el('gym-rating').disabled=status!=='fui';
 }
 function shiftGymMonth(delta){
-  gymMonthCursor=new Date(gymMonthCursor.getFullYear(),gymMonthCursor.getMonth()+delta,1);
+  const proposed=new Date(gymMonthCursor.getFullYear(),gymMonthCursor.getMonth()+delta,1);
+  const now=new Date(),currentMonth=new Date(now.getFullYear(),now.getMonth(),1);
+  if(proposed>currentMonth)return;
+  gymMonthCursor=proposed;
+  const selected=iso(proposed.getFullYear(),proposed.getMonth(),1);
+  selectedGymDate=proposed.getTime()===currentMonth.getTime()?today():selected;
   renderGym();
 }
 function saveGymDay(event){
